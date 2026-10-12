@@ -1,0 +1,13 @@
+@reference "../../../app/styles/globals.css";
+
+@layer components {
+    .cmp-badge {
+        @apply p-2 bg-gray-200 rounded inline-flex gap-3 items-center border border-gray-200 px-4 text-xs lg:text-sm leading-3.5;
+
+        @apply dark:bg-gray-800 dark:border-gray-800 dark:text-white;
+
+        .cmp-badge__close {
+            @apply text-[10px];
+        }
+    }
+}

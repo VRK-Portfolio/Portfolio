@@ -1,0 +1,30 @@
+@reference './../../../app/styles/globals.css';
+
+
+@layer components {
+    .cmp-recent-blogs{
+        /* Add your styles for the project listing component here */
+
+        .cmp-recent-blogs__technologies {
+            @apply flex items-center gap-2 justify-between mb-2;
+            .cmp-recent-blogs__technologies-list {
+                @apply flex gap-2 flex-wrap;
+            }
+
+            .cmp-recent-blogs__publish-date {
+                @apply text-sm text-gray-700 dark:text-gray-400;
+            }
+        }
+
+        .cmp-recent-blogs__link-detail {
+            @apply inline-flex items-center gap-1.5;
+        }
+
+        .cmp-recent-blogs__view-more {
+            .cmp-button {
+                @apply mx-auto w-[200px];
+            }
+            @apply mt-4 text-center;
+        }
+    }
+}

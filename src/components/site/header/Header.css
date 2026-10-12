@@ -1,0 +1,45 @@
+@reference './../../../app/styles/globals.css';
+
+@layer components {
+    .cmp-header {
+        --menu-height: calc(100vh - 60px);
+        @apply bg-background flex justify-between shadow-md items-center h-15 fixed w-full z-10 top-0;
+        .cmp-header__logo {
+            @apply flex-1 lg:flex-none;
+            a {
+                @apply uppercase font-bold text-lg ;
+            }
+        }
+        a {
+            @apply text-sm text-foreground h-15 inline-flex items-center;
+        }
+
+        .cmp-header__menu {
+            @apply flex items-center ml-1;
+        }
+
+        .cmp-header__theme.cmp-button,
+        .cmp-header__hamburger.cmp-button {
+            @apply h-8 w-8 p-2 inline-flex items-center;
+        }
+        nav.cmp-header__nav {
+            @apply fixed bg-background shadow-lg top-15 left-0 w-full lg:w-auto mt-1 max-h-[var(--menu-height)] overflow-y-auto;
+            @apply  lg:mt-0 lg:static lg:shadow-none;
+            ul {
+                @apply flex flex-col h-full;
+                @apply lg:flex-row;
+                li {
+                    @apply list-none;
+                    a {
+                        @apply hover:bg-gray-100 hover:text-foreground px-4 w-full;
+                        @apply dark:hover:bg-gray-900;
+
+                        &.active {
+                            @apply bg-blue-500;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

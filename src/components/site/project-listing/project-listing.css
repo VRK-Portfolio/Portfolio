@@ -1,0 +1,22 @@
+@reference './../../../app/styles/globals.css';
+
+@layer components {
+    .cmp-project-listing {
+        /* Add your styles for the project listing component here */
+
+        .cmp-project-listing__technologies {
+            @apply flex gap-2 flex-wrap mb-2;
+        }
+
+        .cmp-project-listing__link-detail {
+            @apply inline-flex items-center gap-1.5;
+        }
+
+        .cmp-project-listing__view-more {
+            .cmp-button {
+                @apply mx-auto w-[200px];
+            }
+            @apply mt-4 text-center;
+        }
+    }
+}

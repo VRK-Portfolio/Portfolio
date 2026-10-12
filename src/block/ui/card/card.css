@@ -1,0 +1,28 @@
+@reference "../../../app/styles/globals.css";
+
+@layer components {
+    .cmp-card {
+        @apply shadow-sm rounded-lg bg-background pb-4 transition-shadow;
+        @apply dark:bg-gray-900;
+        @apply hover:shadow-md ;
+
+        .cmp-card-heading {
+            @apply pt-4;
+        }
+        .cmp-card-body {
+            @apply mb-4;
+        }
+
+        .cmp-card-footer {
+            @apply text-gray-500;
+        }
+        .cmp-card-heading,
+        .cmp-card-body,
+        .cmp-card-footer {
+            @apply px-4;
+        }
+        .cmp-card-with-image {
+            @apply relative w-full h-64 bg-gray-400 rounded-t-lg;
+        }
+    }
+}

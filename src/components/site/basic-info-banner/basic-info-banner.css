@@ -1,0 +1,32 @@
+@reference "../../../app/styles/globals.css";
+
+@layer utilities {
+    .cmp-basic-info-banner {
+        .container {
+            @apply text-center w-[100%] lg:w-[50%];
+        }
+    }
+}
+@layer components {
+    .cmp-basic-info-banner {
+        .container {
+            @apply text-center w-[50%];
+        }
+
+        .cmp-basic-info-banner__image {
+            @apply mx-auto rounded-full;
+        }
+
+        .cmp-basic-info-banner__title {
+            @apply mt-2 mb-1;
+        }
+
+        .cmp-basic-info-banner__bio {
+            @apply text-gray-600 text-base dark:text-gray-200;
+        }
+
+        .cmp-basic-info-banner__about-me {
+            @apply mt-2 text-gray-700 dark:text-gray-100 text-base;
+        }
+    }
+}

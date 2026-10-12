@@ -1,0 +1,9 @@
+@layer utilities {
+    .section {
+        @apply py-16 lg:py-14;
+    }
+
+    .bg-gray {
+        @apply bg-gray-200 dark:bg-gray-900;
+    }
+}

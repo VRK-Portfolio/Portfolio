@@ -1,0 +1,62 @@
+@reference "../../../app/styles/globals.css";
+
+@layer components {
+    .cmp-button {
+        @apply px-4 py-2 border cursor-pointer text-xs lg:text-base;
+        @apply focus-visible:outline-1 focus-visible:outline-offset-1;
+        /* Primary Button Styles */
+        &.cmp-button__primary {
+            @apply bg-blue-700 border-blue-700 text-white;
+            @apply  hover:bg-blue-800 focus-visible:bg-blue-800 focus-visible:text-white;
+        }
+
+        &.cmp-button__primary-outline {
+            @apply bg-transparent border-blue-800 text-blue-800;
+            @apply hover:bg-blue-800 hover:text-white focus-visible:bg-blue-800 focus-visible:text-white;
+            @apply dark:border-blue-500 dark:text-blue-500 dark:hover:bg-blue-500 dark:hover:text-white;
+        }
+        /* Secondary Button Styles */
+        &.cmp-button__secondary {
+            @apply bg-teal-700 border-teal-700 text-white;
+            @apply hover:bg-teal-800 hover:text-white focus-visible:bg-teal-800 focus-visible:text-white;
+        }
+
+        &.cmp-button__secondary-outline {
+            @apply bg-transparent border-teal-700 text-teal-700;
+            @apply hover:bg-teal-800 hover:text-white focus-visible:bg-teal-800 focus-visible:text-white;
+            @apply dark:border-teal-500 dark:text-teal-500 dark:hover:bg-teal-500 dark:hover:text-white;
+        }
+        /* Danger Button Styles */
+        &.cmp-button__danger {
+            @apply bg-red-700 border-red-700 text-white;
+            @apply hover:bg-red-800 hover:text-white focus-visible:bg-red-800 focus-visible:text-white;
+        }
+        &.cmp-button__danger-outline {
+            @apply bg-transparent border-red-700 text-red-700;
+            @apply hover:bg-red-800 hover:text-white focus-visible:bg-red-800 focus-visible:text-white;
+            @apply dark:border-red-500 dark:text-red-500 dark:hover:bg-red-500 dark:hover:text-white;
+        }
+
+        &.cmp-button__small {
+            @apply px-2 py-1 text-xs;
+        }
+        &.cmp-button__medium {
+            @apply px-4 py-2 text-sm;
+        }
+        &.cmp-button__large {
+            @apply px-6 py-3 text-lg;
+        }
+        &.cmp-button__full-width {
+            @apply w-full;
+        }
+        &.cmp-button__rounded {
+            @apply rounded-full;
+        }
+
+        &.cmp-button__ghost {
+            @apply bg-transparent border-transparent text-foreground;
+            @apply hover:bg-gray-100 dark:hover:bg-gray-800;
+        }
+
+    }
+}

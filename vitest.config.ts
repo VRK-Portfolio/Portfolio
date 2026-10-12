@@ -1,0 +1,47 @@
+import { defineConfig } from 'vitest/config';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import path from 'path';
+
+export default defineConfig({
+  plugins: [tsconfigPaths()],
+  test: {
+    environment: 'jsdom', // Node runtime to match Next.js server context
+    globals: true,
+    testTimeout: 15000, // Set a default test timeout (in milliseconds)
+    hookTimeout: 30000,
+    setupFiles: ['./vitest.setup.ts'],
+    alias: {
+      '@': path.resolve(__dirname, 'src')
+    },
+    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
+    exclude: ['e2e/**/*', 'node_modules', '.next', 'src/mocks/**'],
+    // Coverage configuration
+    coverage: {
+      provider: 'v8', // or 'istanbul'
+      reporter: ['text', 'json', 'html'], // Formats: terminal summary, JSON, and interactive HTML
+      reportsDirectory: './coverage',
+      include: ['src/**/*.{ts,tsx}'], // Change path depending on your directory structure
+      exclude: [
+        'src/**/*.stories.{ts,tsx}',
+        'src/**/*.test.{ts,tsx}',
+        'src/**/__tests__/**',
+        "src/app/**/layout.tsx",
+        'src/types/**',
+        'src/@types/ApiResponse.types.ts',
+        'src/tests/**',
+        'src/mocks/**',
+        "src/libs/db.ts",             // Exclude specific file
+        "src/libs/env.ts",
+        '**/*.d.ts',
+        '**/.next/**',
+      ],
+      // Optional: Set strict coverage thresholds to fail CI if tests fall short
+      thresholds: {
+        statements: 100,
+        branches: 100,
+        functions: 100,
+        lines: 100,
+      },
+    },
+  },
+});

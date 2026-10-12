@@ -1,0 +1,16 @@
+@reference './../../../app/styles/globals.css';
+
+@layer components {
+    .cmp-my-skills {
+        .cmp-my-skills__list {
+            @apply pt-10 justify-items-center;
+        }
+        .cmp-my-skills__list-item {
+            @apply inline-flex flex-col justify-center items-center mb-10 gap-3;   
+        }
+
+        .cmp-my-skills__list-item-title {
+            @apply text-lg font-bold;
+        }
+    }
+}

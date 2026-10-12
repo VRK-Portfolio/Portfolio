@@ -1,0 +1,45 @@
+
+@layer base {
+    body {
+        @apply text-base leading-7;
+    }
+
+    h1 {
+        @apply text-2xl font-bold leading-tight mb-2;
+        @apply lg:text-3xl lg:mb-4;
+    }
+
+    h2 {
+        @apply text-xl font-bold leading-tight;
+        @apply lg:text-2xl;
+    }
+
+    h3 {
+        @apply text-lg font-bold leading-tight;
+        @apply lg:text-xl;
+    }
+
+    h4 {
+        @apply text-base font-bold leading-tight;
+        @apply lg:text-lg;
+    }
+
+    h5 {
+        @apply text-shadow-mauve-300 font-bold leading-tight;
+        @apply lg:text-base;
+    }
+
+    h6 {
+        @apply text-xs font-bold leading-tight;
+        @apply lg:text-sm;
+    }
+
+    body, * {
+        @apply text-sm;
+        @apply lg:text-base;
+    }
+    a {
+        @apply text-blue-500;
+        @apply hover:text-blue-700
+    }
+}

@@ -1,0 +1,17 @@
+@reference './../../../app/styles/globals.css';
+
+@layer components {
+    .cmp-section-heading {
+        @apply text-center my-8;
+
+        .cmp-section-heading__title {
+            @apply text-3xl font-bold mb-4;
+            @apply after:bg-blue-500 after:w-[100px] after:block after:mx-auto after:h-1 after:mt-1 after:relative after:rounded-sm;
+        }
+
+        .cmp-section-heading__subtitle {
+            @apply text-base text-gray-700;
+            @apply dark:text-gray-400;
+        }
+    }
+}

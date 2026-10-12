@@ -20,6 +20,19 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Basic info API
+
+`POST /api/basic-info` accepts a JSON body validated by
+[`BasicInfoSchema`](./src/app/_types/BasicInfo.types.ts).
+The `bio` must contain at least 100 characters and at most 15 words.
+The `about_me` must contain 100 to 300 words. Do not send `created_at`
+or `updated_at`; Mongoose generates these timestamps.
+
+Invalid fields return HTTP 422 with `success: false`,
+`error: "Parameter validation failed"`, and a `validationErrors` array
+containing each field name and validation message. Malformed JSON
+returns HTTP 400 with `error: "Invalid request body"`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
