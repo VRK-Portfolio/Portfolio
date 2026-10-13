@@ -1,3 +1,5 @@
+import z from "zod";
+
 export const countWords = (text: string): number => {
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -15,3 +17,12 @@ export const formatDate = (date: Date = new Date()): string => {
     timeZone: 'UTC'
   });
 }
+
+
+export const urlOrRelativePath = z.string().refine(
+    (val: string) => {
+        // Allow root-relative paths like "/images/..." or standard HTTP/HTTPS URLs
+        return val.startsWith('/') || val.startsWith('http://') || val.startsWith('https://');
+    },
+    { message: "Must be a valid URL or a root-relative path starting with '/'" }
+);

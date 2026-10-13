@@ -65,7 +65,7 @@ describe('My Skills API Routes', () => {
                 },
                 body: JSON.stringify(mockSkills[0])
             });
-            const response = await POST(request);
+            const response = await POST(request, { params: Promise.resolve({}) });
             const data: ApiPostResponse = await response.json();
             if (data.success) {
                 expect(data.success).toBe(true);
@@ -84,7 +84,7 @@ describe('My Skills API Routes', () => {
                 body: JSON.stringify({
                 }) // Invalid body
             });
-            const response = await POST(request);
+            const response = await POST(request, { params: Promise.resolve({}) });
             const data: ApiPostResponse = await response.json();
             expect(data.success).toBe(false);
             if (!data.success) {
@@ -103,7 +103,7 @@ describe('My Skills API Routes', () => {
                 },
                 body: JSON.stringify(mockSkills[0])
             });
-            const response = await POST(request);
+            const response = await POST(request, { params: Promise.resolve({}) });
             const data: ApiPostResponse = await response.json();
             expect(data.success).toBe(false);
             if (!data.success) {
@@ -121,7 +121,7 @@ describe('My Skills API Routes', () => {
                 },
                 body: JSON.stringify(mockSkills[0])
             });
-            const response = await POST(request);
+            const response = await POST(request, { params: Promise.resolve({}) });
             const data: ApiPostResponse = await response.json();
             expect(data.success).toBe(false);
             if (!data.success) {

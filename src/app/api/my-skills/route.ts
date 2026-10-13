@@ -1,5 +1,6 @@
 import { ApiGetResponse, ApiPostResponse } from "@/@types/ApiResponse.types";
 import { MySkillsSchema, MySkillsType } from "@/@types/MySkills.types";
+import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
 import { MySkillsModel } from "@/models/my-skills.model";
 import { NextResponse } from "next/server";
@@ -23,7 +24,7 @@ export const GET = async (): Promise<NextResponse<ApiGetResponse<MySkillsType[] 
 }
 
 
-export const POST = async (request: Request): Promise<NextResponse<ApiPostResponse>> => {
+export const POST = withAuth( async (request: Request): Promise<NextResponse<ApiPostResponse>> => {
     try {
         const body: unknown = await request.json();
         
@@ -58,5 +59,5 @@ export const POST = async (request: Request): Promise<NextResponse<ApiPostRespon
             error: err.message || 'Failed to create skill'
         }, { status: 500 });
     }
-}
+});
 

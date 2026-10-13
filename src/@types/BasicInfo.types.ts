@@ -1,5 +1,6 @@
 import z from "zod";
 import { PHONE_REGEX } from "../libs/regex";
+import { urlOrRelativePath } from "@/libs/utils";
 
 
 export const BasicInfoSchema = z.object({
@@ -21,13 +22,13 @@ export const BasicInfoSchema = z.object({
           .max(150, "Bio must be at most 100 letters"),
     avatar_url: z.string()
           .min(1, "Avatar URL is required")
-          .pipe(z.url("Invalid URL for profile picture")),
+          .pipe(urlOrRelativePath),
     website_url: z.string()
           .min(1, "Website URL is required")
           .pipe(z.url("Invalid URL for website")),
     favicon_url: z.string()
           .min(1, "Favicon URL is required")
-          .pipe(z.url("Invalid URL for favicon")),
+          .pipe(urlOrRelativePath),
     github_url: z.string()
           .min(1, "GitHub URL is required")
           .pipe(z.url("Invalid URL for GitHub profile")),
