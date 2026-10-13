@@ -8,8 +8,8 @@ import { NextRequest } from "next/server";
 
 describe("BasicInfo API Route", () => {
     beforeEach(async () => {
-    vi.restoreAllMocks();
-        
+        vi.restoreAllMocks();
+
         // 👈 Guarantees Mongoose connection is ready before model operations run
         await connectDB();
     });
@@ -34,7 +34,7 @@ describe("BasicInfo API Route", () => {
             const response = await GET();
             const json: ApiGetResponse<BasicInfoType[]> = await response.json();
             expect(json.success).toBe(true);
-            if(json.success) {
+            if (json.success) {
                 expect(json.message).toBeDefined();
                 expect(json.data[0].name).toEqual(validData.name);
                 expect(json.data[0].about_me).toEqual(validData.about_me);
@@ -45,7 +45,7 @@ describe("BasicInfo API Route", () => {
             const response = await GET();
             const json: ApiGetResponse<BasicInfoType[]> = await response.json();
             expect(json.success).toBe(true);
-            if(json.success) {
+            if (json.success) {
                 expect(json.message).toBeDefined();
                 expect(json.data).toEqual([]);
             }
@@ -56,7 +56,7 @@ describe("BasicInfo API Route", () => {
             const response = await GET();
             const json: ApiGetResponse<BasicInfoType[]> = await response.json();
             expect(json.success).toBe(false);
-            if(!json.success) {
+            if (!json.success) {
                 expect(json.error).toBeDefined();
                 expect(json.error).toEqual("Internal Server Error");
             }
@@ -75,7 +75,7 @@ describe("BasicInfo API Route", () => {
             const json: ApiGetResponse<BasicInfoType[]> = await response.json();
             expect(response.status).toBe(500);
             expect(json.success).toBe(false);
-            if(!json.success) {
+            if (!json.success) {
                 expect(json.error).toBeDefined();
             }
         });
@@ -91,7 +91,7 @@ describe("BasicInfo API Route", () => {
             }
         });
 
-                test("should handle non-Error thrown types gracefully", async () => {
+        test("should handle non-Error thrown types gracefully", async () => {
             (vi.spyOn(BasicInfoModel, 'find') as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce('');
             const response = await GET();
             const data: ApiPostResponse = await response.json();
@@ -110,9 +110,13 @@ describe("BasicInfo API Route", () => {
         test("should return 422 for invalid request body", async () => {
             const request = new Request("http://localhost:3000/api/basic-info", {
                 method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Cookie": "accessToken=mock-valid-token",
+                },
                 body: JSON.stringify({}),
             });
-            const response = await POST(request);
+            const response = await POST(request, { params: Promise.resolve({}) });
             const json: ApiPostResponse = await response.json();
             expect(response.status).toBe(422);
             expect(json.success).toBe(false);
@@ -124,9 +128,13 @@ describe("BasicInfo API Route", () => {
         test("should return 201 for valid request body", async () => {
             const request = new Request("http://localhost:3000/api/basic-info", {
                 method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Cookie": "accessToken=mock-valid-token", // 👈 Add this
+                },
                 body: JSON.stringify(validData),
             });
-            const response = await POST(request);
+            const response = await POST(request, { params: Promise.resolve({}) });
             const json: ApiPostResponse = await response.json();
             if (!json.success) {
                 // If validation fails, this prints the exact Zod errors in test output
@@ -136,15 +144,19 @@ describe("BasicInfo API Route", () => {
             expect(json.success).toBe(true);
         });
 
-        test("should return 500 for server error", async() => {
+        test("should return 500 for server error", async () => {
             vi.spyOn(BasicInfoModel, "findOneAndUpdate").mockImplementationOnce(() => {
                 throw new Error("Internal Server Error");
             });
             const request = new Request("http://localhost:3000/api/basic-info", {
                 method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Cookie": "accessToken=mock-valid-token", // 👈 Add this
+                },
                 body: JSON.stringify(validData),
             });
-            const response = await POST(request);
+            const response = await POST(request, { params: Promise.resolve({}) });
             const json: ApiPostResponse = await response.json();
             expect(response.status).toBe(500);
             expect(json.success).toBe(false);
@@ -154,18 +166,17 @@ describe("BasicInfo API Route", () => {
         });
 
         test("should show the default error message on 500 server error", async () => {
-             vi.spyOn(BasicInfoModel, "findOneAndUpdate").mockImplementationOnce(() => {
+            vi.spyOn(BasicInfoModel, "findOneAndUpdate").mockImplementationOnce(() => {
                 throw new Error();
             });
             const request = new Request("http://localhost:3000/api/basic-info", {
                 method: "POST",
                 body: JSON.stringify(validData),
             });
-            const response = await POST(request);
+            const response = await POST(request, { params: Promise.resolve({}) });
             const json: ApiPostResponse = await response.json();
             expect(response.status).toBe(500);
             expect(json.success).toBe(false);
-            console.log(json);
             if (!json.success) {
                 expect(json.error).toBeDefined();
             }
@@ -181,7 +192,7 @@ describe("BasicInfo API Route", () => {
                 },
                 body: JSON.stringify(validData)
             });
-            const response = await POST(request);
+            const response = await POST(request, { params: Promise.resolve({}) });
             const data: ApiPostResponse = await response.json();
             expect(data.success).toBe(false);
             if (!data.success) {

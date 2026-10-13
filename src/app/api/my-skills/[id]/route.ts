@@ -1,5 +1,6 @@
 import { ApiGetResponse, ApiPostResponse } from "@/@types/ApiResponse.types";
 import { MySkillsType } from "@/@types/MySkills.types";
+import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
 import { MySkillsModel } from "@/models/my-skills.model";
 import { NextResponse } from "next/server";
@@ -35,7 +36,7 @@ export const GET = async (request: Request, context: RouteContext): Promise<Next
     }
 }
 
-export const PUT = async (request: Request, context: RouteContext): Promise<NextResponse<ApiPostResponse>> => {
+export const PUT = withAuth(async (request: Request, context: RouteContext): Promise<NextResponse<ApiPostResponse>> => {
     try {
         const { id } = await context.params;
         await connectDB();
@@ -59,10 +60,10 @@ export const PUT = async (request: Request, context: RouteContext): Promise<Next
             error: err.message || 'Failed to update skill'
         }, { status: 500 });
     }
-}
+});
 
 
-export const DELETE = async (request: Request, context: RouteContext): Promise<NextResponse<ApiPostResponse>> => {
+export const DELETE = withAuth(async (request: Request, context: RouteContext): Promise<NextResponse<ApiPostResponse>> => {
     try {
         const { id } = await context.params;
         await connectDB();
@@ -85,4 +86,4 @@ export const DELETE = async (request: Request, context: RouteContext): Promise<N
             error: err.message || 'Failed to delete skill'
         }, { status: 500 });
     }
-}
+});

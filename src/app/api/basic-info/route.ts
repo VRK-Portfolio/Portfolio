@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 import { BasicInfoSchema, BasicInfoType } from '@/@types/BasicInfo.types'
 import { ApiGetResponse, ApiPostResponse } from '@/@types/ApiResponse.types'
 import { connectDB } from '@/libs/db'
+import { withAuth } from '@/libs/auth-wrapper'
 
 /**
  * GET /api/basic-info
@@ -29,7 +30,7 @@ export const GET = async (): Promise<NextResponse<ApiGetResponse<BasicInfoType[]
 }
 
 
-export const POST = async (request: Request): Promise<NextResponse<ApiPostResponse>> => {
+export const POST = withAuth(async (request: Request): Promise<NextResponse<ApiPostResponse>> => {
   try {
     const body: unknown = await request.json();
 
@@ -49,7 +50,7 @@ export const POST = async (request: Request): Promise<NextResponse<ApiPostRespon
 
     await connectDB();
     const now = new Date();
-    const i = await BasicInfoModel.findOneAndUpdate(
+    await BasicInfoModel.findOneAndUpdate(
       {},
       {
         $set: {
@@ -79,4 +80,4 @@ export const POST = async (request: Request): Promise<NextResponse<ApiPostRespon
       error: err.message || 'Failed to process request'
     }, { status: 500 });
   }
-}
+});
