@@ -1,0 +1,30 @@
+@reference './../../../app/styles/globals.css';
+
+@layer components {
+    .cmp-input {
+        @apply mb-4;
+        .cmp-input__label {
+            @apply block mb-2 text-base font-medium text-gray-700;
+            @apply dark:text-gray-400;
+        }
+
+        .cmp-input__field {
+            @apply block w-full border border-gray-300 rounded-sm p-2;
+            @apply focus-visible:outline focus-visible:outline-offset-1 focus-visible:outline-blue-600;
+            @apply dark:border-gray-800;
+
+        }
+
+        .cmp-input__error {
+            @apply mt-2 text-sm text-red-600;
+            @apply dark:text-red-400;
+        }
+
+        &.cmp-input--error {
+            .cmp-input__field {
+                @apply border-red-600;
+                @apply dark:border-red-400;
+            }
+        }
+    }
+}

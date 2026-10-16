@@ -1,0 +1,16 @@
+@reference "./../../../app/styles/globals.css";
+
+@layer utilities {
+    main {
+        @apply mt-0;
+    }
+}
+@layer components {
+    .cmp-login {
+        @apply w-[50%];
+
+        button {
+            @apply w-[150px] h-10;
+        }
+    }
+}
