@@ -1,0 +1,7 @@
+@reference './../../app/styles/globals.css';
+
+@layer components {
+    .cmp-login-page {
+        @apply flex justify-center items-center h-screen bg-blue-400 dark:bg-black;
+    }
+}

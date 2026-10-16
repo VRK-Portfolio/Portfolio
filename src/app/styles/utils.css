@@ -6,4 +6,8 @@
     .bg-gray {
         @apply bg-gray-200 dark:bg-gray-900;
     }
+
+    .form-error {
+        @apply bg-red-700 text-white p-2 mb-4 rounded-sm px-4;
+    }
 }
