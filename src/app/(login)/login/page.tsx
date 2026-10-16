@@ -1,7 +1,6 @@
-'use server';
 
 import LoginScreen from "@/screens/login/LoginScreen";
-const LoginPage = async () => {
+export default function LoginPage () {
     return (
         <>
             <LoginScreen />
@@ -9,5 +8,3 @@ const LoginPage = async () => {
 
     );
 };
-
-export default LoginPage;

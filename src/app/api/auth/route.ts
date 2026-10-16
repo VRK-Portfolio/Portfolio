@@ -1,13 +1,15 @@
 import { connectDB } from "@/libs/db";
 import { signAccessToken, signRefreshToken } from "@/libs/jwt";
 import { AuthModel } from "@/models/auth.model";
+import { AuthTypeSchema } from "@/@types/Auth.types";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request): Promise<NextResponse> {
     try {
-        const {email, password} = await request.json();
+        const reqData = AuthTypeSchema.safeParse(await request.json());
+        const {email, password} = reqData.data || {};
 
         if(!email || !password) {
             return NextResponse.json({ error: "Email and password are required", success: false }, { status: 400 });

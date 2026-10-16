@@ -1,8 +1,8 @@
 import './input.css';
 
-import type { InputProps } from './Input.types';
+import type { InputType } from '../../../@types/Input.types';
 
-const Input = ({ label = '', className= '', error = '', register, ...props }: InputProps) => {
+const Input = ({ label = '', className= '', error = '', register, ...props }: InputType) => {
     return (
         <>
             <div className={`cmp-input ${className} ${error ? 'cmp-input--error' : ''}`}>

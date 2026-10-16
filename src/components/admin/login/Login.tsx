@@ -14,7 +14,7 @@ const LoginComponent = () => {
     const router = useRouter();
     
     
-    const onSubmit = async (data: AuthType) => {
+    const onSubmit = async (data: AuthType): Promise<void> => {
         const response = await fetch('/api/auth', {
             method: 'POST',
             headers: {
@@ -26,7 +26,6 @@ const LoginComponent = () => {
         if (!response.ok) {
            setError((await response.json()).error);
         } else {
-            // Redirect to admin dashboard or another page
             router.push('/admin/dashboard');
         }
     };
