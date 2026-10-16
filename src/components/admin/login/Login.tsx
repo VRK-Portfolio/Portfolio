@@ -1,4 +1,5 @@
 'use client';
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Input from "@/block/ui/input/Input";
 import type { AuthType } from "@/@types/Auth.types";
@@ -9,6 +10,7 @@ import {  useRouter } from "next/navigation";
 
 const LoginComponent = () => {
     const { register, handleSubmit, formState: { errors } } = useForm<AuthType>();
+    const [error, setError] = useState<string | null>(null);
     const router = useRouter();
     
     
@@ -22,8 +24,7 @@ const LoginComponent = () => {
         });
 
         if (!response.ok) {
-            // Handle error
-            console.error('Login failed');
+           setError((await response.json()).error);
         } else {
             // Redirect to admin dashboard or another page
             router.push('/admin/dashboard');
@@ -38,6 +39,9 @@ const LoginComponent = () => {
                 </Card.Heading>
                 
                 <Card.Body>
+                {
+                    error && <p className="form-error">{error}</p>
+                }
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <Input register={register('email',
                         {
