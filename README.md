@@ -45,6 +45,10 @@ schema-valid fixtures, and await loaded content with `findByRole` or
 `findByText` rather than asserting synchronously while loading placeholders
 are displayed.
 
+Hook tests can pass the `wrapper` from `createTestQueryWrapper` to
+Testing Library's `renderHook`; the helper also exposes the isolated
+`queryClient` for cache assertions and cleanup.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

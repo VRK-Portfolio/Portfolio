@@ -2,7 +2,7 @@
 export default function Dashboard() {
   return (
     <>
-    Dashboard Page
+      <h1>Admin Dashboard Page</h1>
     </>
   );
 }

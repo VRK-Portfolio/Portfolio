@@ -16,9 +16,9 @@ describe('My Skills API Routes', () => {
     });
 
     const mockSkills: MySkillsType[] = [
-        { id: '1', name: 'JavaScript', icon: '/images/skills/javascript.png', category: 'Language', capabilities: ['Async programming'], proficiency: 'Advanced' },
-        { id: '2', name: 'TypeScript', icon: '/images/skills/typescript.png', category: 'Language', capabilities: ['Type safety'], proficiency: 'Advanced' },
-        { id: '3', name: 'React', icon: '/images/skills/react.png', category: 'Frontend', capabilities: ['Components'], proficiency: 'Advanced' }
+        { _id: '1', name: 'JavaScript', icon: '/images/skills/javascript.png', category: 'Language', capabilities: ['Async programming'], proficiency: 'Advanced' },
+        { _id: '2', name: 'TypeScript', icon: '/images/skills/typescript.png', category: 'Language', capabilities: ['Type safety'], proficiency: 'Advanced' },
+        { _id: '3', name: 'React', icon: '/images/skills/react.png', category: 'Frontend', capabilities: ['Components'], proficiency: 'Advanced' }
     ];
 
 
@@ -135,11 +135,11 @@ describe('My Skills API Routes', () => {
         test('should delete a skill by id', async () => {
             (vi.spyOn(MySkillsModel, 'findByIdAndDelete') as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSkills[0]);
 
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'DELETE'
             });
             const response = await DELETE(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiPostResponse = await response.json();
             if (data.success) {
@@ -151,11 +151,11 @@ describe('My Skills API Routes', () => {
         test('should return 404 if skill is not found', async () => {
             (vi.spyOn(MySkillsModel, 'findByIdAndDelete') as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'DELETE'
             });
             const response = await DELETE(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiPostResponse = await response.json();
             expect(data.success).toBe(false);
@@ -167,11 +167,11 @@ describe('My Skills API Routes', () => {
         test('should return 500 if an error occurs during deletion', async () => {
             (vi.spyOn(MySkillsModel, 'findByIdAndDelete') as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error(''));
 
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'DELETE'
             });
             const response = await DELETE(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiPostResponse = await response.json();
             expect(data.success).toBe(false);
@@ -185,7 +185,7 @@ describe('My Skills API Routes', () => {
     describe('Update Skill /api/my-skills/:id', () => {
         test('should update a skill by id', async () => {
             (vi.spyOn(MySkillsModel, 'findByIdAndUpdate') as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSkills[0]);
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'PUT',
                 headers: {
                     "Content-Type": "application/json"
@@ -193,7 +193,7 @@ describe('My Skills API Routes', () => {
                 body: JSON.stringify(mockSkills[0])
             });
             const response = await PUT(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiPostResponse = await response.json();
             if (data.success) {
@@ -204,7 +204,7 @@ describe('My Skills API Routes', () => {
 
         test("should return 404 if the skill to update is not found", async () => {
             (vi.spyOn(MySkillsModel, 'findByIdAndUpdate') as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'PUT',
                 headers: {
                     "Content-Type": "application/json"
@@ -212,7 +212,7 @@ describe('My Skills API Routes', () => {
                 body: JSON.stringify(mockSkills[0])
             });
             const response = await PUT(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiPostResponse = await response.json();
             expect(data.success).toBe(false);
@@ -223,7 +223,7 @@ describe('My Skills API Routes', () => {
 
         test("should return 500 error message when something went wrong", async() => {
             (vi.spyOn(MySkillsModel, 'findByIdAndUpdate') as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Something went wrong'));
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'PUT',
                 headers: {
                     "Content-Type": "application/json"
@@ -231,7 +231,7 @@ describe('My Skills API Routes', () => {
                 body: JSON.stringify(mockSkills[0])
             });
             const response = await PUT(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiPostResponse = await response.json();
             expect(data.success).toBe(false);
@@ -243,7 +243,7 @@ describe('My Skills API Routes', () => {
 
         test("should return 500 error with a default error message ", async () => {
             (vi.spyOn(MySkillsModel, 'findByIdAndUpdate') as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error(''));
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'PUT',
                 headers: {
                     "Content-Type": "application/json"
@@ -251,7 +251,7 @@ describe('My Skills API Routes', () => {
                 body: JSON.stringify(mockSkills[0])
             });
             const response = await PUT(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiPostResponse = await response.json();
             expect(data.success).toBe(false);
@@ -265,11 +265,11 @@ describe('My Skills API Routes', () => {
     describe('Get Skill by  /api/my-skills/:id ID', () => {
         test('should fetch a skill by id', async () => {
             (vi.spyOn(MySkillsModel, 'findById') as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSkills[0]);
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'GET'
             });
             const response = await GETById(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiGetResponse<MySkillsType | null> = await response.json();
             if (data.success) {
@@ -280,11 +280,11 @@ describe('My Skills API Routes', () => {
 
         test('should return status as 404 when skill is not found', async () => {
             (vi.spyOn(MySkillsModel, 'findById') as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(null);
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'GET'
             });
             const response = await GETById(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiGetResponse<MySkillsType | null> = await response.json();
             expect(data.success).toBe(false);
@@ -295,11 +295,11 @@ describe('My Skills API Routes', () => {
 
         test('should return 500 if an error occurs during fetching a skill by id', async () => {
             (vi.spyOn(MySkillsModel, 'findById') as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce('');
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'GET'
             });
             const response = await GETById(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiGetResponse<MySkillsType | null> = await response.json();
             expect(data.success).toBe(false);
@@ -310,11 +310,11 @@ describe('My Skills API Routes', () => {
 
         test('should return 500 if an error occurs during fetching a skill by id with a default message', async () => { 
             (vi.spyOn(MySkillsModel, 'findById') as unknown as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('Something went wrong'));
-            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0].id}`, {
+            const request = new NextRequest(`http://localhost:3000/api/my-skills/${mockSkills[0]._id}`, {
                 method: 'GET'
             });
             const response = await GETById(request, {
-                params: Promise.resolve({ id: mockSkills[0].id as string })
+                params: Promise.resolve({ id: mockSkills[0]._id as string })
             });
             const data: ApiGetResponse<MySkillsType | null> = await response.json();
             expect(data.success).toBe(false);
