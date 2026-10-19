@@ -1,22 +1,16 @@
 import Image from 'next/image';
 import './basic-info-banner.css';
-import { useEffect, useState } from 'react';
-import { BasicInfoType } from "@/@types/BasicInfo.types";
+import { useBasicInfo } from '@/hooks/useBasicInfo';
+import BasicInfoLoading from './BasicInfoLoading';
 
 const BasicInfoBanner = ({className}: {className?: string}) => {
 
-    const [basicInfo, setBasicInfo] = useState<BasicInfoType>();
+    const { basicInfo, isBasicInfoLoading } = useBasicInfo();
     
-    useEffect(() => {
-        const fetchBasicInfo = async() => {
-            const response = await fetch('/api/basic-info');
-            const data = await response.json();
-            if(data.success) {
-                setBasicInfo(data.data[0]);
-            }
-        }
-        fetchBasicInfo();
-    }, [])
+    if(isBasicInfoLoading) {
+        return <BasicInfoLoading />;
+    }
+
     return (
         <div className={` cmp-basic-info-banner ${className ? className : ''}`}>
             <div className='container'>

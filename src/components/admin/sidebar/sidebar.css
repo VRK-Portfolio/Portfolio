@@ -1,0 +1,118 @@
+@reference './../../../app/styles/globals.css';
+
+@layer components {
+    .cmp-sidebar {
+        @apply bg-white min-w-75 min-h-screen flex flex-col shadow-2xl shadow-blue-100;
+        @apply dark:bg-gray-800 dark:border-gray-700  dark:shadow-blue-900 transition-all duration-100;
+
+        .cmp-sidebar--header {
+            @apply p-2.5 border-b border-gray-300 flex gap-4 items-center h-15;
+            @apply dark:border-gray-700;
+        }
+
+        .cmp-sidebar--header-initials {
+            @apply bg-blue-500 text-white font-bold rounded-md w-10 h-10 text-sm flex items-center justify-center shadow-sm;
+        }
+        .cmp-sidebar--nav {
+            @apply flex-1 p-4;
+
+        }
+
+        .cmp-sidebar--section {
+            @apply mb-4;
+        }
+
+        .cmp-sidebar--section-title {
+            @apply text-gray-500 font-extrabold mb-2 uppercase text-xs;
+            @apply dark:text-gray-400;
+        }
+
+        .cmp-sidebar--section-item {
+            @apply mb-1;
+        }
+
+        .cmp-sidebar--link-content {
+            @apply flex items-center gap-2;
+        }
+
+        .cmp-sidebar--link {
+            @apply text-black flex items-center justify-between gap-1 p-2 rounded-md;
+            @apply dark:text-white;
+            @apply hover:bg-blue-500 hover:text-white hover:shadow-lg hover:shadow-blue-100 hover:dark:shadow-blue-900;
+        }
+
+        .cmp-sidebar--link-text {
+            @apply font-normal text-sm;
+        }
+
+        .cmp-sidebar--footer {
+            @apply p-2.5 border-t border-gray-300 h-15;
+            @apply dark:border-gray-700;
+        }
+
+        .cmp-sidebar--footer-button.cmp-button {
+            @apply w-full flex items-center justify-center gap-1 text-xs rounded-md;
+            @apply bg-gray-50 border border-gray-50 text-gray-700;
+            @apply hover:bg-gray-200;
+            @apply dark:bg-gray-700 dark:border-gray-700 dark:text-gray-200;
+            @apply dark:hover:bg-gray-800;
+
+            span {
+                @apply text-sm;
+            }
+        }
+        .cmp-badge {
+            @apply text-xs font-normal;
+            @apply bg-blue-700 text-white px-3 py-1 rounded-lg border border-blue-800 hover:border-blue-800;
+
+            &.cmp-badge--secondary {
+                @apply bg-gray-500 text-white border-gray-500 hover:border-gray-500;
+            }
+            &.cmp-badge--success {
+                @apply bg-green-700 text-white border-green-700 hover:border-green-700;
+            }
+            &.cmp-badge--danger {
+                @apply bg-red-700 text-white border-red-700 hover:border-red-700;
+            }
+            &.cmp-badge--warning {
+                @apply bg-yellow-700 text-white border-yellow-700 hover:border-yellow-700;
+            }
+
+            &.cmp-badge--info {
+                @apply bg-purple-700 text-white border-purple-700 hover:border-purple-700;
+            }
+        }
+
+        &.cmp-sidebar--collapse {
+            @apply w-20 transition-all duration-300;
+            .cmp-sidebar--header {
+                @apply justify-center
+            }
+            .cmp-sidebar--header-title {
+                @apply hidden;
+            }
+
+            .cmp-sidebar--link-text {
+                @apply hidden;
+            }
+
+            .cmp-sidebar--link {
+                @apply justify-center;
+            }
+            .cmp-badge {
+                @apply hidden;
+            }
+
+            .cmp-sidebar--section-title {
+                @apply hidden;
+            }
+
+            .cmp-sidebar--section {
+                @apply border-b border-gray-300 dark:border-gray-700;
+            }
+            .cmp-sidebar--footer-button-text {
+                @apply hidden;
+            }
+        }
+    }
+}

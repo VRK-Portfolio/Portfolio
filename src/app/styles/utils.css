@@ -10,4 +10,8 @@
     .form-error {
         @apply bg-red-700 text-white p-2 mb-4 rounded-sm px-4;
     }
+
+    .shimmer {
+        @apply bg-gray-200 dark:bg-gray-700 min-h-4 min-w-4;
+    }
 }

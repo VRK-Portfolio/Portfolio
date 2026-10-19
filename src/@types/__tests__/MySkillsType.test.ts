@@ -7,7 +7,10 @@ describe("MySkillsType", () => {
     const validMySkillsType = (): MySkillsType[] => {
         return [{
             name: "Example Skill",
-            icon: "images/example-icon.png"
+            icon: "images/example-icon.png",
+            category: "Example Category",
+            capabilities: ["Capability 1", "Capability 2"],
+            proficiency: "Intermediate"
         }];
     }
     test("should have a valid MySkillsType structure", () => {

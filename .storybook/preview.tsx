@@ -1,9 +1,19 @@
 import type { Preview } from '@storybook/nextjs-vite'
 import { mswLoader } from 'msw-storybook-addon/csf3';
 import { withThemeByDataAttribute } from '@storybook/addon-themes';
-// @ts-ignore -- Storybook's Vite bundler handles this side-effect CSS import.
-import '../src/app/styles/globals.css';
 
+// @ts-ignore.
+import '../src/app/styles/globals.css';
+import { QueryClientProvider, QueryClient } from '@tanstack/react-query';
+
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false, // Disables retries during testing/storybook development
+    },
+  },
+});
 
 const preview: Preview = {
   loaders: [mswLoader()],
@@ -14,7 +24,11 @@ const preview: Preview = {
     },
     defaultTheme: 'light',
     attributeName: 'data-theme'
-  })],
+  }), (Story) => (
+    <QueryClientProvider client={queryClient}>
+      <Story />
+    </QueryClientProvider>
+  )],
   parameters: {
     layout: 'fullscreen',
     controls: {

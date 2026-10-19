@@ -7,6 +7,7 @@ export interface CardProps {
     className?: string;
     children?: React.ReactNode;
     Tag?: Extract<React.ElementType, 'div' | 'article'>;
+    darkType?: 'custom' | 'pure';
 }
 
 export interface CardHeadingProps {
@@ -64,10 +65,10 @@ const CardImage = ({className = '', imageUrl=''}: {className?: string; imageUrl:
     )
 }
 
-const Card = ({className = '', children, Tag = 'div'}: CardProps) => {
+const Card = ({className = '', children, Tag = 'div', darkType = 'custom'}: CardProps) => {
     return (
         <>
-            <Tag className={`cmp-card ${className}`}>
+            <Tag className={`cmp-card ${className} ${darkType === 'pure' ? `cmp-card--${darkType}` : ''}`}>
                 {children}
             </Tag>
         </>

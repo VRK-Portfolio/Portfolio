@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./../styles/globals.css";
 import HeaderComponent from "@/components/site/header/Header";
+import { QueryProvider } from "@/providers/QueryProvider";
 
 
 export const metadata: Metadata = {
@@ -15,10 +16,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <HeaderComponent />
-        <main>
-          {children}
-        </main>
+        <QueryProvider>
+          <HeaderComponent />
+          <main>
+            {children}
+          </main>
+        </QueryProvider>
       </body>
     </html>
   );
