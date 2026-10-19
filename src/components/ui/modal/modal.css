@@ -1,0 +1,7 @@
+@reference "../../../app/styles/globals.css";
+
+@layer components {
+    .cmp-modal {
+        @apply backdrop:bg-black/50 p-6 rounded-lg shadow-xl w-full max-w-xl fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2;
+    }
+}

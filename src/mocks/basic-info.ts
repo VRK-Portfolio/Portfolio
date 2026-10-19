@@ -4,10 +4,10 @@ import { http, HttpResponse } from "msw";
 
 export const basicInfoMock: BasicInfoType[] = [{
     name: "John Doe",
-    about_me: "Passionate developer with experience in building web applications.",
+    about_me: "Passionate developer with experience in building web applications. I build accessible interfaces and reliable services using modern JavaScript and TypeScript. I enjoy collaborating with teams, solving complex problems, and delivering thoughtful user experiences. My work spans frontend development, backend APIs, and database design.",
     avatar_url: "/images/basic-info/photo.png",
     email: "john.doe@example.com",
-    phone: "+1234567890",
+    phone: "9876543210",
     address: "123 Main Street, City, Country",
     bio: "A brief biography about John Doe.",
     favicon_url: "/images/basic-info/favicon.png",

@@ -33,6 +33,18 @@ Invalid fields return HTTP 422 with `success: false`,
 containing each field name and validation message. Malformed JSON
 returns HTTP 400 with `error: "Invalid request body"`.
 
+## Testing
+
+Run the unit test suite with `npm test -- --run`.
+
+Tests for components that use TanStack Query should use
+`renderWithQueryClient` from [`src/tests/tan-query.ts`](./src/tests/tan-query.ts).
+It creates an isolated query client for each render, disables retries, and
+disables cache garbage-collection timers. Mock API requests with MSW using
+schema-valid fixtures, and await loaded content with `findByRole` or
+`findByText` rather than asserting synchronously while loading placeholders
+are displayed.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:

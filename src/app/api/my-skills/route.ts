@@ -27,7 +27,7 @@ export const GET = async (): Promise<NextResponse<ApiGetResponse<MySkillsType[] 
 export const POST = withAuth( async (request: Request): Promise<NextResponse<ApiPostResponse>> => {
     try {
         const body: unknown = await request.json();
-        
+        console.log(body)
         const validation = MySkillsSchema.safeParse(body);
         
         if (!validation.success) {

@@ -1,0 +1,21 @@
+@reference "../../../app/styles/globals.css";
+
+@layer components {
+    .cmp-basic-info-banner {
+        .animate-pulse {
+            .cmp-basic-info-banner__title {
+                @apply h-10 w-50 mx-auto;
+            }
+
+            .cmp-basic-info-banner__bio {
+                @apply h-10 w-[50%] mx-auto;
+                @apply md:w-full;
+            }
+
+            .cmp-basic-info-banner__about-me {
+                @apply h-10 w-full mx-auto;
+                @apply md:w-full;
+            }
+        }
+    }
+}

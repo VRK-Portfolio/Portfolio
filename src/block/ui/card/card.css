@@ -25,4 +25,12 @@
             @apply relative w-full h-64 bg-gray-400 rounded-t-lg;
         }
     }
+
+    [data-theme="dark"] {
+        .cmp-card {
+            &.cmp-card--pure {
+                @apply bg-black text-white;
+            }
+        }
+    }
 }

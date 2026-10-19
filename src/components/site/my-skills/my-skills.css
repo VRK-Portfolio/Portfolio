@@ -6,11 +6,37 @@
             @apply pt-10 justify-items-center;
         }
         .cmp-my-skills__list-item {
-            @apply inline-flex flex-col justify-center items-center mb-10 gap-3;   
+            @apply inline-flex flex-col justify-center items-center gap-3 min-w-full;  
+        }
+        
+        .cmp-card {
+            @apply w-full pt-4;
+        }
+        .cmp-my-skills__content {
+            @apply flex mb-4 items-center gap-3;
         }
 
         .cmp-my-skills__list-item-title {
             @apply text-lg font-bold;
+        }
+
+        .cmp-my-skills__heading-actions {
+            @apply flex justify-between items-center mb-4;
+            
+            .cmp-section-heading {
+                @apply text-left m-0;
+            }
+
+            .cmp-section-heading__title {
+                @apply text-xl mb-0;
+                @apply after:hidden;
+            }
+        }
+
+        &.cmp-my-skills--admin {
+            .container {
+                @apply min-w-full;
+            }
         }
     }
 }

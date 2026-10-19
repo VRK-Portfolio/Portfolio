@@ -16,9 +16,9 @@ describe('My Skills API Routes', () => {
     });
 
     const mockSkills: MySkillsType[] = [
-        { id: '1', name: 'JavaScript', icon: '/images/skills/javascript.png' },
-        { id: '2', name: 'TypeScript', icon: '/images/skills/typescript.png' },
-        { id: '3', name: 'React', icon: '/images/skills/react.png' }
+        { id: '1', name: 'JavaScript', icon: '/images/skills/javascript.png', category: 'Language', capabilities: ['Async programming'], proficiency: 'Advanced' },
+        { id: '2', name: 'TypeScript', icon: '/images/skills/typescript.png', category: 'Language', capabilities: ['Type safety'], proficiency: 'Advanced' },
+        { id: '3', name: 'React', icon: '/images/skills/react.png', category: 'Frontend', capabilities: ['Components'], proficiency: 'Advanced' }
     ];
 
 
