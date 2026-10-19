@@ -12,12 +12,17 @@ export const createTestQueryClient = () =>
     },
   });
 
-export const renderWithQueryClient = (ui: ReactNode) => {
+export const createTestQueryWrapper = () => {
   const queryClient = createTestQueryClient();
-  const result = render(ui, {
-    wrapper: ({ children }: { children: ReactNode }) =>
-      createElement(QueryClientProvider, { client: queryClient }, children),
-  });
+  const wrapper = ({ children }: { children: ReactNode }) =>
+    createElement(QueryClientProvider, { client: queryClient }, children);
+
+  return { queryClient, wrapper };
+};
+
+export const renderWithQueryClient = (ui: ReactNode) => {
+  const { queryClient, wrapper } = createTestQueryWrapper();
+  const result = render(ui, { wrapper });
 
   return { ...result, queryClient };
 };

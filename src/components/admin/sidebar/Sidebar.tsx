@@ -2,7 +2,7 @@
 import { useSkills } from "@/hooks/useSkills";
 import { ArrowLeft, ArrowRight, Award, BookOpen, BriefcaseBusiness, Code, FileUser, LayoutDashboard, Library, Newspaper } from "lucide-react";
 import Badge from "@/block/ui/badge/Badge";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { SidebarType } from "../../../@types/Sidebar.types";
 import Link from "next/link";
 import Button from "@/block/ui/button/Button";
@@ -65,7 +65,7 @@ const SIDEBAR_MENU: SidebarType[] = [{
 }];
 
 const BADGE_CLASSES = ["", "success", "secondary", "danger", "warning", "info"];
-const Sidebar = () => {
+const Sidebar = ({className = ''}: {className?: string}) => {
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const { skillsCount } = useSkills();
     const toggleCollapse = () => {
@@ -87,7 +87,7 @@ const Sidebar = () => {
 
     return (
         <>
-            <aside className={`cmp-sidebar ${collapsed ? 'cmp-sidebar--collapse' : ''}`}>
+            <aside className={`cmp-sidebar ${collapsed ? 'cmp-sidebar--collapse' : ''} ${className}`}>
                 <div className="cmp-sidebar--header">
                     <span className="cmp-sidebar--header-initials">VRK</span>
                     <h2 className="cmp-sidebar--header-title">Admin Panel</h2>
