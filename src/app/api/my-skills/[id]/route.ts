@@ -16,7 +16,7 @@ export const GET = async (request: Request, context: RouteContext): Promise<Next
         await connectDB();
 
         const skills = await MySkillsModel.findById<MySkillsType>(id);
-        if(!skills) {
+        if (!skills) {
             return NextResponse.json({
                 success: false,
                 error: 'Skill not found'
@@ -43,7 +43,7 @@ export const PUT = withAuth(async (request: Request, context: RouteContext): Pro
 
         const body = await request.json();
         const updatedSkill = await MySkillsModel.findByIdAndUpdate<MySkillsType>(id, body, { new: true });
-        if(!updatedSkill) {
+        if (!updatedSkill) {
             return NextResponse.json({
                 success: false,
                 error: 'Skill not found'
@@ -69,7 +69,7 @@ export const DELETE = withAuth(async (request: Request, context: RouteContext): 
         await connectDB();
 
         const deletedSkill = await MySkillsModel.findByIdAndDelete<MySkillsType>(id);
-        if(!deletedSkill) {
+        if (!deletedSkill) {
             return NextResponse.json({
                 success: false,
                 error: 'Skill not found'
