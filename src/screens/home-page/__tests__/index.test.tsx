@@ -7,8 +7,9 @@ import basicInfoHandlers, { basicInfoMock } from "@/mocks/basic-info";
 import { mySkillsHandlers, mockMySkills } from "@/mocks/my-skills";
 import { handlers as projectHandlers } from "@/mocks/project-listing";
 import { handlers as blogHandlers } from "@/mocks/recent-blogs";
+import { certificationHandlers, mockCertifications } from "@/mocks/certifications";
 
-const server = setupServer(...basicInfoHandlers, ...mySkillsHandlers, ...projectHandlers, ...blogHandlers);
+const server = setupServer(...basicInfoHandlers, ...mySkillsHandlers, ...projectHandlers, ...blogHandlers, ...certificationHandlers);
 
 describe("HomePage Component", () => {
 
@@ -25,6 +26,7 @@ describe("HomePage Component", () => {
             screen.findByRole("heading", { name: mockMySkills[0].name }),
             screen.findByText("Project 1"),
             screen.findByText("Blog 1"),
+            screen.findByRole("heading", { name: mockCertifications[0].title }),
         ]);
         for (const element of content) {
             expect(element).toBeInTheDocument();

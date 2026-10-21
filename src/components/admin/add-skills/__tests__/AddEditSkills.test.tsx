@@ -264,6 +264,28 @@ describe("AddEditSkills", () => {
         expect(hooks.updateSkill).not.toHaveBeenCalled();
     });
 
+    test("should populate edit values when skills finish loading", async () => {
+        hooks.skills = [];
+        const { rerender, setModalState } = renderForm(editModal);
+        expect(screen.getByPlaceholderText("Name")).toHaveValue("");
+
+        hooks.skills = [skill];
+        rerender(<AddEditSkills modalState={editModal} setModalState={setModalState} />);
+
+        await waitFor(() => expect(screen.getByPlaceholderText("Name")).toHaveValue(skill.name));
+        expect(screen.getByPlaceholderText("Category")).toHaveValue(skill.category);
+    });
+
+    test("should create rather than update when edit mode has no skill ID", async () => {
+        renderForm({ ...editModal, skillId: null });
+        const { user } = await fillAddForm();
+
+        await user.click(screen.getByRole("button", { name: "Update Skill" }));
+
+        await waitFor(() => expect(hooks.createSkill).toHaveBeenCalledTimes(1));
+        expect(hooks.updateSkill).not.toHaveBeenCalled();
+    });
+
     test("should reset edit values when switching to add mode", async () => {
         const { rerender, setModalState } = renderForm(editModal);
         await waitFor(() => expect(screen.getByPlaceholderText("Name")).toHaveValue(skill.name));

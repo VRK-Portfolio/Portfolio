@@ -16,7 +16,7 @@ const MySkillsComponent = ({ className, type = 'site', modalOpen }: { className?
         return <SkillLoading type={type} />;
     }
     return (
-        <section className={`cmp-my-skills ${className ? className : ''} ${type === 'admin' ? 'cmp-my-skills--admin' : ''}`}>
+        <section className={`cmp-my-skills ${className ? className : ''} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
 
             <div className="container">
                 {
@@ -29,7 +29,7 @@ const MySkillsComponent = ({ className, type = 'site', modalOpen }: { className?
                 {
                     type === 'admin' && (
                         <>
-                            <div className="cmp-my-skills__heading-actions">
+                            <div className="cmp-admin__heading-actions">
                                 <SectionHeading title='Admin View of My Skills' subtitle='Manage and oversee all skills efficiently.' Tag={'h4'} />
                                 <Button variant="primary" className='cmp-my-skills__add-skill w-40' onClick={() => modalOpen?.()}>Add Skill</Button>
                             </div>

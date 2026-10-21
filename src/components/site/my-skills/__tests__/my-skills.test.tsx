@@ -207,11 +207,11 @@ describe("MySkillsComponent", () => {
 
         test("should preserve admin styling while loading and show admin controls after loading", async () => {
             const { container } = renderSkillComponent({ type: "admin" });
-            expect(container.querySelector("section")).toHaveClass("cmp-my-skills--admin");
+            expect(container.querySelector("section")).toHaveClass("cmp-my-skills", "cmp-admin__type");
             expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
 
             await screen.findByRole("heading", { name: skills[0].name });
-            expect(container.querySelector("section")).toHaveClass("cmp-my-skills--admin");
+            expect(container.querySelector("section")).toHaveClass("cmp-my-skills", "cmp-admin__type");
             expect(container.querySelector(".animate-pulse")).not.toBeInTheDocument();
             expect(screen.getByRole("heading", { name: "Admin View of My Skills", level: 4 })).toBeInTheDocument();
             expect(screen.queryByRole("heading", { name: "My Skills" })).not.toBeInTheDocument();

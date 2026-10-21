@@ -7,6 +7,7 @@ import { SidebarType } from "../../../@types/Sidebar.types";
 import Link from "next/link";
 import Button from "@/block/ui/button/Button";
 import './sidebar.css';
+import {useCertifications} from "@/hooks/useCertifications";
 
 const SIDEBAR_MENU: SidebarType[] = [{
     title: "MAIN",
@@ -38,16 +39,16 @@ const SIDEBAR_MENU: SidebarType[] = [{
             badge: "5 Articles"
         },
         {
-            href: "/admin/certifications",
-            icon: Award,
-            text: "Certifications",
-            badge: "3 Certs"
-        },
-        {
             href: "/admin/skills",
             icon: Code,
             text: "Skills",
             badge: "{{skillsCount}} Skills"
+        },
+        {
+            href: "/admin/certifications",
+            icon: Award,
+            text: "Certifications",
+            badge: "{{certificationCount}} Certs"
         },
         {
             href: "/admin/Whitepapers",
@@ -68,6 +69,7 @@ const BADGE_CLASSES = ["", "success", "secondary", "danger", "warning", "info"];
 const Sidebar = ({className = ''}: {className?: string}) => {
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const { skillsCount } = useSkills();
+    const {certificationCount} = useCertifications();
     const toggleCollapse = () => {
         setCollapsed(!collapsed);
     };
@@ -80,10 +82,14 @@ const Sidebar = ({className = ''}: {className?: string}) => {
                 if (item.badge?.includes("{{skillsCount}}")) {
                 return { ...item, badge: `${skillsCount} Skills` };
                 }
+
+                if(item.badge?.includes("{{certificationCount}}")) {
+                    return { ...item, badge: `${certificationCount} Certs` };
+                }
                 return item;
             }),
             }));
-    }, [skillsCount]);
+    }, [skillsCount, certificationCount]);
 
     return (
         <>
