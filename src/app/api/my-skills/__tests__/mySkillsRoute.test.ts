@@ -22,6 +22,42 @@ describe('My Skills API Routes', () => {
     ];
 
 
+    test("POST should persist valid skill data and return an unconditional success response", async () => {
+        const validSkill = {
+            name: "React", icon: "/images/skills/react.svg", category: "Frontend",
+            capabilities: ["Components"], proficiency: "Advanced",
+        };
+        const request = new NextRequest("http://localhost:3000/api/my-skills", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(validSkill),
+        });
+
+        const response = await POST(request, { params: Promise.resolve({}) });
+
+        expect(response.status).toBe(201);
+        expect(await response.json()).toEqual({ success: true, message: "Skill created successfully" });
+        expect(await MySkillsModel.findOne({ name: validSkill.name }).lean()).toMatchObject(validSkill);
+    });
+
+    test.each(["PUT", "DELETE"])("%s should normalize non-Error rejections", async (method) => {
+        const id = "6ad60785c4daf1c34ef66c38";
+        const request = new NextRequest(`http://localhost:3000/api/my-skills/${id}`, {
+            method,
+            ...(method === "PUT" ? { body: JSON.stringify({ name: "Updated" }) } : {}),
+        });
+        if (method === "PUT") {
+            vi.spyOn(MySkillsModel, "findByIdAndUpdate").mockRejectedValueOnce("Database unavailable");
+        } else {
+            vi.spyOn(MySkillsModel, "findByIdAndDelete").mockRejectedValueOnce("Database unavailable");
+        }
+
+        const response = await (method === "PUT" ? PUT : DELETE)(request, { params: Promise.resolve({ id }) });
+
+        expect(response.status).toBe(500);
+        expect(await response.json()).toEqual({ success: false, error: "Database unavailable" });
+    });
+
     describe('GET /api/my-skills', () => {
         test('should fetch all skills', async () => {
             (vi.spyOn(MySkillsModel, 'find') as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockSkills);

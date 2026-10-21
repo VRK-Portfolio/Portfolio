@@ -19,6 +19,32 @@ describe("Certification API Routes", () => {
         { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 1", issuer: "Issuer 1", issueDate: "2023-01-01", expirationDate: "2024-01-01", credentialID: "123", credentialURL: "http://example.com", skillsCoverd: ["Skill 1"] },
         { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 2", issuer: "Issuer 2", issueDate: "2023-02-01", expirationDate: "2024-02-01", credentialID: "456", credentialURL: "http://example.com", skillsCoverd: ["Skill 2"] }
     ];
+    test("GET should preserve an Error instance message", async () => {
+        vi.spyOn(CertificationModel, "find").mockRejectedValueOnce(new Error("Database unavailable"));
+
+        const response = await GET();
+
+        expect(response.status).toBe(500);
+        expect(await response.json()).toEqual({ success: false, error: "Database unavailable" });
+    });
+
+    test.each(["PUT", "DELETE"])("%s should preserve an Error instance message", async (method) => {
+        const id = mockCertifications[0]._id!;
+        const request = new NextRequest(`http://localhost:3000/api/certifications/${id}`, {
+            method,
+            ...(method === "PUT" ? { body: JSON.stringify({ title: "Updated certification" }) } : {}),
+        });
+        if (method === "PUT") {
+            vi.spyOn(CertificationModel, "findByIdAndUpdate").mockRejectedValueOnce(new Error("Database unavailable"));
+        } else {
+            vi.spyOn(CertificationModel, "findByIdAndDelete").mockRejectedValueOnce(new Error("Database unavailable"));
+        }
+
+        const response = await (method === "PUT" ? PUT : DELETE)(request, { params: Promise.resolve({ id }) });
+
+        expect(await response.json()).toEqual({ success: false, error: "Database unavailable" });
+    });
+
     test("GET /api/certifications should return a list of certifications", async () => {
         (vi.spyOn(CertificationModel, 'find') as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockCertifications);
         const response = await GET();

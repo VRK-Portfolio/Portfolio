@@ -1,0 +1,24 @@
+@reference './../../../app/styles/globals.css';
+
+@layer components {
+    .cmp-certification {
+        .cmp-card {
+            @apply py-4 h-full w-full inline-flex flex-col justify-between;
+        }
+        .cmp-certification__icon {
+            @apply bg-blue-100 border border-blue-600 text-blue-600 rounded-sm w-10 h-10 inline-flex items-center justify-center mb-4;
+            @apply dark:bg-gray-800 dark:border-gray-800;
+        }
+        .cmp-certification__title {
+            @apply text-lg font-semibold mb-2;
+        }
+        .cmp-certification__issuer,
+        .cmp-certification__date,
+        .cmp-certification__credential-id {
+            @apply text-sm text-black dark:text-gray-400 mb-1;
+        }
+        .cmp-certification__skills {
+            @apply mt-2;
+        }
+    }
+}

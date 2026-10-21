@@ -3,7 +3,6 @@ import Badge from "@/block/ui/badge/Badge";
 import Button from "@/block/ui/button/Button";
 import Input from "@/block/ui/input/Input";
 import { useCreateSkill, useSkills, useUpdateSkill } from "@/hooks/useSkills";
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 

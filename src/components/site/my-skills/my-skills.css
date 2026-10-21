@@ -20,23 +20,5 @@
             @apply text-lg font-bold;
         }
 
-        .cmp-my-skills__heading-actions {
-            @apply flex justify-between items-center mb-4;
-            
-            .cmp-section-heading {
-                @apply text-left m-0;
-            }
-
-            .cmp-section-heading__title {
-                @apply text-xl mb-0;
-                @apply after:hidden;
-            }
-        }
-
-        &.cmp-my-skills--admin {
-            .container {
-                @apply min-w-full;
-            }
-        }
     }
 }

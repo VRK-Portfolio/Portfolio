@@ -10,3 +10,25 @@
         @apply w-full;
     }
 }
+
+@layer components {
+
+    .cmp-admin__type {
+        .container {
+            @apply min-w-full;
+        }
+
+        .cmp-admin__heading-actions {
+            @apply flex justify-between items-center mb-4;
+
+            .cmp-section-heading {
+                @apply text-left m-0;
+            }
+
+            .cmp-section-heading__title {
+                @apply text-xl mb-0;
+                @apply after:hidden;
+            }
+        }
+    }
+}

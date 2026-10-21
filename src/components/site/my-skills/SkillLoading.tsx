@@ -3,7 +3,7 @@ import Card from "@/block/ui/card/Card";
 
 const SkillLoading = ({type}: {type?: 'admin' | 'site'}) => {
     return (
-        <section className={`cmp-my-skills ${type === 'admin' ? 'cmp-my-skills--admin' : ''}`}>
+        <section className={`cmp-my-skills ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
             <div className="container">
                 <SectionHeading title='My Skills' subtitle='Skilled full-stack engineer developing efficient frontend, backend, and database solutions.' />
                 <ul className='cmp-my-skills__list grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3 animate-pulse'>

@@ -46,9 +46,6 @@ const HeaderComponent = ({ className }: { className?: string }) => {
                                     <Link href=''>Skills</Link>
                                 </li>
                                 <li>
-                                    <Link href=''>Education</Link>
-                                </li>
-                                <li>
                                     <Link href=''>Experience</Link>
                                 </li>
                                 <li>
