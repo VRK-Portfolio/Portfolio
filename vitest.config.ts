@@ -24,7 +24,7 @@ export default defineConfig({
       provider: 'v8', // or 'istanbul'
       reporter: ['text', 'json', 'html'], // Formats: terminal summary, JSON, and interactive HTML
       reportsDirectory: './coverage',
-      include: ['src/**/*.{ts,tsx}'], // Change path depending on your directory structure
+      include: ['src/**/*.{ts,tsx}', 'next.config.ts'],
       exclude: [
         'src/**/*.stories.{ts,tsx}',
         'src/**/*.test.{ts,tsx}',

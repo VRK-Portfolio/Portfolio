@@ -1,0 +1,15 @@
+@reference './../../../app/styles/globals.css';
+
+@layer components {
+    .cmp-my-experience {
+        .cmp-my-experience__item {
+            @apply relative after:absolute;
+            @apply after:w-4 after:h-4 after:bg-blue-500 after:rounded-full after:top-2.5 after:left-[-38.5px] lg:after:left-[-38px];
+            @apply before:w-6 before:h-6 before:border before:border-blue-500 before:rounded-full before:absolute before:top-1.5 before:left-[-42px];
+        }
+
+        .cmp-my-experience__duration {
+            @apply text-sm font-bold text-gray-500;
+        }
+    }
+}

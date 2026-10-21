@@ -27,18 +27,6 @@ const SIDEBAR_MENU: SidebarType[] = [{
             text: "Basic Information"
         },
         {
-            href: "/admin/projects",
-            icon: BriefcaseBusiness,
-            text: "Projects & Works",
-            badge: `1 Proj`
-        },
-        {
-            href: "/admin/blogs",
-            icon: BookOpen,
-            text: "Blog Articles",
-            badge: "5 Articles"
-        },
-        {
             href: "/admin/skills",
             icon: Code,
             text: "Skills",
@@ -49,6 +37,18 @@ const SIDEBAR_MENU: SidebarType[] = [{
             icon: Award,
             text: "Certifications",
             badge: "{{certificationCount}} Certs"
+        },
+        {
+            href: "/admin/projects",
+            icon: BriefcaseBusiness,
+            text: "Projects & Works",
+            badge: `1 Proj`
+        },
+        {
+            href: "/admin/blogs",
+            icon: BookOpen,
+            text: "Blog Articles",
+            badge: "5 Articles"
         },
         {
             href: "/admin/Whitepapers",

@@ -49,6 +49,9 @@ Hook tests can pass the `wrapper` from `createTestQueryWrapper` to
 Testing Library's `renderHook`; the helper also exposes the isolated
 `queryClient` for cache assertions and cleanup.
 
+Run `npm run test:coverage` for application and
+[`Next.js configuration`](./next.config.ts) coverage.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
