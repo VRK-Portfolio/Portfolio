@@ -31,7 +31,8 @@ export const connectDB = async(): Promise<typeof mongoose> => {
         const opts = {
             bufferCommands: false, // Disable mongoose buffering
         }
-
+        console.log('Connecting to MongoDB...');
+        console.log('MongoDB URI:', env.MONGODB_URI);
         cached.promise = mongoose.connect(env.MONGODB_URI, opts).then((mongooseInstance) => {
             return mongooseInstance;
         });
