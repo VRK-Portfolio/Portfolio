@@ -34,7 +34,7 @@ const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { 
                     {
                         certifications?.map((certification) => (
                             <div className="cmp-certification__item" key={certification._id}>
-                                <Card>
+                                <Card darkType="pure">
                                     <Card.Body>
                                         <div className="cmp-certification__icon">
                                             <Award />
