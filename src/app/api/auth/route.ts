@@ -17,7 +17,8 @@ export async function POST(request: Request): Promise<NextResponse> {
 
         await connectDB();
         const user = await AuthModel.findOne({ email });
-
+        const getList = await AuthModel.find();
+        console.log(getList);
         if(!user) {
             return NextResponse.json({ error: "Invalid E-Mail Address", success: false }, { status: 401 });
         }
