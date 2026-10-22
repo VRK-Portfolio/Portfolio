@@ -3,6 +3,7 @@ import "./../styles/globals.css";
 import HeaderComponent from "@/components/site/header/Header";
 import { QueryProvider } from "@/providers/QueryProvider";
 import type { BasicInfoType } from "@/@types/BasicInfo.types";
+export const dynamic = 'force-dynamic';
 
 const fetchSiteConfig = async (): Promise<BasicInfoType | null> => {
   const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/basic-info`);
