@@ -9,10 +9,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  allowedDevOrigins: ['192.168.1.79'],
-  env: {
-    NEXT_PUBLIC_BASE_URL: 'http://localhost:3000',
-  }
+  allowedDevOrigins: ['192.168.1.79']
 };
 
 export default nextConfig;
