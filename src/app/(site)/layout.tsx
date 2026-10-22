@@ -18,14 +18,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: data?.name,
     description: data?.bio,
-    icons: {
-      icon: [
+    icons: [
         {
-          url: data?.favicon_url,
+          url: data?.favicon_url || '',
           type: "image/x-icon"
         }
-      ]
-    }
+    ]
   };
 }
 
