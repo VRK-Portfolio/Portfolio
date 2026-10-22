@@ -16,7 +16,7 @@ export const useBasicInfo = () => {
             if (!res.success) {
                 throw new Error('Failed to fetch basic info');
             }
-            return z.array(BasicInfoSchema).parse(res.data)[0];
+            return z.array(BasicInfoSchema).parse(res.data)[0] || null;
         }
     })
     return {
