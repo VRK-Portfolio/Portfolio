@@ -51,7 +51,8 @@ export async function POST(req: Request) {
         const fileUrl = `/uploads/${fileName}`;
 
         return new Response(JSON.stringify({ message: 'File uploaded successfully', fileUrl }), { status: 200 });
-    } catch (error) {
-        return new Response(JSON.stringify({ error: 'File upload failed' }), { status: 500 });
+    } catch (error: Error | unknown) {
+        const err = error instanceof Error ? error.message : new Error(String(error)).message;
+        return new Response(JSON.stringify({ error: `File upload failed: ${err}` }), { status: 500 });
     }
 }
