@@ -34,7 +34,12 @@ export const connectDB = async(): Promise<typeof mongoose> => {
         console.log('Connecting to MongoDB...');
         console.log('MongoDB URI:', env.MONGODB_URI);
         cached.promise = mongoose.connect(env.MONGODB_URI, opts).then((mongooseInstance) => {
+            console.log('MongoDB connected successfully');
             return mongooseInstance;
+        }).catch((err) => {
+            console.error('Error connecting to MongoDB:', err);
+            cached.promise = null;
+            throw err;
         });
     }
     try {
