@@ -33,6 +33,22 @@ Invalid fields return HTTP 422 with `success: false`,
 containing each field name and validation message. Malformed JSON
 returns HTTP 400 with `error: "Invalid request body"`.
 
+## Certification dates
+
+Certification issue and expiration dates use `Date` objects in the application
+and Mongoose model. The admin form displays them as `YYYY-MM-DD` values and
+converts submitted values to UTC dates, preserving the selected calendar day.
+New certifications default both dates to today (UTC).
+
+## Experience editor
+
+The admin experience page supports adding and editing company details,
+responsibility tags, and multiple positions. Add responsibility tags with Enter
+or the Add Responsibility button. Each experience keeps at least one position.
+Position end dates are optional; marking a position as current clears its end
+date. Date inputs use `YYYY-MM-DD` and are submitted as UTC dates.
+Failed saves leave the form open with its values and an error message.
+
 ## Testing
 
 Run the unit test suite with `npm test -- --run`.

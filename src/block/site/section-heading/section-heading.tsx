@@ -13,7 +13,7 @@ const SectionHeading = ({ title, subtitle, Tag = 'h2' }: SectionHeadingProps) =>
         <div className="cmp-section-heading">
             <Tag className="cmp-section-heading__title">{title}</Tag>
             {subtitle && (
-                <p className="cmp-section-heading__subtitle">{subtitle}</p>
+                <p className="cmp-section-heading__subtitle" dangerouslySetInnerHTML={{ __html: subtitle }}></p>
             )}
         </div>
     );

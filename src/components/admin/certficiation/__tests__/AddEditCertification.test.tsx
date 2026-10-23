@@ -47,8 +47,10 @@ describe("AddEditCertification", () => {
         await user.type(screen.getByPlaceholderText("Certification Name"), certification.title);
         await user.type(screen.getByPlaceholderText("Issuer"), certification.issuer);
         await user.type(screen.getByPlaceholderText("Credential ID"), certification.credentialID);
-        await user.type(screen.getByPlaceholderText("Issue Date"), certification.issueDate);
-        await user.type(screen.getByPlaceholderText("Expiry Date"), certification.expirationDate);
+        await user.clear(screen.getByPlaceholderText("Issue Date"));
+        await user.type(screen.getByPlaceholderText("Issue Date"), certification.issueDate.toISOString().slice(0, 10));
+        await user.clear(screen.getByPlaceholderText("Expiry Date"));
+        await user.type(screen.getByPlaceholderText("Expiry Date"), certification.expirationDate.toISOString().slice(0, 10));
         await user.type(screen.getByPlaceholderText("Credential URL"), certification.credentialURL);
         for (const skill of certification.skillsCoverd) {
             await user.type(screen.getByPlaceholderText("Type and press Enter to add Skills..."), `${skill}{Enter}`);
@@ -62,11 +64,13 @@ describe("AddEditCertification", () => {
         hooks.updateCertification.mockReset();
     });
 
-    test("should render an empty add form", () => {
+    test("should render an add form with today's dates", () => {
         renderForm();
-        for (const placeholder of ["Certification Name", "Issuer", "Credential ID", "Issue Date", "Expiry Date", "Credential URL"]) {
+        for (const placeholder of ["Certification Name", "Issuer", "Credential ID", "Credential URL"]) {
             expect(screen.getByPlaceholderText(placeholder)).toHaveValue("");
         }
+        expect(screen.getByPlaceholderText("Issue Date")).toHaveValue(new Date().toISOString().slice(0, 10));
+        expect(screen.getByPlaceholderText("Expiry Date")).toHaveValue(new Date().toISOString().slice(0, 10));
         expect(screen.getByPlaceholderText("Issue Date")).toHaveAttribute("type", "date");
         expect(screen.getByPlaceholderText("Credential URL")).toHaveAttribute("type", "url");
         expect(screen.getByRole("button", { name: "Submit" })).toBeInTheDocument();
@@ -75,6 +79,8 @@ describe("AddEditCertification", () => {
     test("should validate every required field before saving", async () => {
         const user = userEvent.setup();
         renderForm();
+        await user.clear(screen.getByPlaceholderText("Issue Date"));
+        await user.clear(screen.getByPlaceholderText("Expiry Date"));
         await user.click(screen.getByRole("button", { name: "Submit" }));
 
         for (const message of [
@@ -161,8 +167,8 @@ describe("AddEditCertification", () => {
         const { setModalState } = renderForm(editModal);
         await waitFor(() => expect(screen.getByPlaceholderText("Certification Name")).toHaveValue(certification.title));
         expect(screen.getByPlaceholderText("Issuer")).toHaveValue(certification.issuer);
-        expect(screen.getByPlaceholderText("Issue Date")).toHaveValue(certification.issueDate);
-        expect(screen.getByPlaceholderText("Expiry Date")).toHaveValue(certification.expirationDate);
+        expect(screen.getByPlaceholderText("Issue Date")).toHaveValue(certification.issueDate.toISOString().slice(0, 10));
+        expect(screen.getByPlaceholderText("Expiry Date")).toHaveValue(certification.expirationDate.toISOString().slice(0, 10));
         expect(screen.getByPlaceholderText("Credential URL")).toHaveValue(certification.credentialURL);
         for (const skill of certification.skillsCoverd) {
             expect(screen.getByText(skill)).toBeInTheDocument();
@@ -194,6 +200,23 @@ describe("AddEditCertification", () => {
         expect(screen.queryByText("Update failed")).not.toBeInTheDocument();
     });
 
+    test("should submit changed dates as Date objects without shifting the calendar day", async () => {
+        const user = userEvent.setup();
+        renderForm(editModal);
+        await user.clear(screen.getByPlaceholderText("Issue Date"));
+        await user.type(screen.getByPlaceholderText("Issue Date"), "2024-02-29");
+        await user.clear(screen.getByPlaceholderText("Expiry Date"));
+        await user.type(screen.getByPlaceholderText("Expiry Date"), "2028-12-31");
+        await user.click(screen.getByRole("button", { name: "Update Certification" }));
+
+        await waitFor(() => expect(hooks.updateCertification).toHaveBeenCalledTimes(1));
+        expect(hooks.updateCertification.mock.calls[0][0]).toEqual({
+            ...certification,
+            issueDate: new Date("2024-02-29T00:00:00.000Z"),
+            expirationDate: new Date("2028-12-31T00:00:00.000Z"),
+        });
+    });
+
     test("should populate edit data when certifications finish loading", async () => {
         hooks.certifications = [];
         const { rerender, setModalState } = renderForm(editModal);
@@ -203,6 +226,8 @@ describe("AddEditCertification", () => {
         rerender(<AddEditCertification modalState={editModal} setModalState={setModalState} />);
 
         await waitFor(() => expect(screen.getByPlaceholderText("Certification Name")).toHaveValue(certification.title));
+        expect(screen.getByPlaceholderText("Issue Date")).toHaveValue("2025-01-01");
+        expect(screen.getByPlaceholderText("Expiry Date")).toHaveValue("2027-01-01");
     });
 
     test("should create rather than update when edit mode has no certification ID", async () => {
@@ -222,6 +247,8 @@ describe("AddEditCertification", () => {
         rerender(<AddEditCertification modalState={addModal} setModalState={setModalState} />);
 
         await waitFor(() => expect(screen.getByPlaceholderText("Certification Name")).toHaveValue(""));
+        expect(screen.getByPlaceholderText("Issue Date")).toHaveValue(new Date().toISOString().slice(0, 10));
+        expect(screen.getByPlaceholderText("Expiry Date")).toHaveValue(new Date().toISOString().slice(0, 10));
         expect(screen.getByRole("button", { name: "Submit" })).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Close" })).not.toBeInTheDocument();
     });

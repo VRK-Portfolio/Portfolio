@@ -49,4 +49,10 @@ describe("SectionHeading", () => {
         const { container } = render(<SectionHeading title="Section Title" />);
         expect(container.querySelector("p.cmp-section-heading__subtitle")).not.toBeInTheDocument();
     });
+
+    test("renders subtitle HTML as markup rather than escaped text", () => {
+        const { container } = render(<SectionHeading title="Experience" subtitle="Over <strong>9 years</strong> of experience" />);
+        expect(container.querySelector(".cmp-section-heading__subtitle strong")).toHaveTextContent("9 years");
+        expect(container.querySelector(".cmp-section-heading__subtitle")).toHaveTextContent("Over 9 years of experience");
+    });
 });

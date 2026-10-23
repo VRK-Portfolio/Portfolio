@@ -4,6 +4,7 @@ import { POST } from "../route";
 const mocks = vi.hoisted(() => ({
     connectDB: vi.fn(),
     findOne: vi.fn(),
+    find: vi.fn(),
     compare: vi.fn(),
     signAccessToken: vi.fn(),
     signRefreshToken: vi.fn(),
@@ -13,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/libs/db", () => ({ connectDB: mocks.connectDB }));
 vi.mock("@/models/auth.model", () => ({
-    AuthModel: { findOne: mocks.findOne },
+    AuthModel: { findOne: mocks.findOne, find: mocks.find },
 }));
 vi.mock("bcryptjs", () => ({ default: { compare: mocks.compare } }));
 vi.mock("@/libs/jwt", () => ({
@@ -50,6 +51,7 @@ describe("authRoute POST", () => {
         vi.resetAllMocks();
         mocks.connectDB.mockResolvedValue(undefined);
         mocks.findOne.mockResolvedValue(user);
+        mocks.find.mockResolvedValue([]);
         mocks.compare.mockResolvedValue(true);
         mocks.signAccessToken.mockResolvedValue("test-access-token");
         mocks.signRefreshToken.mockResolvedValue("test-refresh-token");
@@ -141,6 +143,7 @@ describe("authRoute POST", () => {
     test.each([
         ["database connection", mocks.connectDB],
         ["user lookup", mocks.findOne],
+        ["user list lookup", mocks.find],
         ["password comparison", mocks.compare],
     ])("returns 500 when %s fails", async (_, dependency) => {
         dependency.mockRejectedValueOnce(new Error("Authentication dependency failed"));

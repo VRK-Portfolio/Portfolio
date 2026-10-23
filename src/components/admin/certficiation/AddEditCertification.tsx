@@ -11,19 +11,25 @@ interface AddEditCertificationProps {
     setModalState: React.Dispatch<React.SetStateAction<{ isOpen: boolean; mode: 'add' | 'edit'; certificationId?: string | null }>>;
 }
 
+type CertificationFormValues = Omit<CertificationType, 'issueDate' | 'expirationDate'> & {
+    issueDate: string;
+    expirationDate: string;
+};
+
 const AddEditCertification = ({ modalState, setModalState }: AddEditCertificationProps) => {
     const { mode, certificationId } = modalState;
     const { certifications } = useCertifications();
     const { addCertification } = useAddCertification();
     const { updateCertification } = useUpdateCertifications();
-    const { register, handleSubmit, formState: { errors }, setValue, getValues, control, reset } = useForm<CertificationType>({
+    const today = new Date().toISOString().slice(0, 10);
+    const { register, handleSubmit, formState: { errors }, setValue, getValues, control, reset } = useForm<CertificationFormValues>({
         defaultValues: {
             title: '',
             issuer: '',
-            issueDate: '',
+            issueDate: today,
             credentialID: '',
             credentialURL: '',
-            expirationDate: '',
+            expirationDate: today,
             skillsCoverd: []
         }
     });
@@ -37,20 +43,24 @@ const AddEditCertification = ({ modalState, setModalState }: AddEditCertificatio
     useEffect(() => {
         if (mode === 'edit' && certificationId) {
             if (currentCertification) {
-                reset(currentCertification);
+                reset({
+                    ...currentCertification,
+                    issueDate: currentCertification.issueDate.toISOString().slice(0, 10),
+                    expirationDate: currentCertification.expirationDate.toISOString().slice(0, 10),
+                });
             }
         } else {
             reset({
                 title: '',
                 issuer: '',
-                issueDate: '',
+                issueDate: today,
                 credentialID: '',
                 credentialURL: '',
-                expirationDate: '',
+                expirationDate: today,
                 skillsCoverd: []
             });
         }
-    }, [mode, certificationId, certifications, currentCertification, reset ]);
+    }, [mode, certificationId, certifications, currentCertification, reset, today ]);
 
     useEffect(() => {
         register('skillsCoverd', {
@@ -79,7 +89,12 @@ const AddEditCertification = ({ modalState, setModalState }: AddEditCertificatio
         );
     };
 
-    const onSubmit = (data: CertificationType) => {
+    const onSubmit = (values: CertificationFormValues) => {
+        const data: CertificationType = {
+            ...values,
+            issueDate: new Date(values.issueDate),
+            expirationDate: new Date(values.expirationDate),
+        };
         console.log(data);
         if (mode === 'edit' && certificationId) {
             updateCertification(data, {

@@ -8,6 +8,7 @@ import Link from "next/link";
 import Button from "@/block/ui/button/Button";
 import './sidebar.css';
 import {useCertifications} from "@/hooks/useCertifications";
+import { useGetExpericence } from "@/hooks/useExperience";
 
 const SIDEBAR_MENU: SidebarType[] = [{
     title: "MAIN",
@@ -37,6 +38,12 @@ const SIDEBAR_MENU: SidebarType[] = [{
             icon: Award,
             text: "Certifications",
             badge: "{{certificationCount}} Certs"
+        },
+        {
+            href: "/admin/experience",
+            icon: Award,
+            text: "Experience",
+            badge: "Total Exp {{experienceCount}} Yrs"
         },
         {
             href: "/admin/projects",
@@ -70,6 +77,7 @@ const Sidebar = ({className = ''}: {className?: string}) => {
     const [collapsed, setCollapsed] = useState<boolean>(false);
     const { skillsCount } = useSkills();
     const {certificationCount} = useCertifications();
+    const { totalExperience } = useGetExpericence();
     const toggleCollapse = () => {
         setCollapsed(!collapsed);
     };
@@ -86,10 +94,13 @@ const Sidebar = ({className = ''}: {className?: string}) => {
                 if(item.badge?.includes("{{certificationCount}}")) {
                     return { ...item, badge: `${certificationCount} Certs` };
                 }
+                if(item.badge?.includes("{{experienceCount}}")) {
+                    return { ...item, badge: `Exper ${totalExperience} Yrs` };
+                }
                 return item;
             }),
             }));
-    }, [skillsCount, certificationCount]);
+    }, [skillsCount, certificationCount, totalExperience]);
 
     return (
         <>

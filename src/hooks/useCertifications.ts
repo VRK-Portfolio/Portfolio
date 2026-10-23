@@ -13,7 +13,12 @@ export const useCertifications = () => {
             }
             const res: ApiGetResponse<CertificationType[]> = await response.json();
             if (res.success) {
-                return z.array(CertificationSchema).parse(res.data);
+                const data = res.data.map(item => ({
+                    ...item,
+                    issueDate: new Date(item.issueDate),
+                    expirationDate: new Date(item.expirationDate),
+                }));
+                return z.array(CertificationSchema).parse(data);
             } else {
                 throw new Error('Failed to fetch certifications');
             }

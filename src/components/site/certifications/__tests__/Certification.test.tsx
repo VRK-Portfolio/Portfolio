@@ -22,7 +22,7 @@ describe("CertificationComponent", () => {
         for (const [index, certification] of mockCertifications.entries()) {
             expect(screen.getByRole("heading", { name: certification.title })).toBeInTheDocument();
             expect(screen.getByText(`Issuer : ${certification.issuer}`)).toBeInTheDocument();
-            expect(screen.getByText(`Issued: ${certification.issueDate}`)).toBeInTheDocument();
+            expect(screen.getByText(`Issued: ${index === 0 ? "1 January 2025" : "1 February 2025"}`)).toBeInTheDocument();
             expect(screen.getByText(`Credential ID: ${certification.credentialID}`)).toBeInTheDocument();
             for (const skill of certification.skillsCoverd) {
                 expect(screen.getByText(skill)).toBeInTheDocument();
