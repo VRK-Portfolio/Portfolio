@@ -6,6 +6,7 @@ import SectionHeading from "@/block/site/section-heading/section-heading";
 import Link from "next/link";
 import {useCertifications, useDeleteCertifications} from "@/hooks/useCertifications";
 import Button from "@/block/ui/button/Button";
+import { formatDate } from "@/libs/utils";
 
 const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { className?: string, modalOpen?: (id?: string) => void, type?: 'admin' | 'site' }) => {
     const { certifications } = useCertifications();
@@ -41,7 +42,7 @@ const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { 
                                         </div>
                                         <h3 className="cmp-certification__title">{certification.title}</h3>
                                         <p className="cmp-certification__issuer">Issuer : {certification.issuer}</p>
-                                        <p className="cmp-certification__date">Issued: {certification.issueDate}</p>
+                                        <p className="cmp-certification__date">Issued: {formatDate(certification.issueDate)}</p>
                                         <p className="cmp-certification__credential-id">Credential ID: {certification.credentialID}</p>
                                         <div className="cmp-certification__skills inline-flex gap-2 flex-row flex-wrap">
                                             {certification.skillsCoverd.map((skill) => (

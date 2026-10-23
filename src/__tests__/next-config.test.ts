@@ -8,6 +8,7 @@ describe("Next.js configuration", () => {
     test.each([
         "https://vijayrameshkumar.com/uploads/photo.png",
         "https://vijayrameshkumar.com/images/skills/react.svg",
+        "https://portfolio.public.blob.vercel-storage.com/uploads/photo.png",
     ])("should allow the configured remote image URL %s", (url) => {
         expect(hasRemoteMatch([], remotePatterns, new URL(url))).toBe(true);
     });
@@ -17,6 +18,9 @@ describe("Next.js configuration", () => {
         "https://example.com/photo.png",
         "https://images.vijayrameshkumar.com/photo.png",
         "https://vijayrameshkumar.com.example.com/photo.png",
+        "http://portfolio.public.blob.vercel-storage.com/uploads/photo.png",
+        "https://portfolio.public.blob.vercel-storage.com.example.com/photo.png",
+        "https://portfolio.private.blob.vercel-storage.com/photo.png",
     ])("should reject remote images from unconfigured origins such as %s", (url) => {
         expect(hasRemoteMatch([], remotePatterns, new URL(url))).toBe(false);
     });
@@ -25,7 +29,7 @@ describe("Next.js configuration", () => {
         expect(nextConfig.allowedDevOrigins).toEqual(["192.168.1.79"]);
     });
 
-    test("should expose the configured local public base URL", () => {
-        expect(nextConfig.env).toEqual({ NEXT_PUBLIC_BASE_URL: "http://localhost:3000" });
+    test("should not hardcode deployment environment variables into the build", () => {
+        expect(nextConfig.env).toBeUndefined();
     });
 });

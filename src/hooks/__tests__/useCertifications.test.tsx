@@ -68,6 +68,32 @@ describe("certification hooks", () => {
             expect(result.current.isError).toBe(false);
         });
 
+        test("coerces serialized API dates into Date objects in the cache", async () => {
+            fetchMock.mockResolvedValueOnce(Response.json({
+                success: true,
+                data: [{
+                    ...mockCertifications[0],
+                    issueDate: "2025-01-01T00:00:00.000Z",
+                    expirationDate: "2027-01-01",
+                }],
+            }));
+            const { result } = renderHook(useCertifications, { wrapper: context.wrapper });
+            await waitFor(() => expect(result.current.isLoading).toBe(false));
+            expect(result.current.certifications[0]).toEqual(mockCertifications[0]);
+            expect(result.current.certifications[0].issueDate).toBeInstanceOf(Date);
+            expect(result.current.certifications[0].expirationDate).toBeInstanceOf(Date);
+        });
+
+        test.each(["issueDate", "expirationDate"])("exposes an invalid %s without returning corrupt data", async (field) => {
+            fetchMock.mockResolvedValueOnce(Response.json({
+                success: true, data: [{ ...mockCertifications[0], [field]: "invalid" }],
+            }));
+            const { result } = renderHook(useCertifications, { wrapper: context.wrapper });
+            await waitFor(() => expect(result.current.isError).toBe(true));
+            expect(result.current.error?.name).toBe("ZodError");
+            expect(result.current.certifications).toEqual([]);
+        });
+
         test.each([200, 503])("should expose unsuccessful responses with status %i without retrying", async (status) => {
             fetchMock.mockResolvedValueOnce(Response.json({ success: false, error: "Unavailable" }, { status }));
             const { result } = renderHook(useCertifications, { wrapper: context.wrapper });

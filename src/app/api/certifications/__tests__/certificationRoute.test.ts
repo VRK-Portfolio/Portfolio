@@ -16,9 +16,20 @@ describe("Certification API Routes", () => {
     });
 
     const mockCertifications: CertificationType[] = [
-        { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 1", issuer: "Issuer 1", issueDate: "2023-01-01", expirationDate: "2024-01-01", credentialID: "123", credentialURL: "http://example.com", skillsCoverd: ["Skill 1"] },
-        { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 2", issuer: "Issuer 2", issueDate: "2023-02-01", expirationDate: "2024-02-01", credentialID: "456", credentialURL: "http://example.com", skillsCoverd: ["Skill 2"] }
+        { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 1", issuer: "Issuer 1", issueDate: new Date("2023-01-01"), expirationDate: new Date("2024-01-01"), credentialID: "123", credentialURL: "http://example.com", skillsCoverd: ["Skill 1"] },
+        { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 2", issuer: "Issuer 2", issueDate: new Date("2023-02-01"), expirationDate: new Date("2024-02-01"), credentialID: "456", credentialURL: "http://example.com", skillsCoverd: ["Skill 2"] }
     ];
+    test("should cast existing date strings to Date objects", () => {
+        const certification = CertificationModel.hydrate({
+            ...mockCertifications[0],
+            issueDate: "2023-01-01",
+            expirationDate: "2024-01-01",
+        });
+
+        expect(certification.issueDate).toEqual(new Date("2023-01-01T00:00:00.000Z"));
+        expect(certification.expirationDate).toEqual(new Date("2024-01-01T00:00:00.000Z"));
+    });
+
     test("GET should preserve an Error instance message", async () => {
         vi.spyOn(CertificationModel, "find").mockRejectedValueOnce(new Error("Database unavailable"));
 

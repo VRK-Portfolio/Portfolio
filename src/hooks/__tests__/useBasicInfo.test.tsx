@@ -110,15 +110,17 @@ describe("useBasicInfo", () => {
         expect(result.current.basicInfo).toBeNull();
     });
 
-    test("should expose the query error when the API returns an empty array", async () => {
+    test("should return null without a query error when the API returns an empty array", async () => {
         const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
         fetchMock.mockResolvedValueOnce(successResponse([]));
         const { result } = renderHook(useBasicInfo, { wrapper: context.wrapper });
 
-        await waitFor(() => expect(result.current.isBasicInfoError).toBe(true));
+        await waitFor(() => expect(result.current.isBasicInfoLoading).toBe(false));
         expect(result.current.basicInfo).toBeNull();
-        expect(result.current.basicInfoError?.message).toContain("data is undefined");
-        expect(consoleError).toHaveBeenCalledWith(expect.stringContaining("Query data cannot be undefined"));
+        expect(result.current.isBasicInfoError).toBe(false);
+        expect(result.current.basicInfoError).toBeNull();
+        expect(context.queryClient.getQueryData(["basicInfo"])).toBeNull();
+        expect(consoleError).not.toHaveBeenCalled();
     });
 
     test("should recover from an error when refetch succeeds", async () => {
