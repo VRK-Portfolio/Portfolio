@@ -2,7 +2,7 @@ import { ApiPostResponse } from "@/@types/ApiResponse.types";
 import { ExperiencePropsSchema, ExperienceType } from "@/@types/Experience.types";
 import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
-import { Experience, ExperienceSchema } from "@/models/experience.model";
+import { Experience } from "@/models/experience.model";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 

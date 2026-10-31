@@ -5,41 +5,44 @@ import Card from "@/block/ui/card/Card";
 import { formatDate, truncateText } from "@/libs/utils";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { BlogType } from "@/@types/Blogs.types";
+import { BlogListingSchema, BlogListingType } from "@/@types/Blogs.types";
 import './recent-blogs.css';
 import { MoveUpRight } from "lucide-react";
 
 const RecentBlogsComponent = ({ maxCount, className }: { maxCount?: number, className?: string }) => {
-    const [blogs, setBlogs] = useState<BlogType[]>([]);
+    const [blogs, setBlogs] = useState<BlogListingType[]>([]);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchBlogs = async () => {
-        const response = await fetch('/api/blogs')
-        try {
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error('Failed to fetch blogs');
-            }
-            if (!data.success) {
-                throw new Error('Failed to fetch blogs');
-            }
-
-            if (maxCount !== undefined) {
-                setBlogs(data.data.slice(0, maxCount));
-            } else {
-                setBlogs(data.data);
-            }
-        } catch (error) {
-            setError('Failed to fetch blogs');
-        }
-    }
-
     useEffect(() => {
+        let active = true;
         const fetchData = async () => {
-            await fetchBlogs();
+            try {
+                const response = await fetch('/api/blogs');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch blogs');
+                }
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error('Failed to fetch blogs');
+                }
+                const listing = BlogListingSchema.array().parse(data.data);
+                if (active) {
+                    setBlogs(listing);
+                }
+            } catch (error) {
+                if (active) {
+                    console.error('Failed to fetch blogs:', error);
+                    setError('Failed to fetch blogs');
+                }
+            }
         }
         fetchData();
+        return () => {
+            active = false;
+        };
     }, []);
+
+    const visibleBlogs = maxCount === undefined ? blogs : blogs.slice(0, maxCount);
 
     if (error) {
         return (
@@ -54,27 +57,27 @@ const RecentBlogsComponent = ({ maxCount, className }: { maxCount?: number, clas
                 <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {blogs?.map(blog => (
-                        <Card Tag="article" key={blog.id}>
-                            <Card.Image imageUrl={blog.image_url} />
-                            <Card.Heading>{blog.title}</Card.Heading>
+                    {visibleBlogs.map(blog => (
+                        <Card Tag="article" key={blog._id ?? blog.slug}>
+                            {blog.coverImage && <Card.Image imageUrl={blog.coverImage} />}
+                            <Card.Heading Tag="h3">{blog.title}</Card.Heading>
                             <Card.Body>
                                 <div className="cmp-recent-blogs__technologies">
                                     <div className="cmp-recent-blogs__technologies-list">
-                                        {blog.technologies.map(tech => (
-                                            <Badge key={tech}>{tech}</Badge>
+                                        {blog.skills?.map(skill => (
+                                            <Badge key={skill._id}>{skill.name}</Badge>
                                         ))}
                                     </div>
                                     <div className="cmp-recent-blogs__publish-date">
-                                        {formatDate(blog.published_at)}
+                                        {blog.createdAt && formatDate(new Date(blog.createdAt))}
                                     </div>
                                 </div>
                                 <p>
-                                    {truncateText(blog.description)}
+                                    {truncateText(blog.content)}
                                 </p>
                             </Card.Body>
                             <Card.Footer>
-                                <Link className="cmp-recent-blogs__link-detail" href={`/blogs/${blog.id}`} target="_blank" rel="noopener noreferrer">
+                                <Link className="cmp-recent-blogs__link-detail" href={`/blogs/${blog.slug}`} target="_blank" rel="noopener noreferrer">
                                     Click Here
                                     <span>
                                         <MoveUpRight className="size-4" />
@@ -89,7 +92,7 @@ const RecentBlogsComponent = ({ maxCount, className }: { maxCount?: number, clas
                 <div className="cmp-recent-blogs__view-more">
                     {
                         maxCount !== undefined &&
-                        blogs.length >= maxCount && (
+                        blogs.length > maxCount && (
                             <Button >
                                 View More
                             </Button>

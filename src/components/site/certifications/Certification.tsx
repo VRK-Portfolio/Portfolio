@@ -7,10 +7,14 @@ import Link from "next/link";
 import {useCertifications, useDeleteCertifications} from "@/hooks/useCertifications";
 import Button from "@/block/ui/button/Button";
 import { formatDate } from "@/libs/utils";
+import CertificationLoading from "./loading";
 
 const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { className?: string, modalOpen?: (id?: string) => void, type?: 'admin' | 'site' }) => {
-    const { certifications } = useCertifications();
+    const { certifications, isLoading } = useCertifications();
     const { deleteCertification } = useDeleteCertifications();
+    if (isLoading) {
+        return <CertificationLoading />;
+    }
     return (
         <div className={`cmp-certification ${className} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
             <div className="container">

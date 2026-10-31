@@ -33,7 +33,7 @@ const ExperienceDetails = ({ experience }: { experience: ExperienceType}) => {
     )
 }
 export const MyExperienceComponent = ({ className = '', type = 'site', modalOpen }: { className?: string, type?: 'admin' | 'site', modalOpen?: (id?: string) => void }) => {
-    const { experienceList } = useGetExpericence();
+    const { experienceList, totalExperience } = useGetExpericence();
     const {deleteExperience} = useDeleteExperience();
 
     return (
@@ -57,7 +57,7 @@ export const MyExperienceComponent = ({ className = '', type = 'site', modalOpen
                             <div className="container pl-20!">
                                 <SectionHeading
                                     title="My Experience"
-                                    subtitle={`Full-Stack Developer with <strong>9 years of expertise</strong> in architecting scalable, efficient systems`}
+                                    subtitle={`Full-Stack Developer with <strong>${totalExperience}+ years of expertise</strong> in architecting scalable, efficient systems`}
                                 />
                             </div>
                         </>
