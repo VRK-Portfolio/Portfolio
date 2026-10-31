@@ -49,6 +49,16 @@ Position end dates are optional; marking a position as current clears its end
 date. Date inputs use `YYYY-MM-DD` and are submitted as UTC dates.
 Failed saves leave the form open with its values and an error message.
 
+## Blog data
+
+Blog creation uses `BlogsTypeSchema`: `title`, `slug`, `category`, and `content`
+are required. Optional fields include skill IDs, status, author, cover image,
+and string timestamps. The listing API populates skills as `{ _id, name }`
+objects, validated by `BlogListingSchema`.
+Recent blog cards use the slug for their links and display content previews,
+cover images, skill names, and creation dates when available. `maxCount` limits
+the displayed cards; View More appears only when additional records exist.
+
 ## Testing
 
 Run the unit test suite with `npm test -- --run`.

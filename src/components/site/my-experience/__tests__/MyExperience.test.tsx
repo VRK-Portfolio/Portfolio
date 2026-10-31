@@ -6,6 +6,7 @@ import { MyExperienceComponent } from "../MyExperience";
 
 const hooks = vi.hoisted(() => ({
     experienceList: [] as ExperienceType[],
+    totalExperience: 9,
     deleteExperience: vi.fn(),
 }));
 vi.mock("@/hooks/useExperience", () => ({
@@ -27,16 +28,24 @@ const experience: ExperienceType = {
 describe("MyExperienceComponent", () => {
     beforeEach(() => {
         hooks.experienceList = [experience];
+        hooks.totalExperience = 9;
         hooks.deleteExperience.mockReset();
     });
 
     test("renders the default site heading with formatted subtitle markup", () => {
         const { container } = render(<MyExperienceComponent />);
         expect(screen.getByRole("heading", { name: "My Experience", level: 2 })).toBeInTheDocument();
-        expect(container.querySelector("strong")).toHaveTextContent("9 years of expertise");
+        expect(container.querySelector("strong")).toHaveTextContent("9+ years of expertise");
         expect(container.querySelector("section")).toHaveClass("cmp-my-experience");
         expect(container.querySelector("section")).not.toHaveClass("cmp-admin__type");
         expect(screen.queryByRole("button")).not.toBeInTheDocument();
+    });
+
+    test("updates the experience subtitle when the query total changes", () => {
+        const { container, rerender } = render(<MyExperienceComponent />);
+        hooks.totalExperience = 12;
+        rerender(<MyExperienceComponent />);
+        expect(container.querySelector("strong")).toHaveTextContent("12+ years of expertise");
     });
 
     test("renders company details, responsibilities, positions and UTC date ranges", () => {

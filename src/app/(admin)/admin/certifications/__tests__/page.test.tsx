@@ -15,7 +15,8 @@ describe("Admin certifications page", () => {
     test("should render the certification screen and load its admin content", async () => {
         renderWithQueryClient(<Certifications />);
 
-        expect(screen.getByRole("heading", { name: "Admin View of Certifications" })).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: "Admin View of Certifications" })).not.toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: "Admin View of Certifications" })).toBeInTheDocument();
         expect(await screen.findByRole("heading", { name: mockCertifications[0].title })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Add Certification" })).toBeEnabled();
         expect(screen.queryByRole("dialog", { hidden: true })).not.toBeInTheDocument();

@@ -66,6 +66,7 @@ describe("ExperienceScreen", () => {
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
         await user.click(screen.getByRole("button", { name: "Edit" }));
         const editForm = within(screen.getByRole("dialog", { name: "Edit Experience" }));
+        await waitFor(() => expect(queryClient.isFetching({ queryKey: ["experience"] })).toBe(0));
         expect(editForm.getByLabelText("Start Date 1")).toHaveValue("2024-02-29");
         expect(editForm.getByRole("checkbox", { name: "Current position 1" })).toBeChecked();
         await user.clear(editForm.getByRole("textbox", { name: "Company" }));

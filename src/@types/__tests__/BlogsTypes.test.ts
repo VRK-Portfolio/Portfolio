@@ -1,52 +1,75 @@
 import { describe, expect, test } from "vitest";
-import { BlogSchema, BlogType } from "../Blogs.types";
-import z from "zod";
+import { BlogListingSchema, BlogsTypeSchema } from "../Blogs.types";
+import { mockBlogListingData } from "@/mocks/recent-blogs";
 
-describe("Blogs Types", () => {
+const blog = {
+    title: "Type-safe React",
+    slug: "type-safe-react",
+    category: "Frontend",
+    content: "Building reliable React applications.",
+};
 
-    const validBlogType: BlogType[] = [
-        {
+describe("blog schemas", () => {
+    test("accepts the updated creation fields and supplies default status and author", () => {
+        expect(BlogsTypeSchema.parse(blog)).toEqual({
+            ...blog,
+            status: "draft",
+            author: "Vijay Rameshkumar",
+        });
+    });
+
+    test("accepts optional IDs, skill references, images, and string timestamps", () => {
+        const data = {
+            ...blog,
+            _id: "507f1f77bcf86cd799439011",
+            skills: ["507f1f77bcf86cd799439021"],
+            status: "published",
+            author: "Example Author",
+            coverImage: "/images/blog.png",
+            createdAt: "2026-10-31T00:00:00.000Z",
+            updatedAt: "2026-10-31T01:00:00.000Z",
+        };
+        expect(BlogsTypeSchema.parse(data)).toEqual(data);
+    });
+
+    test.each(["title", "slug", "category", "content"] as const)("rejects a missing required %s", (field) => {
+        const { [field]: omitted, ...incomplete } = blog;
+        expect(omitted).toBeDefined();
+        expect(BlogsTypeSchema.safeParse(incomplete).success).toBe(false);
+    });
+
+    test.each([
+        { status: "archived" },
+        { skills: [42] },
+        { createdAt: new Date() },
+        { coverImage: 42 },
+    ])("rejects invalid updated fields: %j", (invalid) => {
+        expect(BlogsTypeSchema.safeParse({ ...blog, ...invalid }).success).toBe(false);
+    });
+
+    test("validates populated listing skills while keeping creation skill IDs distinct", () => {
+        expect(BlogListingSchema.array().parse(mockBlogListingData)).toEqual(mockBlogListingData);
+        expect(BlogsTypeSchema.safeParse(mockBlogListingData[0]).success).toBe(false);
+        expect(BlogListingSchema.safeParse({
+            ...blog, skills: ["507f1f77bcf86cd799439021"],
+        }).success).toBe(false);
+        expect(BlogListingSchema.safeParse({
+            ...blog, skills: [{ _id: "507f1f77bcf86cd799439021" }],
+        }).success).toBe(false);
+    });
+
+    test("accepts an empty blog list", () => {
+        expect(BlogListingSchema.array().parse([])).toEqual([]);
+    });
+
+    test("rejects the old blog shape instead of accepting missing new fields", () => {
+        expect(BlogsTypeSchema.safeParse({
             id: 1,
-            title: "Blog 1",
-            description: "This is a blog post",
-            image_url: "https://example.com/image1.jpg",
-            technologies: ["Tech 1", "Tech 2"],
+            title: "Old Blog",
+            description: "Old description",
+            image_url: "/images/blog.png",
+            technologies: ["React"],
             published_at: new Date(),
-        }
-    ];
-test("valid project should have correct structure", () => {
-        const projectList = validBlogType;
-        const blogsListSchema = z.array(BlogSchema);
-        const response = blogsListSchema.parse(projectList);
-        expect(response).toEqual(projectList);
-    });
-
-    test("invalid project should throw an error", () => {
-        const invalidProject = [{
-            id: "not-a-number",
-            title: "Blog 1",
-            technologies: ["Tech 1", "Tech 2"],
-            description: "This is a blog post",
-            image_url: "https://example.com/image1.jpg"
-        }];
-        const blogsListSchema = z.array(BlogSchema);
-        expect(() => blogsListSchema.parse(invalidProject)).toThrow();
-    });
-
-    test("empty project list should be valid", () => {
-        const emptyProjectList: BlogType[] = [];
-        const blogsListSchema = z.array(BlogSchema);
-        const response = blogsListSchema.parse(emptyProjectList);
-        expect(response).toEqual(emptyProjectList);
-    });
-
-    test("project list with missing fields should throw an error", () => {
-        const incompleteProject = [{
-            id: 1,
-            title: "Blog 1",
-            technologies: ["Tech 1", "Tech 2"]
-        }];
-        const blogsListSchema = z.array(BlogSchema);
-        expect(() => blogsListSchema.parse(incompleteProject)).toThrow();
+        }).success).toBe(false);
     });
 });

@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 
-import { http, HttpResponse } from 'msw';
-import { mockBlogListingData } from '@/mocks/recent-blogs';
+import { handlers } from '@/mocks/recent-blogs';
 import RecentBlogs from './recent-blogs';
 
 const meta = {
@@ -18,16 +17,7 @@ export const Default: Story = {
   },
   parameters: {
     msw: {
-      handlers: [
-        // 👈 Use wildcard '*/api/basic-info' without the '/mock' prefix
-        http.get('*/api/blogs', () => {
-          return HttpResponse.json({
-            data: mockBlogListingData,
-            success: true,
-            message: 'Fetched blog listing successfully',
-          });
-        }),
-      ],
+      handlers,
     },
   },
 };

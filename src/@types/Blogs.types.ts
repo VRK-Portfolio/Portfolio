@@ -15,3 +15,12 @@ export const BlogsTypeSchema = z.object({
 })
 
 export type BlogType = z.infer<typeof BlogsTypeSchema>;
+
+export const BlogListingSchema = BlogsTypeSchema.extend({
+    skills: z.array(z.object({
+        _id: z.string(),
+        name: z.string(),
+    })).optional(),
+});
+
+export type BlogListingType = z.infer<typeof BlogListingSchema>;
