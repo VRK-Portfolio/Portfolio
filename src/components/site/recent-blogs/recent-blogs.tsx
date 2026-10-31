@@ -54,7 +54,7 @@ const RecentBlogsComponent = ({ maxCount, className }: { maxCount?: number, clas
                 <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {blogs?.map(blog => (
+                    {/* {blogs?.map(blog => (
                         <Card Tag="article" key={blog.id}>
                             <Card.Image imageUrl={blog.image_url} />
                             <Card.Heading>{blog.title}</Card.Heading>
@@ -83,7 +83,7 @@ const RecentBlogsComponent = ({ maxCount, className }: { maxCount?: number, clas
                                 </Link>
                             </Card.Footer>
                         </Card>
-                    ))}
+                    ))} */}
                 </div>
 
                 <div className="cmp-recent-blogs__view-more">

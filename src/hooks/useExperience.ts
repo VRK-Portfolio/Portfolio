@@ -14,7 +14,13 @@ export const useGetExpericence = () => {
             if (!data.success) {
                 throw new Error('Failed to fetch experience');
             }
-            return ExperiencePropsSchema.array().parse(data.data);
+            return ExperiencePropsSchema.array().parse(data.data.sort((a, b) => {
+                const aStart = new Date(a.positions[0]?.startDate || 0);
+                const bStart = new Date(b.positions[0]?.startDate || 0);
+                a.positions.sort((x, y) => new Date(y.startDate).getTime() - new Date(x.startDate).getTime());
+                b.positions.sort((x, y) => new Date(y.startDate).getTime() - new Date(x.startDate).getTime());
+                return bStart.getTime() - aStart.getTime();
+            }));
         }
     })
 
@@ -31,11 +37,9 @@ export const useGetExpericence = () => {
                 total += (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
             });
         });
-        console.log('Total experience in months:', Math.round((total/12)));
         return Math.round((total/12)); 
     }
 
-    totalExperience();
     return {
         experienceList: query.data || [],
         isLoading: query.isLoading,
