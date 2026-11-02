@@ -1,9 +1,10 @@
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterAll, afterEach, beforeAll, describe, expect, test, vi } from "vitest";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
 import { handlers, mockBlogListingData } from "@/mocks/recent-blogs";
 import RecentBlogsComponent from "../recent-blogs";
+import { renderWithQueryClient as render } from "@/tests/tan-query";
 
 const server = setupServer(...handlers);
 
@@ -16,8 +17,9 @@ describe("Recent Blogs Component", () => {
     });
     afterAll(() => server.close());
 
-    test("renders its section heading and custom styling", () => {
+    test("renders its section heading and custom styling", async () => {
         const { container } = render(<RecentBlogsComponent className="custom-blogs" />);
+        await screen.findByRole("heading", { name: "Recent Blogs", level: 2 });
         expect(container.querySelector("section")).toHaveClass("cmp-recent-blogs", "custom-blogs");
         expect(screen.getByRole("heading", { name: "Recent Blogs", level: 2 })).toBeInTheDocument();
     });
@@ -104,20 +106,39 @@ describe("Recent Blogs Component", () => {
         { name: "API failure", response: () => HttpResponse.json({ success: false }, { status: 200 }) },
         { name: "malformed JSON", response: () => new HttpResponse("{") },
         { name: "invalid schema", response: () => HttpResponse.json({ success: true, data: [{ title: "Incomplete" }] }) },
-    ])("reports and logs $name", async ({ response }) => {
-        const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    ])("reports $name", async ({ response }) => {
         server.use(http.get("*/api/blogs", response));
         render(<RecentBlogsComponent />);
-        expect(await screen.findByText("Failed to fetch blogs")).toBeInTheDocument();
-        expect(log).toHaveBeenCalledWith("Failed to fetch blogs:", expect.any(Error));
+        expect(await screen.findByRole("alert")).not.toBeEmptyDOMElement();
         expect(screen.queryByRole("article")).not.toBeInTheDocument();
     });
 
     test("reports network rejections rather than leaving an unhandled promise", async () => {
-        const log = vi.spyOn(console, "error").mockImplementation(() => {});
         vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("Offline")));
         render(<RecentBlogsComponent />);
-        expect(await screen.findByText("Failed to fetch blogs")).toBeInTheDocument();
-        expect(log).toHaveBeenCalledWith("Failed to fetch blogs:", new TypeError("Offline"));
+        expect(await screen.findByRole("alert")).toHaveTextContent("Offline");
+    });
+
+    test("passes the selected blog ID to distinct edit and delete actions", async () => {
+        const modalOpen = vi.fn();
+        const onDelete = vi.fn();
+        render(<RecentBlogsComponent type="admin" modalOpen={modalOpen} onDelete={onDelete} />);
+        await screen.findByRole("heading", { name: "Blog 1" });
+        fireEvent.click(screen.getByRole("button", { name: "New Blog" }));
+        expect(modalOpen).toHaveBeenCalledExactlyOnceWith();
+        const card = within(screen.getAllByRole("article")[1]);
+        fireEvent.click(card.getByRole("button", { name: "Edit Blog" }));
+        expect(modalOpen).toHaveBeenLastCalledWith(mockBlogListingData[1]._id);
+        fireEvent.click(card.getByRole("button", { name: "Delete Blog" }));
+        expect(onDelete).toHaveBeenCalledExactlyOnceWith(mockBlogListingData[1]._id);
+        expect(modalOpen).toHaveBeenCalledTimes(2);
+    });
+
+    test("shows deletion progress and failures without losing the cards", async () => {
+        render(<RecentBlogsComponent type="admin" isDeleting deletingId={mockBlogListingData[0]._id} onDelete={vi.fn()} deleteError="Could not delete blog" />);
+        await screen.findByRole("heading", { name: "Blog 1" });
+        expect(screen.getByRole("button", { name: "Deleting..." })).toBeDisabled();
+        expect(screen.getAllByRole("button", { name: "Delete Blog" }).every(button => button.hasAttribute("disabled"))).toBe(true);
+        expect(screen.getByRole("alert")).toHaveTextContent("Could not delete blog");
     });
 });

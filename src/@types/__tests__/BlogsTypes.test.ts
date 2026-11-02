@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { BlogListingSchema, BlogsTypeSchema } from "../Blogs.types";
+import { BlogListingSchema, BlogsTypeSchema, BlogWriteSchema } from "../Blogs.types";
 import { mockBlogListingData } from "@/mocks/recent-blogs";
 
 const blog = {
@@ -60,6 +60,20 @@ describe("blog schemas", () => {
 
     test("accepts an empty blog list", () => {
         expect(BlogListingSchema.array().parse([])).toEqual([]);
+    });
+
+    test("normalizes writes and excludes client-supplied identity and timestamps", () => {
+        expect(BlogWriteSchema.parse({
+            ...blog, title: "  Type-safe React  ", _id: "client-id", createdAt: "client-date", updatedAt: "client-date",
+        })).toEqual({ ...blog, skills: [], status: "draft", author: "Vijay Rameshkumar" });
+    });
+
+    test.each(["", " ", "<p></p>", "<p><br></p>", "<p>&nbsp;</p>"])("rejects empty editor content %j", content => {
+        expect(BlogWriteSchema.safeParse({ ...blog, content }).success).toBe(false);
+    });
+
+    test.each(['<p><img src="https://example.com/image.png"></p>', "<table><tr><td></td></tr></table>"])("accepts structured content %s", content => {
+        expect(BlogWriteSchema.safeParse({ ...blog, content }).success).toBe(true);
     });
 
     test("rejects the old blog shape instead of accepting missing new fields", () => {

@@ -4,60 +4,67 @@ import Button from "@/block/ui/button/Button";
 import Card from "@/block/ui/card/Card";
 import { formatDate, truncateText } from "@/libs/utils";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { BlogListingSchema, BlogListingType } from "@/@types/Blogs.types";
 import './recent-blogs.css';
 import { MoveUpRight } from "lucide-react";
+import { useBlogListing } from "@/hooks/useBlogListing";
 
-const RecentBlogsComponent = ({ maxCount, className }: { maxCount?: number, className?: string }) => {
-    const [blogs, setBlogs] = useState<BlogListingType[]>([]);
-    const [error, setError] = useState<string | null>(null);
+interface RecentBlogsProps {
+    maxCount?: number;
+    className?: string;
+    type?: 'site' | 'admin';
+    modalOpen?: (id?: string) => void;
+    onDelete?: (id: string) => void;
+    isDeleting?: boolean;
+    deletingId?: string;
+    deleteError?: string;
+}
 
-    useEffect(() => {
-        let active = true;
-        const fetchData = async () => {
-            try {
-                const response = await fetch('/api/blogs');
-                if (!response.ok) {
-                    throw new Error('Failed to fetch blogs');
-                }
-                const data = await response.json();
-                if (!data.success) {
-                    throw new Error('Failed to fetch blogs');
-                }
-                const listing = BlogListingSchema.array().parse(data.data);
-                if (active) {
-                    setBlogs(listing);
-                }
-            } catch (error) {
-                if (active) {
-                    console.error('Failed to fetch blogs:', error);
-                    setError('Failed to fetch blogs');
-                }
-            }
-        }
-        fetchData();
-        return () => {
-            active = false;
-        };
-    }, []);
-
-    const visibleBlogs = maxCount === undefined ? blogs : blogs.slice(0, maxCount);
-
-    if (error) {
+const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, onDelete, isDeleting = false, deletingId, deleteError }: RecentBlogsProps) => {
+    const { blogs, isLoading, isError, error } = useBlogListing();
+    if (isLoading) {
         return (
             <section className="cmp-recent-blogs">
-                <p className="cmp-recent-blogs__error">{error}</p>
+                <p>Loading...</p>
+            </section>
+        );
+    }
+
+    const visibleBlogs = maxCount === undefined ? blogs : blogs && blogs.slice(0, maxCount);
+
+    if (isError) {
+        return (
+            <section className="cmp-recent-blogs">
+                <p role="alert" className="cmp-recent-blogs__error">{error?.message}</p>
             </section>
         );
     }
     return (
-        <section className={`cmp-recent-blogs ${className ?? ''}`}>
+        <section className={`cmp-recent-blogs ${className ?? ''} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
             <div className="container">
-                <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
 
+                {
+                    type === 'admin' ? (
+                        <>
+                            <div className="container">
+                                <div className="cmp-admin__heading-actions">
+                                    <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
+                                    <Button variant="primary" className='cmp-my-skills__add-skill w-40' onClick={() => modalOpen?.()}>New Blog</Button>
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="container pl-20!">
+                                <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
+                            </div>
+                        </>
+                    )
+                }
+
+
+                {type === 'admin' && deleteError && <p role="alert" className="mb-4 text-red-500">{deleteError}</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {visibleBlogs.map(blog => (
+                    {visibleBlogs && visibleBlogs.map(blog => (
                         <Card Tag="article" key={blog._id ?? blog.slug}>
                             {blog.coverImage && <Card.Image imageUrl={blog.coverImage} />}
                             <Card.Heading Tag="h3">{blog.title}</Card.Heading>
@@ -73,7 +80,7 @@ const RecentBlogsComponent = ({ maxCount, className }: { maxCount?: number, clas
                                     </div>
                                 </div>
                                 <p>
-                                    {truncateText(blog.content)}
+                                    {truncateText(blog.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim())}
                                 </p>
                             </Card.Body>
                             <Card.Footer>
@@ -84,6 +91,20 @@ const RecentBlogsComponent = ({ maxCount, className }: { maxCount?: number, clas
                                         <span className="sr-only">View Blog in new tab</span>
                                     </span>
                                 </Link>
+
+
+                {
+                    type === 'admin' ? (
+                        <>
+                        <div className="cmp-admin__blog-actions mt-3 inline-flex gap-2 w-full">
+                            <Button variant="primary" outline className='cmp-my-skills__add-skill w-40' disabled={!blog._id || !modalOpen} onClick={() => modalOpen?.(blog._id)}>Edit Blog</Button>
+                            <Button variant="danger" outline className='cmp-my-skills__add-skill w-40' disabled={!blog._id || !onDelete || isDeleting} onClick={() => blog._id && onDelete?.(blog._id)}>
+                                {isDeleting && deletingId === blog._id ? 'Deleting...' : 'Delete Blog'}
+                            </Button>
+                        </div>
+                        </>
+                    ) : null
+                }
                             </Card.Footer>
                         </Card>
                     ))}
@@ -92,7 +113,7 @@ const RecentBlogsComponent = ({ maxCount, className }: { maxCount?: number, clas
                 <div className="cmp-recent-blogs__view-more">
                     {
                         maxCount !== undefined &&
-                        blogs.length > maxCount && (
+                        blogs && blogs.length > maxCount && (
                             <Button >
                                 View More
                             </Button>

@@ -12,4 +12,4 @@ const certificationSchema = new Schema<CertificationType>({
 });
 
 
-export const CertificationModel: Model<CertificationType> = mongoose.models.Certification || model<CertificationType>('certification', certificationSchema);
+export const CertificationModel: Model<CertificationType> = mongoose.models.Certification || model<CertificationType>('Certification', certificationSchema);

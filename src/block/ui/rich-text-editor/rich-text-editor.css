@@ -1,0 +1,93 @@
+@reference "../../../app/styles/globals.css";
+
+@layer components {
+    .rich-text-editor {
+        @apply mb-4 overflow-hidden rounded-lg border border-gray-300 bg-white text-gray-800;
+        @apply dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100;
+
+        &:focus-within {
+            @apply border-blue-500;
+        }
+
+        .rich-text-editor__toolbar {
+            @apply flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50 p-2;
+            @apply dark:border-gray-700 dark:bg-gray-800;
+        }
+
+        .rich-text-editor__group {
+            @apply flex flex-wrap gap-1 border-l border-gray-300 pl-1;
+            @apply dark:border-gray-600;
+        }
+
+        button, select {
+            @apply h-9 rounded-md px-2;
+            @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500;
+            @apply disabled:cursor-not-allowed disabled:opacity-40;
+        }
+
+        button {
+            @apply flex w-9 items-center justify-center;
+            @apply enabled:hover:bg-gray-200 dark:enabled:hover:bg-gray-700;
+        }
+
+        button[aria-pressed="true"] {
+            @apply bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300;
+        }
+
+        select {
+            @apply max-w-full border border-gray-300 bg-white px-2 text-sm;
+            @apply dark:border-gray-600 dark:bg-gray-900;
+        }
+
+        .rich-text-editor__images {
+            @apply fixed inset-auto m-0 w-80 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-2rem)] overflow-y-auto;
+            @apply gap-3 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800 shadow-xl;
+            @apply dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100;
+            position-area: bottom span-left;
+            position-try-fallbacks: flip-inline, flip-block, flip-block flip-inline;
+            margin-block: 0.5rem;
+
+            &:popover-open { @apply grid; }
+
+            label { @apply grid gap-1 font-medium; }
+            input {
+                @apply w-full min-w-0 rounded-md border border-gray-300 bg-white p-2;
+                @apply focus-visible:outline-2 focus-visible:outline-blue-500;
+                @apply disabled:opacity-40 dark:border-gray-600 dark:bg-gray-900;
+            }
+            input[type="file"] { @apply file:mr-3 file:font-medium; }
+            button { @apply w-auto justify-self-start border border-gray-300 dark:border-gray-600; }
+        }
+
+        .rich-text-editor__image-hint { @apply text-gray-500 dark:text-gray-400; }
+        .rich-text-editor__image-error { @apply text-red-600 dark:text-red-400; }
+
+        .rich-text-editor__content {
+            @apply min-h-60 max-h-[60dvh] overflow-y-auto overscroll-contain p-4 leading-relaxed outline-none;
+            overflow-wrap: anywhere;
+
+            > * + * { @apply mt-3; }
+            h1 { @apply text-3xl font-bold; }
+            h2 { @apply text-2xl font-bold; }
+            h3 { @apply text-xl font-semibold; }
+            h4 { @apply text-lg font-semibold; }
+            h5 { @apply text-base font-semibold; }
+            h6 { @apply text-sm font-semibold; }
+            ul { @apply list-disc pl-6; }
+            ol { @apply list-decimal pl-6; }
+            blockquote { @apply border-l-4 border-gray-300 pl-4 italic dark:border-gray-600; }
+            code { @apply rounded bg-gray-100 px-1 font-mono text-sm dark:bg-gray-800; }
+            pre { @apply overflow-x-auto rounded-md bg-gray-100 p-3 dark:bg-gray-800; }
+            pre code { @apply bg-transparent p-0; }
+            hr { @apply my-4 border-gray-300 dark:border-gray-600; }
+            img { @apply h-auto max-w-full rounded-md; }
+            img.ProseMirror-selectednode { @apply outline-2 outline-blue-500; }
+            .tableWrapper { @apply overflow-x-auto; }
+            table { @apply w-full border-collapse; }
+            th, td { @apply relative min-w-24 border border-gray-300 p-2 align-top dark:border-gray-600; }
+            th { @apply bg-gray-100 text-left font-semibold dark:bg-gray-800; }
+            th > p, td > p { @apply m-0; }
+            .selectedCell::after { @apply pointer-events-none absolute inset-0 bg-blue-500/15; }
+        }
+    }
+}

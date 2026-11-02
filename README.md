@@ -59,6 +59,51 @@ Recent blog cards use the slug for their links and display content previews,
 cover images, skill names, and creation dates when available. `maxCount` limits
 the displayed cards; View More appears only when additional records exist.
 
+The admin blog form supports creating and editing title, URL slug, category,
+author, cover image upload, draft/published status, skill references, and rich-text
+content. A slug is suggested from the title when the slug is empty. Image
+uploads must finish before saving. Save failures keep the form and its content
+open; successful creates, updates, and deletions refresh the listing.
+Edit and Delete act on the selected blog ID; Delete removes it immediately.
+Cover files upload through `/api/upload`; the returned persistent URL is saved
+as `coverImage`. The form previews the uploaded or existing image. Editing
+preserves the current cover unless a replacement upload succeeds or Remove
+cover image is selected. Failed uploads block saving until retried or explicitly
+discarded.
+
+Blog writes require authentication: `POST /api/blogs` creates a blog, while
+`PUT /api/blogs/[id]` updates it and `DELETE /api/blogs/[id]` deletes it.
+`BlogWriteSchema` validates nonempty fields/content, URL-safe slugs, skill IDs,
+and optional cover image URLs or root-relative paths. Identity and timestamps
+cannot be overwritten by the form: the server generates creation/update
+timestamps and preserves the original creation timestamp when editing.
+Invalid input returns HTTP 400, unauthenticated writes return HTTP 401, and
+missing update/delete targets return HTTP 404.
+
+## Image uploads
+
+`POST /api/upload` stores SVG, PNG, JPG, and WebP images in public Vercel Blob
+storage. Blog covers, the rich text editor, profile images, and skill icons use
+this endpoint.
+
+For local development:
+
+1. Create or open a public Blob store in your Vercel project's Storage settings.
+2. Obtain a read/write token for that store and add it to the existing
+   `.env.local` file as `BLOB_READ_WRITE_TOKEN=<your-token>`. Preserve the other
+   environment variables.
+3. Restart `npm run dev`, then retry the upload.
+
+Keep the token server-side: never use a `NEXT_PUBLIC_` prefix, commit it, or
+share it in chat. Environment files are already ignored by Git.
+
+Vercel deployments can also use a valid `VERCEL_OIDC_TOKEN` together with
+`BLOB_STORE_ID`. OIDC tokens expire; a copied token in `.env.local` is not a
+permanent local credential. Refresh the OIDC credentials through your Vercel
+setup, or use a store read/write token for local development.
+If the SDK cannot find usable credentials, the endpoint returns HTTP 503 with
+setup guidance. Failed uploads do not insert an image into the editor.
+
 ## Testing
 
 Run the unit test suite with `npm test -- --run`.

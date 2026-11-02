@@ -1,10 +1,13 @@
 // @vitest-environment node
 
-import { put } from "@vercel/blob";
+import { BlobError, put } from "@vercel/blob";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { POST } from "../route";
 
-vi.mock("@vercel/blob", () => ({ put: vi.fn() }));
+vi.mock("@vercel/blob", async importOriginal => ({
+    ...await importOriginal<typeof import("@vercel/blob")>(),
+    put: vi.fn(),
+}));
 
 describe("POST /api/upload", () => {
     const timestamp = 1700000000000;
@@ -111,6 +114,22 @@ describe("POST /api/upload", () => {
         expect(await response.json()).toEqual({ error: "File upload failed: Invalid multipart body" });
         expect(consoleError).toHaveBeenCalledExactlyOnceWith("Invalid multipart body");
         expect(put).not.toHaveBeenCalled();
+    });
+
+    test("reports unusable Blob credentials as a configuration error", async () => {
+        const error = new BlobError('No blob credentials found. Pass a `token` option, set `BLOB_READ_WRITE_TOKEN`, or use OIDC.');
+        const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+        vi.mocked(put).mockRejectedValueOnce(error);
+
+        const response = await POST(createRequest(new File([fileContents], "icon.png", { type: "image/png" })));
+
+        expect(response.status).toBe(503);
+        expect(await response.json()).toEqual({
+            success: false,
+            error: 'Image uploads need valid Vercel Blob credentials. Set BLOB_READ_WRITE_TOKEN on the server, or refresh Vercel OIDC credentials with BLOB_STORE_ID. Restart the development server after changing environment variables.',
+        });
+        expect(consoleError).toHaveBeenCalledExactlyOnceWith(error.message);
+        expect(put).toHaveBeenCalledTimes(1);
     });
 
     test.each([
