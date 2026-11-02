@@ -1,4 +1,4 @@
-import { put } from "@vercel/blob";
+import { BlobError, put } from "@vercel/blob";
 import { NextResponse } from "next/server";
 
 const ALLOWED_MIME_TYPES = [
@@ -38,7 +38,12 @@ export async function POST(req: Request) {
         
     } catch (error: unknown) {
         const err = error instanceof Error ? error.message : String(error);
-        console.error(err);
+        if (error instanceof BlobError && err.includes('No blob credentials found.')) {
+            return NextResponse.json({
+                success: false,
+                error: 'Image uploads need valid Vercel Blob credentials. Set BLOB_READ_WRITE_TOKEN on the server, or refresh Vercel OIDC credentials with BLOB_STORE_ID. Restart the development server after changing environment variables.',
+            }, { status: 503 });
+        }
         return NextResponse.json({ error: `File upload failed: ${err}` }, { status: 500 });
     }
 }

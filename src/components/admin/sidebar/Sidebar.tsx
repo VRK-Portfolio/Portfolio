@@ -9,6 +9,7 @@ import Button from "@/block/ui/button/Button";
 import './sidebar.css';
 import {useCertifications} from "@/hooks/useCertifications";
 import { useGetExpericence } from "@/hooks/useExperience";
+import { useBlogListing } from "@/hooks/useBlogListing";
 
 const SIDEBAR_MENU: SidebarType[] = [{
     title: "MAIN",
@@ -55,7 +56,7 @@ const SIDEBAR_MENU: SidebarType[] = [{
             href: "/admin/blogs",
             icon: BookOpen,
             text: "Blog Articles",
-            badge: "5 Articles"
+            badge: "{{blogCount}} Blogs"
         },
         {
             href: "/admin/Whitepapers",
@@ -78,6 +79,8 @@ const Sidebar = ({className = ''}: {className?: string}) => {
     const { skillsCount } = useSkills();
     const {certificationCount} = useCertifications();
     const { totalExperience } = useGetExpericence();
+
+    const { blogCount } = useBlogListing();
     const toggleCollapse = () => {
         setCollapsed(!collapsed);
     };
@@ -97,10 +100,13 @@ const Sidebar = ({className = ''}: {className?: string}) => {
                 if(item.badge?.includes("{{experienceCount}}")) {
                     return { ...item, badge: `Exper ${totalExperience} Yrs` };
                 }
+                if(item.badge?.includes("{{blogCount}}")) {
+                    return { ...item, badge: `${blogCount} Blogs` };
+                }
                 return item;
             }),
             }));
-    }, [skillsCount, certificationCount, totalExperience]);
+    }, [skillsCount, certificationCount, totalExperience, blogCount]);
 
     return (
         <>

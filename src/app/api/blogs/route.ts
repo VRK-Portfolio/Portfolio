@@ -1,5 +1,5 @@
 import { ApiGetResponse, ApiPostResponse } from "@/@types/ApiResponse.types";
-import { BlogsTypeSchema, BlogType, BlogListingType } from "@/@types/Blogs.types";
+import { BlogWriteSchema, BlogListingType } from "@/@types/Blogs.types";
 import mongoose from "mongoose";
 import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
@@ -8,26 +8,19 @@ import { NextResponse } from "next/server";
 
 export const POST = withAuth(async (req: Request):Promise<NextResponse<ApiPostResponse>> => {
     try {
-        const body: BlogType = await req.json();
-
-        const isValid = BlogsTypeSchema.safeParse(body);
+        const isValid = BlogWriteSchema.safeParse(await req.json());
         if (!isValid.success) {
             return NextResponse.json({ success: false, error: 'Invalid request body', errors: isValid.error.issues.map(issue => ({ field: issue.path.join('.'), message: issue.message })) }, { status: 400 });
         }
-        if (!body) {
-            return NextResponse.json({ success: false, error: 'Request body is required' }, { status: 400 });
-        }
-
-        body.skills?.forEach(skill => {
-            if (typeof skill !== 'string' || !skill || !mongoose.Types.ObjectId.isValid(skill)) {
-                throw new Error('Invalid skill ID');
-            }
-        });
         await connectDB();
-        await BlogModel.create(body);
+        const now = new Date().toISOString();
+        await BlogModel.create({ ...isValid.data, createdAt: now, updatedAt: now });
         return NextResponse.json({ success: true, message: 'Blog created successfully' }, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ success: false, error: (error as Error).message }, { status: 500 });
+        return NextResponse.json({
+            success: false,
+            error: error instanceof SyntaxError ? 'Invalid request body' : error instanceof Error ? error.message : 'Failed to create blog',
+        }, { status: error instanceof SyntaxError ? 400 : 500 });
     }
 });
 

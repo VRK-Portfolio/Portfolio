@@ -38,6 +38,8 @@ describe("Blog API routes", () => {
         expect(saved.content).toBe(blog.content);
         expect(saved.status).toBe("draft");
         expect(saved.author).toBe("Vijay Rameshkumar");
+        expect(saved.createdAt).toEqual(expect.any(String));
+        expect(saved.updatedAt).toBe(saved.createdAt);
     });
 
     test("lists populated skill names and serialized document IDs", async () => {
@@ -89,8 +91,11 @@ describe("Blog API routes", () => {
 
     test("checks referenced skill IDs before database access", async () => {
         const response = await POST(createRequest({ ...blog, skills: ["invalid"] }), context);
-        expect(response.status).toBe(500);
-        expect(await response.json()).toEqual({ success: false, error: "Invalid skill ID" });
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+            success: false, error: "Invalid request body",
+            errors: [{ field: "skills.0", message: "Invalid skill ID" }],
+        });
         expect(connectDB).not.toHaveBeenCalled();
     });
 
