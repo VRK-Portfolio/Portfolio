@@ -29,8 +29,9 @@ export const GET = async (req: Request): Promise<NextResponse<ApiGetResponse<Blo
     try {
 
         await connectDB();
-        if (req.headers.get("X-Recent")?.trim() !== "") {
-            const blogs = await BlogModel.find({slug: { $ne: req.headers.get("X-Recent") }}).sort({ createdAt: -1 }).limit(3).populate<{
+        const recentSlug = req.headers.get("X-Recent")?.trim();
+        if (recentSlug) {
+            const blogs = await BlogModel.find({slug: { $ne: recentSlug }}).sort({ createdAt: -1 }).limit(3).populate<{
                 skills: { _id: mongoose.Types.ObjectId; name: string }[];
             }>({ path: 'skills', select: 'name' }).lean();
             const data: BlogListingType[] = blogs.map(blog => ({

@@ -34,7 +34,7 @@ describe("Admin blog CRUD workflows", () => {
             if (url === "/api/upload") {
                 return Response.json({ fileUrl: "https://portfolio.public.blob.vercel-storage.com/uploads/cover.png" });
             }
-            if (url === "/api/blogs" && !init?.method) {
+            if (url === "/api/blogs" && (!init?.method || init.method === "GET")) {
                 return Response.json({ success: true, data: remote });
             }
             if (init?.method === "DELETE") {
@@ -96,7 +96,7 @@ describe("Admin blog CRUD workflows", () => {
         await user.click(screen.getByRole("button", { name: "Delete Blog" }));
         await waitFor(() => expect(screen.queryByRole("article")).not.toBeInTheDocument());
         expect(remote).toEqual([]);
-        const writes = fetchMock.mock.calls.filter(([url, init]) => init?.method && url !== "/api/upload");
+        const writes = fetchMock.mock.calls.filter(([url, init]) => init?.method && init.method !== "GET" && url !== "/api/upload");
         expect(writes.map(([url, init]) => [url, init?.method])).toEqual([
             ["/api/blogs", "POST"], [`/api/blogs/${id}`, "PUT"], [`/api/blogs/${id}`, "DELETE"],
         ]);

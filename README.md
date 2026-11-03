@@ -53,7 +53,9 @@ Failed saves leave the form open with its values and an error message.
 
 Blog creation uses `BlogsTypeSchema`: `title`, `slug`, `category`, and `content`
 are required. Optional fields include skill IDs, status, author, cover image,
-and string timestamps. The listing API populates skills as `{ _id, name }`
+and timestamps. The API serializes timestamps as ISO strings; the listing schema
+parses them into `Date` values while preserving omitted timestamps.
+The listing API populates skills as `{ _id, name }`
 objects, validated by `BlogListingSchema`.
 Recent blog cards use the slug for their links and display content previews,
 cover images, skill names, and creation dates when available. `maxCount` limits

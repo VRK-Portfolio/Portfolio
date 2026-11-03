@@ -22,14 +22,7 @@ export const useBlogListing = (recent?: ParamValue) => {
                 throw new Error(res.error || "Failed to fetch blogs");
             }
 
-            const data = res.data.map(item => {
-                return {
-                    ...item,
-                    createdAt: new Date(item.createdAt as Date),
-                    updatedAt: new Date(item.updatedAt as Date),
-                }
-            })
-            const parsed = z.array(BlogListingSchema).parse(data);
+            const parsed = z.array(BlogListingSchema).parse(res.data);
             return parsed;
         }
     });
