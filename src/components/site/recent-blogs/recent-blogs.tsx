@@ -83,7 +83,7 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
                                 </p>
                             </Card.Body>
                             <Card.Footer>
-                                <Link className="cmp-recent-blogs__link-detail" href={`/blogs/${blog.slug}`} target="_blank" rel="noopener noreferrer">
+                                <Link className="cmp-recent-blogs__link-detail" href={`/blogs/${blog.slug}`}>
                                     Click Here
                                     <span>
                                         <MoveUpRight className="size-4" />
