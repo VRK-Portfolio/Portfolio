@@ -1,11 +1,12 @@
 import { BlogType } from "@/@types/Blogs.types";
 import mongoose, { Schema, Model, model } from "mongoose";
+import { MySkillsModel } from "./my-skills.model";
 
 const BlogsSchema = new Schema<BlogType>({
     title: { type: String, required: true },
     slug: { type: String, required: true },
     category: { type: String, required: true },
-    skills: [{ type: mongoose.Schema.Types.ObjectId, ref: "MySkills" }],
+    skills: [{ type: mongoose.Schema.Types.ObjectId, ref: MySkillsModel.modelName }],
     content: { type: String, required: true },
     status: { type: String, enum: ["draft", "published"], default: "draft" },
     author: { type: String, default: "Vijay Rameshkumar" },
