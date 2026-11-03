@@ -1,12 +1,17 @@
 import { ApiGetResponse, ApiPostResponse } from "@/@types/ApiResponse.types";
 import { BlogListingSchema, BlogListingType, BlogWriteType } from "@/@types/Blogs.types";
+import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ParamValue } from "next/dist/server/request/params";
 
-export const useBlogListing = () => {
+export const useBlogListing = (recent?: ParamValue) => {
     const query = useQuery({
-        queryKey: ["blogListing"],
+        queryKey: ["blogListing", recent],
         queryFn: async () => {
-            const response = await fetch("/api/blogs");
+            const response = await fetch(`/api/blogs`, {
+                method: "GET",
+                ...(recent ? { headers: { "X-Recent": recent.toString() } } : {})
+            });
             if (!response.ok) {
                 throw new Error("Failed to fetch blogs");
             }
@@ -16,9 +21,16 @@ export const useBlogListing = () => {
             if (!res.success) {
                 throw new Error(res.error || "Failed to fetch blogs");
             }
-            const parsed = BlogListingSchema.array().safeParse(res.data);
-            if (!parsed.success) throw new Error("Invalid blog listing data");
-            return parsed.data;
+
+            const data = res.data.map(item => {
+                return {
+                    ...item,
+                    createdAt: new Date(item.createdAt as Date),
+                    updatedAt: new Date(item.updatedAt as Date),
+                }
+            })
+            const parsed = z.array(BlogListingSchema).parse(data);
+            return parsed;
         }
     });
     return {
@@ -71,5 +83,29 @@ export const useDeleteBlog = () => {
         isDeleting: mutation.isPending,
         deletingId: mutation.variables,
         deleteError: mutation.error,
+    };
+};
+
+
+export const useBlogById = (id?: ParamValue) => {
+    const query = useQuery({
+        queryKey: ["blogDetail", id],
+        queryFn: async () => {
+            const response = await fetch(`/api/blogs/${id}`);
+            if (!response.ok) {
+                throw new Error("Failed to fetch blog detail");
+            }
+            const res: ApiGetResponse<BlogListingType> = await response.json();
+            if (!res.success) {
+                throw new Error(res.error || "Failed to fetch blog detail");
+            }
+            return res.data;
+        }
+    });
+    return {
+        blogDetail: query.data,
+        isLoading: query.isLoading,
+        isError: query.isError,
+        error: query.error,
     };
 };

@@ -1,0 +1,95 @@
+@reference './../styles/globals.css';
+
+@layer components {
+    .rich-text {
+
+        @apply leading-relaxed outline-none;
+        overflow-wrap: anywhere;
+
+        * {
+            @apply mb-5;
+        }
+
+        h1, h1 * {
+            @apply text-3xl font-bold;
+        }
+
+        h2, h2 * {
+            @apply text-2xl font-bold;
+        }
+
+        h3, h3 * {
+            @apply text-xl font-semibold;
+        }
+
+        h4, h4 * {
+            @apply text-lg font-semibold;
+        }
+
+        h5, h5 * {
+            @apply text-base font-semibold;
+        }
+
+        h6, h6 * {
+            @apply text-sm font-semibold;
+        }
+
+        ul {
+            @apply list-disc pl-6;
+        }
+
+        ol {
+            @apply list-decimal pl-6;
+        }
+
+        blockquote {
+            @apply border-l-4 border-gray-300 pl-4 italic dark:border-gray-600;
+        }
+
+        code {
+            @apply rounded bg-gray-100 px-1 font-mono text-sm dark:bg-gray-800;
+        }
+
+        pre {
+            @apply overflow-x-auto rounded-md bg-gray-100 p-3 dark:bg-gray-800;
+        }
+
+        pre code {
+            @apply bg-transparent p-0;
+        }
+
+        hr {
+            @apply my-4 border-gray-300 dark:border-gray-600;
+        }
+
+        img {
+            @apply h-auto max-w-full rounded-md;
+        }
+
+        .tableWrapper {
+            @apply overflow-x-auto;
+        }
+
+        table {
+            @apply w-full border-collapse;
+        }
+
+        th,
+        td {
+            @apply relative min-w-24 border border-gray-300 p-2 align-top dark:border-gray-600;
+        }
+
+        th {
+            @apply bg-gray-100 text-left font-semibold dark:bg-gray-800;
+        }
+
+        th>p,
+        td>p {
+            @apply m-0;
+        }
+
+        .selectedCell::after {
+            @apply pointer-events-none absolute inset-0 bg-blue-500/15;
+        }
+    }
+}

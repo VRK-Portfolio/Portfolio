@@ -1,0 +1,17 @@
+@reference './../../app/styles/globals.css';
+
+@layer components {
+    .cmp-blog-detail {
+        .container {
+            @apply grid grid-cols-12 gap-3 mt-3;
+        }
+
+        .cmp-blog-detail__cover-image {
+            @apply w-full h-100 object-cover mb-3;
+        }
+
+        .cmp-blog-detail__skills {
+            @apply inline-flex gap-2 mb-3;
+        }
+    }
+}

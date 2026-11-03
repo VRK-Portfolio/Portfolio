@@ -58,3 +58,21 @@ export const DELETE = withAuth(async (_request: Request, { params }: BlogContext
         }, { status: 500 });
     }
 });
+
+export const GET = async(_request: Request, { params }: BlogContext): Promise<NextResponse<ApiPostResponse>> => {
+    try {
+        const { id } = await params;
+
+        await connectDB();
+        const blog = await BlogModel.findOne({ slug: id}).populate("skills").lean();
+        if (!blog) {
+            return NextResponse.json({ success: false, error: "Blog not found" }, { status: 404 });
+        }
+        return NextResponse.json({ success: true, data: blog, message: "Blog fetched successfully" });
+    } catch (error) {
+        return NextResponse.json({
+            success: false,
+            error: error instanceof Error ? error.message : "Failed to fetch blog",
+        }, { status: 500 });
+    }
+};
