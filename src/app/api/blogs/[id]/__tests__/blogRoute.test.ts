@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import mongoose from "mongoose";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { BlogModel } from "@/models/blogs.model";
-import { PUT, DELETE } from "../route";
+import { GET, PUT, DELETE } from "../route";
 
 const { connectDB } = vi.hoisted(() => ({ connectDB: vi.fn() }));
 vi.mock("@/libs/db", () => ({ connectDB }));
@@ -23,6 +23,21 @@ describe("Blog update and delete API", () => {
         connectDB.mockResolvedValue(undefined);
     });
     afterEach(() => vi.restoreAllMocks());
+
+    test("registers and populates skills when the blog route is loaded independently", async () => {
+        expect(mongoose.modelNames()).toContain("MySkills");
+        const skill = await mongoose.model("MySkills").create({
+            name: "React", icon: "/react.svg", category: "Frontend",
+            capabilities: ["Components"], proficiency: "Advanced",
+        });
+        await BlogModel.create({ ...blog, skills: [String(skill._id)] });
+        const response = await GET(request("GET"), context(blog.slug));
+        expect(response.status).toBe(200);
+        expect(await response.json()).toMatchObject({
+            success: true,
+            data: { slug: blog.slug, skills: [{ _id: String(skill._id), name: "React" }] },
+        });
+    });
 
     test("updates all editable fields while preserving identity and creation time", async () => {
         const saved = await BlogModel.create(blog);
