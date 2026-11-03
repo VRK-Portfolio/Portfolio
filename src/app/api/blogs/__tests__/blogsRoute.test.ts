@@ -21,6 +21,9 @@ const createRequest = (data: unknown) => new Request("http://localhost:3000/api/
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
 });
+const createListingRequest = (recent?: string) => new Request("http://localhost:3000/api/blogs", {
+    headers: recent === undefined ? {} : { "X-Recent": recent },
+});
 
 describe("Blog API routes", () => {
     beforeEach(() => {
@@ -51,7 +54,7 @@ describe("Blog API routes", () => {
             coverImage: "/images/blog.png",
             createdAt: "2026-10-31T00:00:00.000Z",
         });
-        const response = await GET();
+        const response = await GET(createListingRequest());
         expect(response.status).toBe(200);
         const body = await response.json();
         expect(body.success).toBe(true);
@@ -67,7 +70,7 @@ describe("Blog API routes", () => {
     });
 
     test("returns an empty successful listing when no blogs exist", async () => {
-        const response = await GET();
+        const response = await GET(createListingRequest());
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({
             success: true, data: [], message: "Blogs fetched successfully",
@@ -101,9 +104,31 @@ describe("Blog API routes", () => {
 
     test("exposes listing database errors instead of returning an empty success", async () => {
         connectDB.mockRejectedValueOnce(new Error("Database unavailable"));
-        const response = await GET();
+        const response = await GET(createListingRequest());
         expect(response.status).toBe(500);
         expect(await response.json()).toEqual({ success: false, error: "Database unavailable" });
+    });
+
+    test.each([undefined, "", "   "])("returns the full listing for X-Recent=%j", async recent => {
+        await BlogModel.insertMany(Array.from({ length: 5 }, (_, index) => ({
+            ...blog, slug: `blog-${index}`,
+        })));
+        const response = await GET(createListingRequest(recent));
+        expect(response.status).toBe(200);
+        const body = await response.json();
+        expect(body.data).toHaveLength(5);
+        expect(body.message).toBe("Blogs fetched successfully");
+    });
+
+    test("returns at most three recent blogs excluding the trimmed current slug", async () => {
+        await BlogModel.insertMany(Array.from({ length: 5 }, (_, index) => ({
+            ...blog, slug: `blog-${index}`, createdAt: `2026-10-0${index + 1}T00:00:00.000Z`,
+        })));
+        const response = await GET(createListingRequest(" blog-4 "));
+        expect(response.status).toBe(200);
+        const body = await response.json();
+        expect(body.data.map((item: { slug: string }) => item.slug)).toEqual(["blog-3", "blog-2", "blog-1"]);
+        expect(body.message).toBe("Recent blogs fetched successfully");
     });
 
     test("requires authentication before creating a blog", async () => {

@@ -21,6 +21,7 @@ interface RecentBlogsProps {
 
 const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, onDelete, isDeleting = false, deletingId, deleteError }: RecentBlogsProps) => {
     const { blogs, isLoading, isError, error } = useBlogListing();
+    const visibleBlogs = maxCount === undefined ? blogs : blogs && blogs.slice(0, maxCount);
     if (isLoading) {
         return (
             <section className="cmp-recent-blogs">
@@ -28,8 +29,6 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
             </section>
         );
     }
-
-    const visibleBlogs = maxCount === undefined ? blogs : blogs && blogs.slice(0, maxCount);
 
     if (isError) {
         return (
@@ -76,7 +75,7 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
                                         ))}
                                     </div>
                                     <div className="cmp-recent-blogs__publish-date">
-                                        {blog.createdAt && formatDate(new Date(blog.createdAt))}
+                                        {/* {blog.createdAt && formatDate(new Date(blog.createdAt))} */}
                                     </div>
                                 </div>
                                 <p>

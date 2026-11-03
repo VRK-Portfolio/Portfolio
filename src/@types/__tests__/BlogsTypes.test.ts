@@ -18,7 +18,7 @@ describe("blog schemas", () => {
         });
     });
 
-    test("accepts optional IDs, skill references, images, and string timestamps", () => {
+    test("accepts optional IDs, skill references, images, and parses string timestamps as dates", () => {
         const data = {
             ...blog,
             _id: "507f1f77bcf86cd799439011",
@@ -29,7 +29,19 @@ describe("blog schemas", () => {
             createdAt: "2026-10-31T00:00:00.000Z",
             updatedAt: "2026-10-31T01:00:00.000Z",
         };
-        expect(BlogsTypeSchema.parse(data)).toEqual(data);
+        expect(BlogsTypeSchema.parse(data)).toEqual({
+            ...data, createdAt: new Date(data.createdAt), updatedAt: new Date(data.updatedAt),
+        });
+    });
+
+    test("accepts Date values and preserves omitted timestamps", () => {
+        const date = new Date("2026-10-31T00:00:00.000Z");
+        expect(BlogsTypeSchema.parse({ ...blog, createdAt: date, updatedAt: date })).toMatchObject({
+            createdAt: date, updatedAt: date,
+        });
+        const parsed = BlogListingSchema.parse(blog);
+        expect(parsed.createdAt).toBeUndefined();
+        expect(parsed.updatedAt).toBeUndefined();
     });
 
     test.each(["title", "slug", "category", "content"] as const)("rejects a missing required %s", (field) => {
@@ -41,7 +53,8 @@ describe("blog schemas", () => {
     test.each([
         { status: "archived" },
         { skills: [42] },
-        { createdAt: new Date() },
+        { createdAt: "invalid date" },
+        { updatedAt: new Date(NaN) },
         { coverImage: 42 },
     ])("rejects invalid updated fields: %j", (invalid) => {
         expect(BlogsTypeSchema.safeParse({ ...blog, ...invalid }).success).toBe(false);

@@ -1,4 +1,5 @@
 import "./../styles/globals.css";
+import './../styles/site.css';
 import HeaderComponent from "@/components/site/header/Header";
 import { QueryProvider } from "@/providers/QueryProvider";
 export const dynamic = 'force-dynamic';

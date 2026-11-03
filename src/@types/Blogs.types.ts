@@ -10,9 +10,9 @@ export const BlogsTypeSchema = z.object({
     content: z.string(),
     status: z.enum(["draft", "published"]).default("draft").optional(),
     author: z.string().default("Vijay Rameshkumar").optional(),
-    createdAt: z.string().optional(),
+    createdAt: z.coerce.date().optional(),
     coverImage: z.string().optional(),
-    updatedAt: z.string().optional()
+    updatedAt: z.coerce.date().optional()
 })
 
 export type BlogType = z.infer<typeof BlogsTypeSchema>;

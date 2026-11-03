@@ -16,7 +16,7 @@ export const mockBlogListingData: BlogListingType[] = [
     ],
     status: "published",
     author: "Vijay Rameshkumar",
-    createdAt: "2024-06-01T00:00:00.000Z",
+    createdAt: new Date("2024-06-01T00:00:00.000Z"),
   },
   {
     _id: "507f1f77bcf86cd799439012",
@@ -31,7 +31,7 @@ export const mockBlogListingData: BlogListingType[] = [
     ],
     status: "published",
     author: "Vijay Rameshkumar",
-    createdAt: "2024-06-02T00:00:00.000Z",
+    createdAt: new Date("2024-06-02T00:00:00.000Z"),
   },
   {
     _id: "507f1f77bcf86cd799439013",
@@ -46,7 +46,7 @@ export const mockBlogListingData: BlogListingType[] = [
     ],
     status: "published",
     author: "Vijay Rameshkumar",
-    createdAt: "2024-06-03T00:00:00.000Z",
+    createdAt: new Date("2024-06-03T00:00:00.000Z"),
   },
   {
     _id: "507f1f77bcf86cd799439014",
@@ -61,7 +61,7 @@ export const mockBlogListingData: BlogListingType[] = [
     ],
     status: "published",
     author: "Vijay Rameshkumar",
-    createdAt: "2024-06-04T00:00:00.000Z",
+    createdAt: new Date("2024-06-04T00:00:00.000Z"),
   },
 ];
 
