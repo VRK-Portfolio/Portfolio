@@ -60,7 +60,7 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
                 {type === 'admin' && deleteError && <p role="alert" className="mb-4 text-red-500">{deleteError}</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {visibleBlogs && visibleBlogs.map(blog => (
-                        <Card Tag="article" darkType="pure" key={blog._id ?? blog.slug}>
+                        <Card Tag="article" key={blog._id ?? blog.slug}>
                             {blog.coverImage && <Card.Image imageUrl={blog.coverImage} />}
                             <Card.Heading Tag="h3">{blog.title}</Card.Heading>
                             <Card.Body>
