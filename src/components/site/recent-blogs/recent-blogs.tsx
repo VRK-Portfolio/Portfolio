@@ -44,18 +44,14 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
                 {
                     type === 'admin' ? (
                         <>
-                            <div className="container">
-                                <div className="cmp-admin__heading-actions">
-                                    <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
-                                    <Button variant="primary" className='cmp-my-skills__add-skill w-40' onClick={() => modalOpen?.()}>New Blog</Button>
-                                </div>
+                            <div className="cmp-admin__heading-actions">
+                                <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
+                                <Button variant="primary" className='cmp-my-skills__add-skill w-40' onClick={() => modalOpen?.()}>New Blog</Button>
                             </div>
                         </>
                     ) : (
                         <>
-                            <div className="container pl-20!">
-                                <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
-                            </div>
+                            <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
                         </>
                     )
                 }
@@ -64,7 +60,7 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
                 {type === 'admin' && deleteError && <p role="alert" className="mb-4 text-red-500">{deleteError}</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {visibleBlogs && visibleBlogs.map(blog => (
-                        <Card Tag="article" key={blog._id ?? blog.slug}>
+                        <Card Tag="article" darkType="pure" key={blog._id ?? blog.slug}>
                             {blog.coverImage && <Card.Image imageUrl={blog.coverImage} />}
                             <Card.Heading Tag="h3">{blog.title}</Card.Heading>
                             <Card.Body>
@@ -79,7 +75,7 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
                                     </div>
                                 </div>
                                 <p>
-                                    {truncateText(blog.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim())}
+                                    {truncateText(blog.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(), 150)}
                                 </p>
                             </Card.Body>
                             <Card.Footer>

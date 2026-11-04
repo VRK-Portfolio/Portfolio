@@ -18,12 +18,12 @@ const BlogDetailScreen = () => {
             <div className="cmp-blog-detail">
                 {blogDetail && (
                     <div className="container">
-                        <div className="col-span-12 lg:col-span-8 order-2 lg:order-1">
+                        <div className="col-span-12 lg:col-span-8">
                             {isLoading && <p>Loading...</p>}
                             {isError && <p>Error: {error?.message}</p>}
                             {
                                 blogDetail.coverImage && (
-                                    <Image className="cmp-blog-detail__cover-image" src={blogDetail.coverImage} alt={blogDetail.title} width={100} height={100} />
+                                    <Image className="cmp-blog-detail__cover-image" src={blogDetail.coverImage} alt={blogDetail.title} width={800} height={100} />
                                 )
                             }
                             <h1>{blogDetail.title}</h1>
@@ -36,8 +36,9 @@ const BlogDetailScreen = () => {
                                 }
                             </div>
                             <div className="rich-text" dangerouslySetInnerHTML={{ __html: blogDetail.content }}></div>
+                        <hr/>
                         </div>
-                        <div className="col-span-12 order-1 lg:order-2 lg:col-span-4">
+                        <div className="col-span-12 lg:col-span-4">
                             <h4 className="mb-3">Similar Blogs</h4>
                             <div className="cmp-recent-blogs inline-flex w-full flex-col gap-3">
                             {blogs?.map((blog) => (
@@ -53,7 +54,7 @@ const BlogDetailScreen = () => {
                                             </div>
                                         </div>
                                         <p>
-                                            {truncateText(blog.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim())}
+                                            {truncateText(blog.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(), 100)}
                                         </p>
                                     </Card.Body>
                                     <Card.Footer>
