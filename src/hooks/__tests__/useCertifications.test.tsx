@@ -55,7 +55,7 @@ describe("certification hooks", () => {
             expect(result.current.certifications).toEqual(mockCertifications);
             expect(result.current.certificationCount).toBe(mockCertifications.length);
             expect(context.queryClient.getQueryData(["certifications"])).toEqual(mockCertifications);
-            expect(fetchMock).toHaveBeenCalledExactlyOnceWith("/api/certifications");
+            expect(fetchMock).toHaveBeenCalledExactlyOnceWith("/api/certifications", expect.objectContaining({ signal: expect.anything() }));
         });
 
         test("should accept an empty list", async () => {
@@ -137,6 +137,24 @@ describe("certification hooks", () => {
             await waitFor(() => expect(result.current.certificationCount).toBe(mockCertifications.length));
             expect(result.current.isError).toBe(false);
             expect(result.current.error).toBeNull();
+        });
+
+        test("stops loading when the request deadline expires and can recover through refetch", async () => {
+            const timeout = new AbortController();
+            const timeoutSpy = vi.spyOn(AbortSignal, "timeout").mockReturnValue(timeout.signal);
+            fetchMock.mockImplementationOnce((_url, options) => new Promise((_resolve, reject) => {
+                options?.signal?.addEventListener("abort", () => reject(options.signal?.reason), { once: true });
+            })).mockResolvedValueOnce(Response.json({ success: true, data: mockCertifications }));
+            const { result } = renderHook(useCertifications, { wrapper: context.wrapper });
+            expect(result.current.isLoading).toBe(true);
+            expect(timeoutSpy).toHaveBeenCalledWith(15000);
+            act(() => timeout.abort(new DOMException("Request timed out", "TimeoutError")));
+            await waitFor(() => expect(result.current.isError).toBe(true));
+            expect(result.current.isLoading).toBe(false);
+            timeoutSpy.mockRestore();
+            await act(async () => { await result.current.refetch(); });
+            await waitFor(() => expect(result.current.certificationCount).toBe(mockCertifications.length));
+            expect(result.current.isError).toBe(false);
         });
     });
 
