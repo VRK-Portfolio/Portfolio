@@ -2,7 +2,7 @@ import './basic-info-loader.css';
 const BasicInfoLoading = () => {
     return (
         <>
-        <div className="cmp-basic-info-banner section">
+        <div className="cmp-basic-info-banner section" id="BasicInfo">
                     <div className='container animate-pulse'>
                         <div className="cmp-basic-info-banner__image shimmer size-40"/>
                         <div className='cmp-basic-info-banner__title shimmer'></div>

@@ -38,7 +38,7 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
         );
     }
     return (
-        <section className={`cmp-recent-blogs ${className ?? ''} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
+        <section id="Blogs" className={`cmp-recent-blogs ${className ?? ''} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
             <div className="container">
 
                 {
