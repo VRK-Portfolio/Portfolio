@@ -16,7 +16,7 @@ const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { 
         return <CertificationLoading />;
     }
     return (
-        <div className={`cmp-certification ${className} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
+        <section id="Certifications" className={`cmp-certification ${className} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
             <div className="container">
                 {
                     type === 'site' && (
@@ -78,7 +78,7 @@ const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { 
                     }
                 </div>
             </div>
-        </div>
+        </section>
     );
 };
 

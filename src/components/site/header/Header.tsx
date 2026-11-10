@@ -40,22 +40,22 @@ const HeaderComponent = ({ className }: { className?: string }) => {
                         <nav className={`cmp-header__nav ${isMenuVisible ? '' : 'hidden'} lg:block`}>
                             <ul>
                                 <li>
-                                    <Link href=''>Home</Link>
+                                    <Link href='/#'>Home</Link>
                                 </li>
                                 <li>
-                                    <Link href=''>Skills</Link>
+                                    <Link href='/#Skills'>Skills</Link>
                                 </li>
                                 <li>
-                                    <Link href=''>Experience</Link>
+                                    <Link href='/#Experience'>Experience</Link>
                                 </li>
                                 <li>
-                                    <Link href=''>Certifications</Link>
+                                    <Link href='/#Certifications'>Certifications</Link>
                                 </li>
-                                <li>
+                                {/* <li>
                                     <Link href=''>Works</Link>
-                                </li>
+                                </li> */}
                                 <li>
-                                    <Link href=''>Blogs</Link>
+                                    <Link href='/#Blogs'>Blogs</Link>
                                 </li>
                             </ul>
                         </nav>
