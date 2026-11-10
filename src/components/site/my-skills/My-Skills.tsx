@@ -16,7 +16,7 @@ const MySkillsComponent = ({ className, type = 'site', modalOpen }: { className?
         return <SkillLoading type={type} />;
     }
     return (
-        <section className={`cmp-my-skills ${className ? className : ''} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
+        <section className={`cmp-my-skills ${className ? className : ''} ${type === 'admin' ? 'cmp-admin__type' : ''}`} id="Skills">
 
             <div className="container">
                 {

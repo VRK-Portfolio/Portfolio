@@ -38,7 +38,7 @@ export const MyExperienceComponent = ({ className = '', type = 'site', modalOpen
 
     return (
         <>
-            <section className={`cmp-my-experience ${className} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
+            <section id="Experience" className={`cmp-my-experience ${className} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
                 {
                     type === 'admin' ? (
                         <>
