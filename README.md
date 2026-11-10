@@ -20,6 +20,15 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Theme preference
+
+The public header's light/dark toggle saves the selection to localStorage under
+`theme` and restores it when the header mounts, including after reloads. Only
+`light` and `dark` are accepted; missing or invalid values leave the existing
+theme unchanged (light by default). If browser storage is unavailable, the
+toggle still works for the current page and a console warning reports that
+the preference could not be loaded or saved.
+
 ## Basic info API
 
 `POST /api/basic-info` accepts a JSON body validated by
@@ -105,6 +114,125 @@ permanent local credential. Refresh the OIDC credentials through your Vercel
 setup, or use a store read/write token for local development.
 If the SDK cannot find usable credentials, the endpoint returns HTTP 503 with
 setup guidance. Failed uploads do not insert an image into the editor.
+
+## Site footer
+
+Public pages share a theme-aware footer with the current copyright year,
+section navigation, and a floating bottom-right Chat with me button. The button
+smoothly docks into its reserved footer slot when that slot is fully visible,
+then floats again when scrolling away. The same button keeps keyboard focus
+throughout; reduced-motion preferences disable the transition.
+The portfolio chatbot opens as a fixed bottom-right
+panel. The panel stays visible while scrolling, fits mobile viewports, and
+scrolls messages independently. Close it with the close button or Escape.
+User messages appear in right-aligned blue bubbles, and assistant responses
+(including any requested blog titles) appear in left-aligned neutral bubbles.
+Both bubble colors adapt to the selected light or dark theme.
+The chatbot posts
+`{ prompt, pathname }` to `/api/chat` and expects `{ success: true, text, blogs }`.
+Retrieved published blogs appear only as clickable titles that open in a new
+tab. Link data comes from matched blog records, not AI-generated links;
+repeated chunks of the same blog produce one title. Deleted or unpublished
+blogs are excluded.
+
+On `/blogs/[slug]`, the current path is passed through a per-request Mastra
+context. When asked about "this blog" or to summarize the current article, the
+agent requests `currentBlog: true` from the retrieval tool. This fetches the
+published article directly by its URL slug, including full readable content,
+author, category, dates, and skills; it does not depend on vector indexing or
+similarity thresholds. Other questions continue to use normal RAG search.
+Missing or unpublished current articles return no blog details, and navigating
+to another page updates the context on the next chat request.
+
+Skill-only questions about the current article use a direct lookup of its
+saved skill associations and return only those names, without model generation.
+Missing skills are reported explicitly; they are never inferred from the URL,
+title, category, or content. The retrieval tool also supports `detail: "skills"`
+for equivalent questions routed by the agent, with a verbatim answer enforced
+by the API. Blog links are opt-in (`includeBlogLinks: true`) for explicit blog
+lists, recommendations, or link requests, not appended to factual answers.
+
+Requests for the owner's complete skills list read all records from the skills
+collection directly, independently of vector indexing and the four-match
+semantic-search limit. The answer includes every saved, nonempty skill name
+(deduplicated), with no model summarization or inferred additions. The tool
+exposes the same exhaustive lookup with `currentBlog: false, detail: "skills"`;
+current-blog skill requests remain scoped to that article.
+Skill lookups are authorized by the original question, not a model-selected
+`detail` flag or rewritten query. Certificate issue-date questions (including
+"certficate") look up the named certification directly and return only its
+saved issue date. Missing records or dates are reported without guessing;
+these answers do not depend on embeddings or model generation.
+Failed requests display an error and keep the question for retrying.
+Named-skill capability questions return only saved capabilities from the MongoDB
+vector collection, without model generation, web search, or added technology
+features. Unknown skills or missing capabilities return an explicit not-found
+message. Legacy skill text remains readable; the next skills ingestion writes
+embeddings and structured skill metadata on every chunk for exact, complete
+capability answers. Other generated answers require successful, nonempty
+retrieval evidence; a model-only response is never returned.
+### Chatbot settings
+
+Open **Chatbot Settings** in the admin sidebar (`/admin/chat-settings`) to save
+the active provider, model ID, temperature, output token limit, API key, and
+site-wide chat-button visibility. Supported providers are Ollama, Google Gemini,
+OpenAI, Anthropic, and Groq. Use a model that supports tool calling. Model IDs
+must be available to your account/local Ollama installation. Provider errors
+are surfaced rather than silently switching models. New Google configurations
+suggest `gemini-3.8-flash`; Google no longer makes `gemini-2.5-flash` available
+to new users. Existing saved model IDs are not silently replaced at runtime.
+Unavailable-model, invalid-key/access, quota, and service-overload errors show
+actionable messages in the chat window without exposing provider payloads or
+credentials. Failed questions remain in the input for retrying.
+
+Before saving a cloud API key, set the server-only environment variable
+`CHAT_SETTINGS_ENCRYPTION_KEY` to a random 32-byte hexadecimal value (generate
+with `openssl rand -hex 32`) and restart the server. Keep it outside source
+control, backed up securely, and stable across deployments: changing it makes
+existing saved keys unreadable. Keys are encrypted with AES-256-GCM in MongoDB;
+authenticated settings responses expose only a saved-key indicator. Leaving
+the key field blank keeps the key only for the same provider. Switching
+providers requires a new key; saving Ollama removes the saved cloud key.
+Only one provider configuration is retained at a time.
+
+Without saved settings, chat keeps the Ollama `llama3.2` default. Ollama generation
+uses its OpenAI-compatible `/v1` API at server-only `OLLAMA_BASE_URL` (default
+`http://localhost:11434`). Embeddings/ingestion keep their existing local Ollama
+configuration; changing the chat provider does not change embedding models.
+Cloud generation sends retrieved portfolio context and the visitor's question
+to the selected provider.
+
+Visibility changes apply after **Save chat settings**. Public pages refresh
+visibility every 30 seconds while open, on focus, or on reload. Hiding removes
+both the floating/footer launcher and chat panel, and `/api/chat` rejects new
+questions while disabled. Settings reads and writes require the existing admin
+authentication; the public visibility endpoint returns only the visibility flag,
+provider, and model ID. The chat window displays the configured LLM provider
+and model as compact badges below the question input, using the same refresh interval. No API keys,
+saved-key indicators, or private generation settings are exposed publicly.
+
+## RAG ingestion
+
+The full ingestion flow in `src/mastra/ingestion/index.ts` also runs
+`seedBlogs`, `seedCertifications`, and `seedExperience`. These functions can
+be called individually from a server-side ingestion script after configuring
+the MongoDB environment. Ingestion uses local Ollama with `nomic-embed-text`,
+the same embedding model used by the chatbot's retrieval tool.
+
+Only published blogs are indexed, including content, category, author, dates,
+related skill names, and a public blog path. Certifications include issuer,
+issue/expiration dates, credentials, and covered skills. Experience is indexed
+per position with company, location, responsibilities, dates, and description.
+HTML content is converted to text before chunking.
+
+Chunks retain their record context and are stored in the existing vector
+collection under `blogs`, `certifications`, and `experience`. Stable IDs allow
+reruns to update existing chunks; stale chunks (including unpublished or deleted
+records) are removed after successful writes. An empty source clears only its
+own chunks. Embedding failures leave existing vectors untouched and propagate
+to the caller. Run ingestion again after editing source records; CRUD endpoints
+do not automatically reindex content. Importing the full-ingestion entry point
+currently starts the full ingestion automatically.
 
 ## Testing
 

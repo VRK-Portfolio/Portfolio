@@ -1,7 +1,7 @@
 
 
 import { ExperienceType, PositionType } from "@/@types/Experience.types";
-import mongoose, { Schema } from "mongoose";
+import mongoose, { Schema, type Model } from "mongoose";
 
 export const PositionSchema = new mongoose.Schema<PositionType>({
     role: { type: String, required: true },
@@ -20,4 +20,4 @@ export const ExperienceSchema = new Schema<ExperienceType>({
     ], required: true },
 });
 
-export const Experience = mongoose.models.Experience || mongoose.model<ExperienceType>("Experience", ExperienceSchema);
+export const Experience: Model<ExperienceType> = mongoose.models.Experience || mongoose.model<ExperienceType>("Experience", ExperienceSchema);
