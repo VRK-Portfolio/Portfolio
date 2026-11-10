@@ -1,9 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { POST } from "../route";
 import { DEFAULT_CHAT_CONFIG } from "@/@types/ChatSettings.types";
+import { ChatConfigurationError } from "@/libs/chat-configuration-error";
 
 const mocks = vi.hoisted(() => ({
-    generate: vi.fn(), getAgentById: vi.fn(), getCurrentBlogSkills: vi.fn(), getPortfolioSkills: vi.fn(), getCertificationIssueDate: vi.fn(), getSkillCapabilities: vi.fn(), getChatSettings: vi.fn(),
+    generate: vi.fn(), getAgentById: vi.fn(), getCurrentBlogSkills: vi.fn(), getPortfolioSkills: vi.fn(), getCertificationIssueDate: vi.fn(), getSkillCapabilities: vi.fn(), getChatSettings: vi.fn(), getPublishedBlogs: vi.fn(),
+}));
+vi.mock("@/mastra/tools/published-blogs", async importOriginal => ({
+    ...await importOriginal<typeof import("@/mastra/tools/published-blogs")>(),
+    getPublishedBlogs: mocks.getPublishedBlogs,
 }));
 vi.mock("@/libs/chat-settings", () => ({ getChatSettings: mocks.getChatSettings }));
 vi.mock("@/mastra/index", () => ({ mastra: { getAgentById: mocks.getAgentById } }));
@@ -38,6 +43,7 @@ const toolResult = (blogs: unknown[], toolName = "customVectorQueryTool") => ({
 beforeEach(() => {
     vi.resetAllMocks();
     mocks.getChatSettings.mockResolvedValue({ ...DEFAULT_CHAT_CONFIG, hasApiKey: false });
+    mocks.getPublishedBlogs.mockResolvedValue({ text: "Published blogs:", blogs: [blog] });
     mocks.getAgentById.mockReturnValue({ generate: mocks.generate });
     mocks.getCurrentBlogSkills.mockResolvedValue("- React\n- TypeScript");
     mocks.getPortfolioSkills.mockResolvedValue("- JavaScript\n- TypeScript\n- ReactJS\n- NextJS\n- NodeJS\n- Docker");
@@ -46,6 +52,40 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("Chat blog links and page context API", () => {
+    test.each(["/", "/blogs/react-patterns"])("lists every published blog directly without a model or embeddings on %s", async pathname => {
+        mocks.generate.mockRejectedValue(new Error("No model or local embeddings are available in this deployment"));
+        const response = await POST(request({ prompt: "show me the list of blogs", pathname }));
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ success: true, text: "Published blogs:", blogs: [blog] });
+        expect(mocks.getPublishedBlogs).toHaveBeenCalledOnce();
+        expect(mocks.getAgentById).not.toHaveBeenCalled();
+    });
+
+    test("does not bypass the disabled-chat setting for blog lists", async () => {
+        mocks.getChatSettings.mockResolvedValue({ ...DEFAULT_CHAT_CONFIG, chatEnabled: false });
+        expect((await POST(request({ prompt: "show me the list of blogs" }))).status).toBe(403);
+        expect(mocks.getPublishedBlogs).not.toHaveBeenCalled();
+    });
+
+    test("reports a blog-list database failure instead of using model knowledge", async () => {
+        mocks.getPublishedBlogs.mockRejectedValue(new Error("Database unavailable"));
+        expect((await POST(request({ prompt: "show me the list of blogs" }))).status).toBe(500);
+        expect(mocks.getAgentById).not.toHaveBeenCalled();
+    });
+
+    test.each([
+        "CHAT_ENCRYPTION_KEY_MISSING",
+        "CHAT_ENCRYPTION_KEY_INVALID",
+        "CHAT_API_KEY_DECRYPTION_FAILED",
+        "CHAT_API_KEY_MISSING",
+    ] as const)("identifies deployment configuration errors without revealing credentials: %s", async code => {
+        mocks.generate.mockRejectedValue({ cause: new ChatConfigurationError(code) });
+        const response = await POST(request({ prompt: "Recommend React blogs" }));
+        expect(response.status).toBe(503);
+        expect(await response.json()).toMatchObject({ success: false, code, error: expect.any(String) });
+        expect(console.error).toHaveBeenCalledWith("Chat response error:", expect.objectContaining({ phase: "generation", errorType: code }));
+    });
+
     test("rejects all chat requests when disabled, including direct fact lookups", async () => {
         mocks.getChatSettings.mockResolvedValue({ ...DEFAULT_CHAT_CONFIG, chatEnabled: false });
         const response = await POST(request({ prompt: "what is the core capabilities of Mongodb" }));
@@ -70,10 +110,10 @@ describe("Chat blog links and page context API", () => {
             text: "Here is a related blog.",
             toolResults: [toolResult([blog]), toolResult([blog]), toolResult([{ invalid: true }], "anotherTool")],
         });
-        const response = await POST(request({ prompt: " Show blogs " }));
+        const response = await POST(request({ prompt: " Show React blogs " }));
         expect(response.status).toBe(200);
         expect(mocks.getAgentById).toHaveBeenCalledWith("rag-agent");
-        expect(mocks.generate).toHaveBeenCalledWith("Show blogs", expect.objectContaining({ requestContext: expect.anything() }));
+        expect(mocks.generate).toHaveBeenCalledWith("Show React blogs", expect.objectContaining({ requestContext: expect.anything() }));
         expect(await response.json()).toEqual({ success: true, text: "Here is a related blog.", blogs: [blog] });
     });
 
@@ -156,7 +196,7 @@ describe("Chat blog links and page context API", () => {
             statusCode, message: "private-key and provider request details",
             requestHeaders: { authorization: "private-key" },
         });
-        const response = await POST(request({ prompt: "show me the list of blogs" }));
+        const response = await POST(request({ prompt: "Recommend React blogs" }));
         const body = await response.json();
         expect(response.status).toBe(status);
         expect(body).toMatchObject({ success: false, error: expect.stringContaining(message) });
@@ -169,7 +209,7 @@ describe("Chat blog links and page context API", () => {
         { lastError: { statusCode: 429 } },
     ])("recognizes wrapped provider failures %j", async error => {
         mocks.generate.mockRejectedValue(error);
-        const response = await POST(request({ prompt: "show me the list of blogs" }));
+        const response = await POST(request({ prompt: "Recommend React blogs" }));
         expect(response.status).toBe("cause" in error ? 503 : 429);
     });
 

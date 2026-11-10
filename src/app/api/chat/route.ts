@@ -8,6 +8,8 @@ import { getPortfolioSkills, isPortfolioSkillsListQuestion } from '@/mastra/tool
 import { getCertificationIssueDate, isCertificationIssueDateQuestion } from '@/mastra/tools/certification-issue-date';
 import { getCapabilitySkillName, getSkillCapabilities } from '@/mastra/tools/skill-capabilities';
 import { getChatSettings } from '@/libs/chat-settings';
+import { ChatConfigurationError } from '@/libs/chat-configuration-error';
+import { getPublishedBlogs, isPublishedBlogsListQuestion } from '@/mastra/tools/published-blogs';
 
 const PromptSchema = z.object({
   prompt: z.string().trim().min(1),
@@ -20,15 +22,17 @@ const BlogToolResultSchema = z.object({
   matches: z.array(z.string()).default([]),
 });
 
-function getProviderStatus(error: unknown): number | undefined {
+function getChatErrorDetails(error: unknown): { providerStatus?: number; configurationError?: ChatConfigurationError } {
   const visited = new Set<object>();
   while (typeof error === 'object' && error !== null && !visited.has(error)) {
     visited.add(error);
-    if ('statusCode' in error && typeof error.statusCode === 'number') return error.statusCode;
-    if ('status' in error && typeof error.status === 'number') return error.status;
-    if ('code' in error && typeof error.code === 'number') return error.code;
+    if (error instanceof ChatConfigurationError) return { configurationError: error };
+    if ('statusCode' in error && typeof error.statusCode === 'number') return { providerStatus: error.statusCode };
+    if ('status' in error && typeof error.status === 'number') return { providerStatus: error.status };
+    if ('code' in error && typeof error.code === 'number') return { providerStatus: error.code };
     error = 'lastError' in error ? error.lastError : 'cause' in error ? error.cause : undefined;
   }
+  return {};
 }
 
 const providerErrors: Partial<Record<number, { status: number; error: string }>> = {
@@ -41,14 +45,20 @@ const providerErrors: Partial<Record<number, { status: number; error: string }>>
 };
 
 export async function POST(req: Request) {
+  let phase = 'request';
   try {
     const input = PromptSchema.safeParse(await req.json());
     if (!input.success) {
       return NextResponse.json({ success: false, error: 'Provide a nonempty prompt and, optionally, a valid page path' }, { status: 400 });
     }
+    phase = 'settings';
     const settings = await getChatSettings();
     if (!settings.chatEnabled) {
       return NextResponse.json({ success: false, error: 'The chatbot is disabled.' }, { status: 403 });
+    }
+    phase = 'database-lookup';
+    if (isPublishedBlogsListQuestion(input.data.prompt)) {
+      return NextResponse.json(ChatResponseSchema.parse({ success: true, ...await getPublishedBlogs() }));
     }
     const requestContext = new RequestContext();
     requestContext.set('userPrompt', input.data.prompt);
@@ -84,11 +94,13 @@ export async function POST(req: Request) {
       }));
     }
 
+    phase = 'generation';
     const agent = mastra.getAgentById('rag-agent');
     const response = await agent.generate(input.data.prompt, {
       requestContext,
       modelSettings: { temperature: settings.temperature, maxOutputTokens: settings.maxOutputTokens },
     });
+    phase = 'response';
     const blogsById = new Map<string, ChatBlog>();
     let exactAnswer: string | undefined;
     let hasRetrievedContext = false;
@@ -110,8 +122,17 @@ export async function POST(req: Request) {
     if (error instanceof SyntaxError) {
       return NextResponse.json({ success: false, error: 'Invalid request body' }, { status: 400 });
     }
-    const providerStatus = getProviderStatus(error);
-    console.error('Chat response error:', { providerStatus: providerStatus ?? 'unknown' });
+    const { providerStatus, configurationError } = getChatErrorDetails(error);
+    console.error('Chat response error:', {
+      phase,
+      providerStatus: providerStatus ?? 'unknown',
+      errorType: configurationError?.code ?? (error instanceof Error ? error.name : 'UnknownError'),
+    });
+    if (configurationError) {
+      return NextResponse.json({
+        success: false, error: configurationError.message, code: configurationError.code,
+      }, { status: 503 });
+    }
     const failure = providerStatus === undefined ? undefined : providerErrors[providerStatus];
     if (failure) {
       return NextResponse.json({ success: false, error: failure.error }, { status: failure.status });

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { DEFAULT_CHAT_CONFIG } from "@/@types/ChatSettings.types";
 import { decryptChatApiKey, encryptChatApiKey, getChatModelConfig, getChatSettings, getPublicChatSettings, isChatEnabled, saveChatSettings } from "../chat-settings";
+import { ChatConfigurationError } from "../chat-configuration-error";
 
 const mocks = vi.hoisted(() => ({ read: vi.fn(), write: vi.fn() }));
 vi.mock("@/libs/db", () => ({ connectDB: vi.fn() }));
@@ -48,10 +49,39 @@ describe("Persistent chat configuration", () => {
     test("requires a server encryption secret and rejects a different secret", () => {
         const encrypted = encryptChatApiKey("test-secret");
         vi.stubEnv("CHAT_SETTINGS_ENCRYPTION_KEY", "b".repeat(64));
-        expect(() => decryptChatApiKey(encrypted)).toThrow();
+        expect(() => decryptChatApiKey(encrypted)).toThrow(ChatConfigurationError);
         vi.stubEnv("CHAT_SETTINGS_ENCRYPTION_KEY", "");
         expect(() => encryptChatApiKey("test-secret")).toThrow("CHAT_SETTINGS_ENCRYPTION_KEY");
-        expect(() => decryptChatApiKey("invalid")).toThrow("Invalid encrypted");
+        vi.stubEnv("CHAT_SETTINGS_ENCRYPTION_KEY", "a".repeat(64));
+        expect(() => decryptChatApiKey("invalid")).toThrow("could not be decrypted");
+    });
+
+    test.each([
+        ["", "CHAT_ENCRYPTION_KEY_MISSING"],
+        ["not-a-valid-key", "CHAT_ENCRYPTION_KEY_INVALID"],
+    ])("distinguishes missing and invalid deployment encryption secrets", (value, code) => {
+        vi.stubEnv("CHAT_SETTINGS_ENCRYPTION_KEY", value);
+        try {
+            encryptChatApiKey("fixture-secret");
+            throw new Error("Expected configuration validation to fail");
+        } catch (error) {
+            expect(error).toBeInstanceOf(ChatConfigurationError);
+            expect(error).toMatchObject({ code });
+            expect(String(error)).not.toContain("fixture-secret");
+        }
+    });
+
+    test("identifies a different deployment key and malformed ciphertext without leaking either", () => {
+        const encrypted = encryptChatApiKey("fixture-secret");
+        vi.stubEnv("CHAT_SETTINGS_ENCRYPTION_KEY", "b".repeat(64));
+        try {
+            decryptChatApiKey(encrypted);
+            throw new Error("Expected credential validation to fail");
+        } catch (error) {
+            expect(error).toMatchObject({ code: "CHAT_API_KEY_DECRYPTION_FAILED" });
+            expect(String(error)).not.toContain(encrypted);
+            expect(String(error)).not.toContain("fixture-secret");
+        }
     });
 
     test("persists only ciphertext and never returns plaintext or ciphertext to the admin", async () => {

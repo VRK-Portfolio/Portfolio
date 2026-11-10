@@ -164,6 +164,10 @@ Skill lookups are authorized by the original question, not a model-selected
 saved issue date. Missing records or dates are reported without guessing;
 these answers do not depend on embeddings or model generation.
 Failed requests display an error and keep the question for retrying.
+Unfiltered blog-list requests such as "show me the list of blogs" fetch every
+published blog's title and slug directly from MongoDB, newest first. They do
+not require Gemini, credential decryption, local embeddings, or existing
+vector chunks. Drafts are excluded and links remain title-only.
 Named-skill capability questions return only saved capabilities from the MongoDB
 vector collection, without model generation, web search, or added technology
 features. Unknown skills or missing capabilities return an explicit not-found
@@ -195,10 +199,24 @@ the key field blank keeps the key only for the same provider. Switching
 providers requires a new key; saving Ollama removes the saved cloud key.
 Only one provider configuration is retained at a time.
 
+On Vercel, configure the encryption key in the **Production** environment and
+redeploy; a local environment file is not deployed. Local and hosted servers
+sharing saved credentials must use the same encryption key. Configuration
+failures report stable `CHAT_ENCRYPTION_KEY_MISSING`,
+`CHAT_ENCRYPTION_KEY_INVALID`, `CHAT_API_KEY_DECRYPTION_FAILED`, or
+`CHAT_API_KEY_MISSING` codes without exposing keys. Chat server logs identify
+the failing phase and error type/status without logging provider request
+payloads.
+
 Without saved settings, chat keeps the Ollama `llama3.2` default. Ollama generation
 uses its OpenAI-compatible `/v1` API at server-only `OLLAMA_BASE_URL` (default
 `http://localhost:11434`). Embeddings/ingestion keep their existing local Ollama
 configuration; changing the chat provider does not change embedding models.
+Semantic queries still require the local Ollama embedding service; selecting
+Gemini alone does not make that service available inside Vercel. Until a
+hosted embedding service using the same model/vectors is configured in the
+retrieval and ingestion code, use direct database lookups for full blog/skill
+lists and the existing exact-fact lookups.
 Cloud generation sends retrieved portfolio context and the visitor's question
 to the selected provider.
 

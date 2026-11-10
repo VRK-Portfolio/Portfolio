@@ -3,7 +3,11 @@ import { customVectorQueryTool } from "../vector-query.tool";
 import { RequestContext } from "@mastra/core/request-context";
 
 const mocks = vi.hoisted(() => ({
-    connectDB: vi.fn(), embed: vi.fn(), vectors: vi.fn(), blogs: vi.fn(), currentBlog: vi.fn(), portfolioSkills: vi.fn(), certificationIssueDate: vi.fn(), skillCapabilities: vi.fn(),
+    connectDB: vi.fn(), embed: vi.fn(), vectors: vi.fn(), blogs: vi.fn(), currentBlog: vi.fn(), portfolioSkills: vi.fn(), certificationIssueDate: vi.fn(), skillCapabilities: vi.fn(), publishedBlogs: vi.fn(),
+}));
+vi.mock("../published-blogs", async importOriginal => ({
+    ...await importOriginal<typeof import("../published-blogs")>(),
+    getPublishedBlogs: mocks.publishedBlogs,
 }));
 vi.mock("@/libs/db", () => ({ connectDB: mocks.connectDB }));
 vi.mock("@/models/vector-store.model", () => ({ VectorStoreModel: { find: mocks.vectors } }));
@@ -61,6 +65,17 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks());
 
 describe("Blog retrieval links and current article details", () => {
+    test("lists published blogs from the original question without local embeddings or mistaken model flags", async () => {
+        const blogs = [{ _id: firstId, title: blog.title, slug: blog.slug }];
+        mocks.publishedBlogs.mockResolvedValue({ text: "Published blogs:", blogs });
+        expect(await runQuery({
+            userPrompt: "show me the list of blogs", query: "Skills in this blog", currentBlog: true,
+        })).toEqual({ success: true, matches: ["Published blogs:", blog.title], blogs });
+        expect(mocks.embed).not.toHaveBeenCalled();
+        expect(mocks.vectors).not.toHaveBeenCalled();
+        expect(mocks.currentBlog).not.toHaveBeenCalled();
+    });
+
     test("returns only one published blog title link for multiple matching chunks", async () => {
         mocks.vectors.mockReturnValue(queryResult([vector(firstId), vector(firstId, 1)]));
         const query = queryResult([blog]);

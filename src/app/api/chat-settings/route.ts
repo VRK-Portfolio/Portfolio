@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/libs/auth-wrapper";
 import { getChatSettings, saveChatSettings } from "@/libs/chat-settings";
 import { ChatSettingsUpdateSchema } from "@/@types/ChatSettings.types";
+import { ChatConfigurationError } from "@/libs/chat-configuration-error";
 
 export const GET = withAuth(async () => {
     try {
@@ -31,10 +32,9 @@ export const PUT = withAuth(async (request: Request) => {
             return NextResponse.json({ success: false, error: "Invalid request body." }, { status: 400 });
         }
         console.error("Failed to save chat settings.");
-        const message = error instanceof Error && (
-            error.message.startsWith("Set CHAT_SETTINGS_ENCRYPTION_KEY") ||
-            error.message === "An API key is required for the selected provider."
-        ) ? error.message : "Failed to save chat settings.";
+        const message = error instanceof ChatConfigurationError ? error.message
+            : error instanceof Error && error.message === "An API key is required for the selected provider."
+                ? error.message : "Failed to save chat settings.";
         return NextResponse.json({ success: false, error: message }, { status: 500 });
     }
 });
