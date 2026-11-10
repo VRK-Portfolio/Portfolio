@@ -59,6 +59,13 @@ and Mongoose model. The admin form displays them as `YYYY-MM-DD` values and
 converts submitted values to UTC dates, preserving the selected calendar day.
 New certifications default both dates to today (UTC).
 
+Certification reads and creates wait for MongoDB before querying, including
+on cold starts. The shared connection helper waits for an in-flight connection
+and reconnects instead of returning a stale disconnected client. The
+certification request has a 15-second client timeout; errors stop the loading
+shimmer and show **Retry certifications**. A successful empty collection shows
+an explicit empty state, and failed background refreshes retain existing cards.
+
 ## Experience editor
 
 The admin experience page supports adding and editing company details,
