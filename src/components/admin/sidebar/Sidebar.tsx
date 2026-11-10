@@ -1,6 +1,6 @@
 'use client';
 import { useSkills } from "@/hooks/useSkills";
-import { ArrowLeft, ArrowRight, Award, BookOpen, BriefcaseBusiness, Code, FileUser, LayoutDashboard, Library, Newspaper } from "lucide-react";
+import { ArrowLeft, ArrowRight, Award, BookOpen, BriefcaseBusiness, Code, FileUser, LayoutDashboard, Library, MessageCircle, Newspaper } from "lucide-react";
 import Badge from "@/block/ui/badge/Badge";
 import { useMemo, useState } from "react";
 import { SidebarType } from "../../../@types/Sidebar.types";
@@ -18,6 +18,11 @@ const SIDEBAR_MENU: SidebarType[] = [{
             href: "/admin/dashboard",
             icon: LayoutDashboard,
             text: "Dashboard",
+        },
+        {
+            href: "/admin/chat-settings",
+            icon: MessageCircle,
+            text: "Chatbot Settings",
         }
     ]
 }, {

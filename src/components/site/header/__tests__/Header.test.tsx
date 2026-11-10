@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { act, render } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { renderToString } from "react-dom/server";
 import Header from "../Header";
 import './../Header.css';
@@ -9,10 +9,21 @@ describe("Header component", () => {
     let user: UserEvent;
 
      beforeEach(() => {
+        const values = new Map<string, string>();
+        vi.stubGlobal('localStorage', {
+            getItem: vi.fn((key: string) => values.get(key) ?? null),
+            setItem: vi.fn((key: string, value: string) => { values.set(key, value); }),
+            removeItem: vi.fn((key: string) => { values.delete(key); }),
+            clear: vi.fn(() => values.clear()),
+            key: vi.fn((index: number) => [...values.keys()][index] ?? null),
+            get length() { return values.size; },
+        } satisfies Storage);
         document.documentElement.removeAttribute('data-theme');
         user = userEvent.setup();
     });
     afterEach(() => {
+        vi.restoreAllMocks();
+        vi.unstubAllGlobals();
         document.documentElement.removeAttribute('data-theme');
     });
     const renderHeader = () => {
@@ -127,10 +138,46 @@ describe("Header component", () => {
        // Click the theme button to switch to dark theme
        await user.click(themeButton);
        expect(document.documentElement.getAttribute('data-theme')).toBe("dark");
+       expect(window.localStorage.getItem('theme')).toBe("dark");
 
        // Click the theme button again to switch back to light theme
        await user.click(themeButton);
        expect(document.documentElement.getAttribute('data-theme')).toBe("light");
+       expect(window.localStorage.getItem('theme')).toBe("light");
+   });
+
+   test.each(['light', 'dark'])("restores the saved %s theme on mount", async theme => {
+       window.localStorage.setItem('theme', theme);
+       renderHeader();
+       await waitFor(() => expect(document.documentElement).toHaveAttribute('data-theme', theme));
+       expect(screen.getByRole('button', { name: theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode' })).toBeInTheDocument();
+   });
+
+   test("keeps the selected theme after remounting with a fresh document theme", async () => {
+       const first = render(<Header />);
+       await user.click(screen.getByRole('button', { name: 'Switch to dark mode' }));
+       first.unmount();
+       document.documentElement.removeAttribute('data-theme');
+       render(<Header />);
+       await waitFor(() => expect(document.documentElement).toHaveAttribute('data-theme', 'dark'));
+   });
+
+   test("ignores invalid stored preferences without changing the existing theme", () => {
+       window.localStorage.setItem('theme', 'invalid');
+       document.documentElement.setAttribute('data-theme', 'dark');
+       renderHeader();
+       expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+   });
+
+   test("reports unavailable storage while preserving the working theme toggle", async () => {
+       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+       vi.mocked(window.localStorage.getItem).mockImplementation(() => { throw new DOMException('Unavailable', 'SecurityError'); });
+       vi.mocked(window.localStorage.setItem).mockImplementation(() => { throw new DOMException('Unavailable', 'QuotaExceededError'); });
+       renderHeader();
+       expect(warn).toHaveBeenCalledWith('Theme preference could not be loaded from localStorage.');
+       await user.click(screen.getByRole('button', { name: 'Switch to dark mode' }));
+       expect(document.documentElement).toHaveAttribute('data-theme', 'dark');
+       expect(warn).toHaveBeenCalledWith('Theme preference could not be saved to localStorage.');
    });
 
    test("should respect an existing dark theme and toggle it to light", async () => {
