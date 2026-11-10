@@ -1,7 +1,6 @@
 import { connectDB } from "@/libs/db";
 import { VectorStoreModel } from "@/models/vector-store.model";
 import { BlogModel } from "@/models/blogs.model";
-import { ChatBlogSchema } from "@/@types/Chat.types";
 import { toPlainText } from "../ingestion/seed-documents";
 import { createTool } from "@mastra/core/tools";
 import { embed } from "ai";
@@ -11,6 +10,7 @@ import { getCurrentBlogSkills, isCurrentBlogSkillsQuestion } from "./current-blo
 import { getPortfolioSkills, isPortfolioSkillsListQuestion } from "./portfolio-skills";
 import { getCertificationIssueDate, isCertificationIssueDateQuestion } from "./certification-issue-date";
 import { getCapabilitySkillName, getSkillCapabilities } from "./skill-capabilities";
+import { getPublishedBlogs, isPublishedBlogsListQuestion, toChatBlog } from "./published-blogs";
 
 function cosineSimilarity(vecA: number[], vecB: number[]): number {
     if (!vecA || !vecB || vecA.length === 0 || vecB.length === 0 || vecA.length !== vecB.length) {
@@ -31,10 +31,6 @@ function cosineSimilarity(vecA: number[], vecB: number[]): number {
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
 }
 
-function blogLink(blog: { _id: unknown; title: string; slug: string }) {
-    return ChatBlogSchema.parse({ _id: String(blog._id), title: blog.title, slug: blog.slug });
-}
-
 export const customVectorQueryTool = createTool({
     id: 'query-portfolio-database',
     description: 'Search portfolio knowledge, retrieve the current blog, or list every saved portfolio skill without similarity limits.',
@@ -48,6 +44,10 @@ export const customVectorQueryTool = createTool({
         try {
             const userPrompt = requestContext.get("userPrompt");
             const question = typeof userPrompt === "string" ? userPrompt : query;
+            if (isPublishedBlogsListQuestion(question)) {
+                const result = await getPublishedBlogs();
+                return { success: true, matches: [result.text, ...result.blogs.map(blog => blog.title)], blogs: result.blogs };
+            }
             const capabilitySkill = getCapabilitySkillName(question);
             if (capabilitySkill) {
                 const answer = await getSkillCapabilities(capabilitySkill);
@@ -88,7 +88,7 @@ export const customVectorQueryTool = createTool({
                     blog.skills?.length && `Skills: ${blog.skills.map(skill => skill.name).join(", ")}`,
                     `Content: ${toPlainText(blog.content)}`,
                 ].filter(Boolean).join("\n");
-                return { success: true, matches: [details], blogs: includeBlogLinks ? [blogLink(blog)] : [] };
+                return { success: true, matches: [details], blogs: includeBlogLinks ? [toChatBlog(blog)] : [] };
             }
             const { embedding: queryEmbedding } = await embed({
                 model: ollama.embedding('nomic-embed-text'),
@@ -134,7 +134,7 @@ export const customVectorQueryTool = createTool({
             const blogsById = new Map(blogRecords.map(blog => [String(blog._id), blog]));
             const blogs = blogIds.flatMap(id => {
                 const blog = blogsById.get(id);
-                return blog ? [blogLink(blog)] : [];
+                return blog ? [toChatBlog(blog)] : [];
             });
             const matches = topMatches.filter(match => {
                 const id = getBlogId(match);
