@@ -31,6 +31,16 @@ the preference could not be loaded or saved.
 
 ## Basic info API
 
+The public site layout reads the Basic Info collection server-side to generate
+its default page title/title template, description, author/creator, favicon,
+Open Graph, and Twitter metadata. It uses `name`, `bio`, `website_url`,
+`avatar_url`, and `favicon_url`; private contact fields are not included.
+The website URL supplies the metadata base for relative images/icons. Public
+routes remain dynamic so saved profile changes appear on the next request.
+An unconfigured collection uses a generic "Portfolio" title and logs a warning;
+database failures or invalid saved metadata are surfaced rather than hidden.
+The layout does not assign a homepage canonical URL to every blog.
+
 `POST /api/basic-info` accepts a JSON body validated by
 [`BasicInfoSchema`](./src/app/_types/BasicInfo.types.ts).
 The `bio` must contain at least 100 characters and at most 15 words.
