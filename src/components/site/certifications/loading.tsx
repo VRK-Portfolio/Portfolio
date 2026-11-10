@@ -4,7 +4,7 @@ import SectionHeading from "@/block/site/section-heading/section-heading";
 const CertificationLoading = ({ type = 'site' }: { type?: 'admin' | 'site' }) => {
     return (
         <>
-            <div className={`cmp-certification cmp-my-skills ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
+            <div role="status" aria-label="Loading certifications" className={`cmp-certification cmp-my-skills ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
                 <div className="container">
                     <SectionHeading title="Certifications" subtitle="Sample Sub Heading for Certifications" />
                     <div className="cmp-certification__content grid md:grid-cols-2 xl:grid-cols-3 gap-4 animate-pulse">

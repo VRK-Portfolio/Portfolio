@@ -3,9 +3,11 @@ import { CertificationSchema, CertificationType } from "@/@types/Certification.t
 import { withAuth } from "@/libs/auth-wrapper";
 import { CertificationModel } from "@/models/certifications.model";
 import { NextResponse } from "next/server";
+import { connectDB } from "@/libs/db";
 
 const GET = async (): Promise<NextResponse<ApiGetResponse<CertificationType[]>>> => {
     try {
+        await connectDB();
         const certifications = await CertificationModel.find();
         return NextResponse.json({
             data: certifications,
@@ -37,6 +39,7 @@ const POST = withAuth(async (req: Request): Promise<NextResponse<ApiPostResponse
             }, { status: 400 });
         }
         const { data: validatedData } = validation;
+        await connectDB();
         await CertificationModel.create(validatedData);
         return NextResponse.json({
             success: true,

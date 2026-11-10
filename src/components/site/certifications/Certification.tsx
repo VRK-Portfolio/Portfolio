@@ -10,10 +10,10 @@ import { formatDate } from "@/libs/utils";
 import CertificationLoading from "./loading";
 
 const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { className?: string, modalOpen?: (id?: string) => void, type?: 'admin' | 'site' }) => {
-    const { certifications, isLoading } = useCertifications();
+    const { certifications, isLoading, isError, isFetching, refetch } = useCertifications();
     const { deleteCertification } = useDeleteCertifications();
     if (isLoading) {
-        return <CertificationLoading />;
+        return <CertificationLoading type={type} />;
     }
     return (
         <section id="Certifications" className={`cmp-certification ${className} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
@@ -35,6 +35,13 @@ const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { 
                         </>
                     )
                 }
+                {isError && (
+                    <div role="alert" className="mb-4 space-y-3">
+                        <p>Certifications could not be loaded. Please try again.</p>
+                        <Button onClick={() => refetch()} disabled={isFetching}>Retry certifications</Button>
+                    </div>
+                )}
+                {!isError && certifications.length === 0 && <p>No certifications available yet.</p>}
                 <div className="cmp-certification__content grid md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {
                         certifications?.map((certification) => (

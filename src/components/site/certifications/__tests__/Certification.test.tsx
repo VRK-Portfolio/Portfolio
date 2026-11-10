@@ -92,6 +92,40 @@ describe("CertificationComponent", () => {
         await waitFor(() => expect(queryClient.getQueryState(["certifications"])?.status).toBe("error"));
         expect(screen.getByRole("heading", { name: "Certifications" })).toBeInTheDocument();
         expect(screen.queryByRole("link")).not.toBeInTheDocument();
+        expect(screen.getByRole("alert")).toHaveTextContent("Certifications could not be loaded.");
+        expect(screen.getByRole("button", { name: "Retry certifications" })).toBeEnabled();
+        expect(screen.queryByRole("status", { name: "Loading certifications" })).not.toBeInTheDocument();
+    });
+
+    test.each(["site", "admin"] as const)("recovers from a 500 with the retry button in the %s view", async type => {
+        const user = userEvent.setup();
+        let requests = 0;
+        server.use(http.get("*/api/certifications", () => {
+            requests++;
+            return requests === 1
+                ? HttpResponse.json({ success: false, error: "Unavailable" }, { status: 500 })
+                : HttpResponse.json({ success: true, data: mockCertifications });
+        }));
+        const { container } = renderWithQueryClient(<CertificationComponent type={type} />);
+        expect(screen.getByRole("status", { name: "Loading certifications" })).toBeInTheDocument();
+        if (type === "admin") expect(container.querySelector(".cmp-admin__type")).toBeInTheDocument();
+        await screen.findByRole("alert");
+        expect(container.querySelector(".shimmer")).not.toBeInTheDocument();
+        await user.click(screen.getByRole("button", { name: "Retry certifications" }));
+        await screen.findByRole("heading", { name: mockCertifications[0].title });
+        expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+        expect(screen.queryByRole("status", { name: "Loading certifications" })).not.toBeInTheDocument();
+        expect(requests).toBe(2);
+    });
+
+    test("retains existing cards when a background refresh fails", async () => {
+        const { queryClient } = renderWithQueryClient(<CertificationComponent />);
+        await screen.findByRole("heading", { name: mockCertifications[0].title });
+        server.use(http.get("*/api/certifications", () => HttpResponse.json({ success: false }, { status: 500 })));
+        await queryClient.invalidateQueries({ queryKey: ["certifications"] });
+        await screen.findByRole("alert");
+        expect(screen.getByRole("heading", { name: mockCertifications[0].title })).toBeInTheDocument();
+        expect(screen.queryByRole("status", { name: "Loading certifications" })).not.toBeInTheDocument();
     });
 
     test("should render an empty admin list while keeping Add Certification available", async () => {
@@ -102,5 +136,6 @@ describe("CertificationComponent", () => {
         expect(screen.getByRole("button", { name: "Add Certification" })).toBeEnabled();
         expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Delete" })).not.toBeInTheDocument();
+        expect(screen.getByText("No certifications available yet.")).toBeInTheDocument();
     });
 });
