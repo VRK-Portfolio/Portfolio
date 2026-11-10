@@ -2,7 +2,7 @@
 import Link from "next/link"
 import './Header.css';
 import Button from "@/block/ui/button/Button";
-import { useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Menu, Moon, Sun, X } from "lucide-react";
 
 const subscribeToTheme = (onChange: () => void) => {
@@ -21,11 +21,28 @@ const HeaderComponent = ({ className }: { className?: string }) => {
 
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const isDarkTheme = useSyncExternalStore(subscribeToTheme, getThemeSnapshot, getServerThemeSnapshot);
+    useEffect(() => {
+        try {
+            const theme = window.localStorage.getItem('theme');
+            if (theme === 'light' || theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', theme);
+            }
+        } catch {
+            console.warn('Theme preference could not be loaded from localStorage.');
+        }
+    }, []);
+
     const showHideMenu = () => {
         setIsMenuVisible(!isMenuVisible);
     };
     const changeTheme = () => {
-        document.documentElement.setAttribute('data-theme', getThemeSnapshot() ? 'light' : 'dark');
+        const theme = getThemeSnapshot() ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        try {
+            window.localStorage.setItem('theme', theme);
+        } catch {
+            console.warn('Theme preference could not be saved to localStorage.');
+        }
     };
     return (
         <>
@@ -59,7 +76,8 @@ const HeaderComponent = ({ className }: { className?: string }) => {
                                 </li>
                             </ul>
                         </nav>
-                        <Button onClick={() => changeTheme()} className="cmp-header__theme" variant="ghost" rounded>
+                        <Button onClick={() => changeTheme()} className="cmp-header__theme" variant="ghost" rounded
+                            aria-label={isDarkTheme ? "Switch to light mode" : "Switch to dark mode"}>
 
                             {
                                 isDarkTheme ? <Sun className="size-4" /> : <Moon className="size-4" />

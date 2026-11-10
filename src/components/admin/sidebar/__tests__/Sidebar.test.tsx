@@ -6,6 +6,7 @@ const counts = vi.hoisted(() => ({ skillsCount: 3, certificationCount: 2, totalE
 vi.mock("@/hooks/useSkills", () => ({ useSkills: () => counts }));
 vi.mock("@/hooks/useCertifications", () => ({ useCertifications: () => counts }));
 vi.mock("@/hooks/useExperience", () => ({ useGetExpericence: () => counts }));
+vi.mock("@/hooks/useBlogListing", () => ({ useBlogListing: () => ({ blogCount: 0 }) }));
 
 describe("Sidebar component", () => {
     beforeEach(() => {
@@ -48,6 +49,7 @@ describe("Sidebar component", () => {
 
     test("links to experience management and displays live query counts", () => {
         renderSidebar();
+        expect(screen.getByRole("link", { name: "Chatbot Settings" })).toHaveAttribute("href", "/admin/chat-settings");
         expect(screen.getByRole("link", { name: /Experience/ })).toHaveAttribute("href", "/admin/experience");
         expect(screen.getByText("3 Skills")).toBeInTheDocument();
         expect(screen.getByText("2 Certs")).toBeInTheDocument();

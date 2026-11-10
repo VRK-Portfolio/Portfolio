@@ -1,0 +1,119 @@
+@reference "../../../app/styles/globals.css";
+
+@layer components {
+    .cmp-footer {
+        @apply mt-auto border-t border-gray-200 bg-background py-6 text-foreground dark:border-gray-800;
+
+        .cmp-footer__content {
+            @apply flex flex-col items-center justify-between gap-5 text-center lg:flex-row lg:flex-wrap lg:text-left;
+        }
+
+        .cmp-footer__copyright,
+        .cmp-footer__hint {
+            @apply text-sm text-gray-600 dark:text-gray-300;
+        }
+
+        .cmp-footer__menu {
+            @apply flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm;
+        }
+
+        a,
+        .cmp-footer__chat-toggle {
+            @apply rounded-sm underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-foreground;
+        }
+
+        .cmp-footer__chat-slot {
+            @apply h-11 w-44 shrink-0;
+        }
+
+        .cmp-footer__chat-toggle {
+            @apply fixed right-4 z-20 inline-flex h-11 w-44 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full border border-gray-300 bg-background px-4 py-2 text-sm text-foreground shadow-lg hover:bg-gray-100 dark:border-gray-700 dark:hover:bg-gray-900;
+            bottom: max(1rem, env(safe-area-inset-bottom));
+            transition: box-shadow 240ms ease, border-radius 380ms ease, background-color 200ms ease;
+
+            &.cmp-footer__chat-toggle--docked {
+                @apply static rounded-lg shadow-none;
+            }
+
+            @media (prefers-reduced-motion: reduce) {
+                transition: none;
+            }
+        }
+
+        .cmp-footer__chat {
+            @apply fixed right-4 z-30 max-w-sm overflow-y-auto rounded-xl border border-gray-200 bg-background p-4 text-left text-foreground shadow-xl dark:border-gray-800;
+            bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 3.5rem);
+            width: calc(100vw - 2rem);
+            height: min(32rem, calc(100dvh - 5.5rem));
+
+            &:not([hidden]) {
+                @apply flex flex-col;
+            }
+
+            > :not(.cmp-footer__messages) {
+                @apply shrink-0;
+            }
+        }
+
+        .cmp-footer__messages {
+            @apply mt-4 min-h-0 flex-1 overflow-y-auto overscroll-contain whitespace-pre-wrap text-sm;
+            overflow-wrap: anywhere;
+        }
+
+        .cmp-footer__model {
+            @apply mt-2 flex flex-wrap gap-2 text-gray-600 dark:text-gray-300;
+            overflow-wrap: anywhere;
+        }
+
+        .cmp-badge.cmp-footer__model-badge {
+            @apply p-1
+        }
+        .cmp-badge.cmp-footer__model-badge span {
+            @apply min-w-0 max-w-full rounded-full px-2 text-[10px] leading-3;
+        }
+
+        .cmp-footer__exchange {
+            @apply mb-4 flex flex-col gap-3;
+        }
+
+        .cmp-footer__message {
+            @apply min-w-0 max-w-[90%] rounded-2xl px-3 py-2 text-left;
+        }
+
+        .cmp-footer__message--user {
+            @apply self-end rounded-br-sm bg-blue-700 text-white dark:bg-blue-600;
+        }
+
+        .cmp-footer__message--assistant {
+            @apply self-start rounded-bl-sm bg-gray-100 text-foreground dark:bg-gray-800;
+        }
+
+        .cmp-footer__message-label {
+            @apply mb-1 block text-xs font-semibold;
+        }
+
+        .cmp-footer__error {
+            @apply mt-2 text-sm text-red-700 dark:text-red-400;
+        }
+
+        .cmp-footer__blog-links {
+            @apply mt-2 list-disc space-y-1 pl-5 whitespace-normal;
+
+            a {
+                @apply text-blue-700 underline dark:text-blue-400;
+            }
+        }
+
+        .cmp-footer__form {
+            @apply mt-4 flex gap-2;
+
+            input {
+                @apply min-w-0 flex-1 rounded-lg border border-gray-300 bg-background px-3 py-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground disabled:opacity-60 dark:border-gray-700;
+            }
+
+            button:disabled {
+                @apply cursor-not-allowed opacity-50;
+            }
+        }
+    }
+}
