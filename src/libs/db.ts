@@ -20,11 +20,13 @@ if (!global.mongooseCache) {
 
 export const connectDB = async(): Promise<typeof mongoose> => {
 
-    if (mongoose.connection.readyState >= 1) {
+    if (mongoose.connection.readyState === 1) {
+        cached.conn = mongoose;
         return mongoose;
     }
     if (cached.conn) {
-        return cached.conn;
+        cached.conn = null;
+        cached.promise = null;
     }
 
     if (!cached.promise) {
@@ -33,20 +35,15 @@ export const connectDB = async(): Promise<typeof mongoose> => {
         }
         console.log('Connecting to MongoDB...');
         cached.promise = mongoose.connect(env.MONGODB_URI, opts).then((mongooseInstance) => {
+            cached.conn = mongooseInstance;
             console.log('MongoDB connected successfully');
             return mongooseInstance;
         }).catch((err) => {
             console.error('Error connecting to MongoDB:', err);
+            cached.conn = null;
             cached.promise = null;
             throw err;
         });
     }
-    try {
-        cached.conn = await cached.promise;
-    } catch (e) {
-        cached.promise = null;
-        throw e;
-    }
-
-    return cached.conn;
+    return cached.promise;
 }

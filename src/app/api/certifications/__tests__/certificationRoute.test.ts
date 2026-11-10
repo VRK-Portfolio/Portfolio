@@ -5,6 +5,8 @@ import { GET, POST } from "../route";
 import { ApiGetResponse, ApiPostResponse } from "@/@types/ApiResponse.types";
 import { NextRequest } from "next/server";
 import { DELETE, PUT } from "../[id]/route";
+import { connectDB } from "@/libs/db";
+import mongoose from "mongoose";
 
 vi.mock("@/libs/db", () => ({
     connectDB: vi.fn().mockResolvedValue(true)
@@ -13,12 +15,50 @@ describe("Certification API Routes", () => {
 
     beforeEach(async () => {
         vi.restoreAllMocks();
+        vi.mocked(connectDB).mockClear();
     });
 
     const mockCertifications: CertificationType[] = [
         { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 1", issuer: "Issuer 1", issueDate: new Date("2023-01-01"), expirationDate: new Date("2024-01-01"), credentialID: "123", credentialURL: "http://example.com", skillsCoverd: ["Skill 1"] },
         { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 2", issuer: "Issuer 2", issueDate: new Date("2023-02-01"), expirationDate: new Date("2024-02-01"), credentialID: "456", credentialURL: "http://example.com", skillsCoverd: ["Skill 2"] }
     ];
+    test("GET waits for the connection before querying on a cold start", async () => {
+        const connection = Promise.withResolvers<typeof mongoose>();
+        vi.mocked(connectDB).mockReturnValueOnce(connection.promise);
+        const find = vi.spyOn(CertificationModel, "find").mockResolvedValueOnce([]);
+        const pending = GET();
+        await Promise.resolve();
+        expect(find).not.toHaveBeenCalled();
+        connection.resolve(mongoose);
+        expect((await pending).status).toBe(200);
+        expect(find).toHaveBeenCalledOnce();
+    });
+
+    test("GET returns a connection failure without querying a disconnected model", async () => {
+        vi.mocked(connectDB).mockRejectedValueOnce(new Error("Connection unavailable"));
+        const find = vi.spyOn(CertificationModel, "find");
+        const response = await GET();
+        expect(response.status).toBe(500);
+        expect(await response.json()).toMatchObject({ success: false, error: "Connection unavailable" });
+        expect(find).not.toHaveBeenCalled();
+    });
+
+    test("POST waits for the connection before creating a certification", async () => {
+        const connection = Promise.withResolvers<typeof mongoose>();
+        vi.mocked(connectDB).mockReturnValueOnce(connection.promise);
+        const create = vi.spyOn(CertificationModel, "create").mockResolvedValueOnce([]);
+        const request = new NextRequest("http://localhost:3000/api/certifications", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(mockCertifications[0]),
+        });
+        const pending = POST(request, { params: Promise.resolve({}) });
+        await vi.waitFor(() => expect(connectDB).toHaveBeenCalled());
+        expect(create).not.toHaveBeenCalled();
+        connection.resolve(mongoose);
+        expect((await pending).status).toBe(201);
+        expect(create).toHaveBeenCalledOnce();
+    });
+
     test("should cast existing date strings to Date objects", () => {
         const certification = CertificationModel.hydrate({
             ...mockCertifications[0],

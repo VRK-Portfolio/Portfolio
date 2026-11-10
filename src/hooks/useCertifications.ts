@@ -6,8 +6,10 @@ import z from "zod";
 export const useCertifications = () => {
     const query = useQuery({
         queryKey: ['certifications'],
-        queryFn: async () => {
-            const response = await fetch('/api/certifications');
+        queryFn: async ({ signal }) => {
+            const response = await fetch('/api/certifications', {
+                signal: AbortSignal.any([signal, AbortSignal.timeout(15000)]),
+            });
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -30,6 +32,8 @@ export const useCertifications = () => {
         isLoading: query.isLoading,
         isError: query.isError,
         error: query.error,
+        refetch: query.refetch,
+        isFetching: query.isFetching,
         certificationCount: query.data?.length || 0,
     };
 };
