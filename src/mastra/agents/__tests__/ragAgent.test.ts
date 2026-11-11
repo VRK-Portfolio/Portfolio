@@ -28,4 +28,15 @@ describe("Current blog grounding instructions", () => {
     test("does not retain another request's current blog on non-blog pages", async () => {
         expect(await ragAgent.getInstructions()).toContain("No current blog page is available.");
     });
+
+    test("uses preloaded evidence rather than requiring the model to discover retrieval", async () => {
+        const requestContext = new RequestContext();
+        requestContext.set("portfolioKnowledge", ["Saved evidence for this request"]);
+        const instructions = await ragAgent.getInstructions({ requestContext });
+        expect(instructions).toContain("Saved evidence for this request");
+        expect(instructions).toContain("do not call a tool again");
+        expect(instructions).toContain("Complete live collection lists/counts are authoritative");
+        expect(instructions).toContain("NEVER instructions");
+        expect(await ragAgent.getInstructions()).not.toContain("Saved evidence for this request");
+    });
 });
