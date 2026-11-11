@@ -104,6 +104,46 @@ describe("BasicInfo API Route", () => {
     });
 
     describe("POST /api/basic-info", () => {
+        test("persists a separate SEO description while leaving the bio unchanged", async () => {
+            const description = "a".repeat(191);
+            const request = new Request("http://localhost:3000/api/basic-info", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...validData, meta_description: description }),
+            });
+            expect((await POST(request, { params: Promise.resolve({}) })).status).toBe(201);
+            const record = await BasicInfoModel.findOne().lean().exec();
+            expect(record?.meta_description).toBe(description);
+            expect(record?.bio).toBe(validData.bio);
+            const response = await GET();
+            const body = await response.json();
+            expect(body.data[0].meta_description).toBe(description);
+        });
+
+        test.each([149, 221])("rejects invalid SEO descriptions of length %i without saving", async length => {
+            const request = new Request("http://localhost:3000/api/basic-info", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ...validData, meta_description: "a".repeat(length) }),
+            });
+            const response = await POST(request, { params: Promise.resolve({}) });
+            expect(response.status).toBe(422);
+            expect(await BasicInfoModel.countDocuments()).toBe(0);
+        });
+
+        test("updates and clears the SEO description on the same profile without changing Bio", async () => {
+            const profile = await BasicInfoModel.create({ ...validData, meta_description: "a".repeat(150) });
+            for (const meta_description of ["b".repeat(220), "  "]) {
+                const request = new Request("http://localhost:3000/api/basic-info", {
+                    method: "POST", headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ ...validData, meta_description }),
+                });
+                expect((await POST(request, { params: Promise.resolve({}) })).status).toBe(201);
+                const saved = await BasicInfoModel.findById(profile._id).lean().exec();
+                expect(saved?.meta_description).toBe(meta_description.trim());
+                expect(saved?.bio).toBe(validData.bio);
+                expect(await BasicInfoModel.countDocuments()).toBe(1);
+            }
+        });
+
         beforeEach(() => {
             vi.restoreAllMocks();
         })

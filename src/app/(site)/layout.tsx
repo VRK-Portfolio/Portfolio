@@ -12,6 +12,7 @@ export const dynamic = 'force-dynamic';
 const siteMetadataSchema = BasicInfoSchema.pick({
   name: true,
   bio: true,
+  meta_description: true,
   website_url: true,
   avatar_url: true,
   favicon_url: true,
@@ -20,7 +21,7 @@ const siteMetadataSchema = BasicInfoSchema.pick({
 export async function generateMetadata(): Promise<Metadata> {
   await connectDB();
   const record = await BasicInfoModel.findOne()
-    .select("name bio website_url avatar_url favicon_url").lean().exec();
+    .select("name bio meta_description website_url avatar_url favicon_url").lean().exec();
   if (!record) {
     console.warn("Basic info is not configured; using the default portfolio metadata.");
     return { title: "Portfolio" };
@@ -31,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
     throw new Error("The basic info website URL must use HTTP or HTTPS.");
   }
   const title = `${info.name} | Portfolio`;
-  const description = info.bio.trim();
+  const description = info.meta_description || info.bio.trim();
 
   return {
     metadataBase,

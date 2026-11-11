@@ -41,7 +41,7 @@ describe("BasicInfoComponent", () => {
 
         expect(screen.getByRole("heading", { name: "Basic Information" })).toBeInTheDocument();
         expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
-        for (const field of ["name", "email", "phone", "address", "about_me", "bio", "website_url", "linked_in_url", "github_url"] as const) {
+        for (const field of ["name", "email", "phone", "address", "about_me", "bio", "meta_description", "website_url", "linked_in_url", "github_url"] as const) {
             expect(getInput(field)).toHaveValue("");
         }
         for (const field of ["avatar_url", "favicon_url"] as const) {
@@ -94,6 +94,7 @@ describe("BasicInfoComponent", () => {
         await waitFor(() => expect(hooks.updateBasicInfo).toHaveBeenCalledExactlyOnceWith({
             ...basicInfoMock[0],
             name: "Updated Developer",
+            meta_description: "",
         }));
         expect(screen.queryByText("Profile Picture is required")).not.toBeInTheDocument();
         expect(screen.queryByText("Favicon is required")).not.toBeInTheDocument();
@@ -139,8 +140,46 @@ describe("BasicInfoComponent", () => {
 
         await waitFor(() => expect(hooks.updateBasicInfo).toHaveBeenCalledExactlyOnceWith({
             ...basicInfoMock[0],
+            meta_description: "",
             avatar_url: expect.objectContaining({ 0: avatar, length: 1 }),
             favicon_url: expect.objectContaining({ 0: favicon, length: 1 }),
         }));
+    });
+
+    test("populates, counts, and submits the SEO description independently of Bio", async () => {
+        const description = "a".repeat(191);
+        hooks.basicInfo = { ...basicInfoMock[0], meta_description: description };
+        render(<BasicInfoComponent />);
+        expect(screen.getByRole("textbox", { name: "SEO Description" })).toHaveValue(description);
+        expect(screen.getByText(/191\/220 characters/)).toBeInTheDocument();
+        submitForm();
+        await waitFor(() => expect(hooks.updateBasicInfo).toHaveBeenCalledWith({
+            ...basicInfoMock[0], meta_description: description,
+        }));
+        expect(getInput("bio")).toHaveValue(basicInfoMock[0].bio);
+    });
+
+    test.each([149, 221])("rejects an SEO description with %i characters before saving", async length => {
+        hooks.basicInfo = { ...basicInfoMock[0], meta_description: "a".repeat(length) };
+        render(<BasicInfoComponent />);
+        submitForm();
+        expect(await screen.findByText(length < 150
+            ? "SEO description must be at least 150 characters"
+            : "SEO description must be at most 220 characters")).toBeInTheDocument();
+        expect(hooks.updateBasicInfo).not.toHaveBeenCalled();
+    });
+
+    test("updates the character count and allows clearing the custom SEO description", async () => {
+        hooks.basicInfo = { ...basicInfoMock[0], meta_description: "a".repeat(191) };
+        render(<BasicInfoComponent />);
+        fireEvent.change(getInput("meta_description"), { target: { value: "b".repeat(150) } });
+        expect(screen.getByText(/150\/220 characters/)).toBeInTheDocument();
+        fireEvent.change(getInput("meta_description"), { target: { value: "" } });
+        expect(screen.getByText(/0\/220 characters/)).toBeInTheDocument();
+        submitForm();
+        await waitFor(() => expect(hooks.updateBasicInfo).toHaveBeenCalledExactlyOnceWith({
+            ...basicInfoMock[0], meta_description: "",
+        }));
+        expect(getInput("bio")).toHaveValue(basicInfoMock[0].bio);
     });
 });
