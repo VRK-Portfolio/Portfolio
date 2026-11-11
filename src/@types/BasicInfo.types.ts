@@ -20,6 +20,11 @@ export const BasicInfoSchema = z.object({
     bio: z.string()
           .min(1, "Bio is required")
           .max(150, "Bio must be at most 100 letters"),
+    meta_description: z.string()
+          .trim()
+          .refine(value => value.length === 0 || value.length >= 150, "SEO description must be at least 150 characters")
+          .max(220, "SEO description must be at most 220 characters")
+          .optional(),
     avatar_url: z.string()
           .min(1, "Avatar URL is required")
           .pipe(urlOrRelativePath),

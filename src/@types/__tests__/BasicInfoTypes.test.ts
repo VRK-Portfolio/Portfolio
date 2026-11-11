@@ -21,6 +21,19 @@ describe("BasicInfoTypes Tests", () => {
    };
 
    describe("Happy Path", () => {
+       test.each([150, 191, 220])("accepts a separate SEO description of %i characters", length => {
+           const payload = { ...getValidPayload(), meta_description: `  ${"a".repeat(length)}  ` };
+           expect(BasicInfoSchema.parse(payload).meta_description).toBe("a".repeat(length));
+       });
+
+       test.each([1, 149, 221])("rejects a nonempty SEO description of %i characters", length => {
+           expect(BasicInfoSchema.safeParse({ ...getValidPayload(), meta_description: "a".repeat(length) }).success).toBe(false);
+       });
+
+       test.each(["", "  ", undefined])("preserves compatibility for an omitted or blank SEO description: %j", meta_description => {
+           expect(BasicInfoSchema.safeParse({ ...getValidPayload(), meta_description }).success).toBe(true);
+       });
+
        test("should return a valid payload", () => {
            const payload = getValidPayload();
            const result = BasicInfoSchema.parse(payload);

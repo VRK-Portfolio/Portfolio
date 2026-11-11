@@ -1,18 +1,18 @@
 'use client';
-import { BasicInfoType } from "@/@types/BasicInfo.types";
+import { BasicInfoSchema, BasicInfoType } from "@/@types/BasicInfo.types";
 import Button from "@/block/ui/button/Button";
 import Card from "@/block/ui/card/Card";
 import Input from "@/block/ui/input/Input";
 import { useBasicInfo, useUpdateBasicInfo } from "@/hooks/useBasicInfo";
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 const BasicInfoComponent = () => {
     const { basicInfo } = useBasicInfo();
     const { updateBasicInfo } = useUpdateBasicInfo();
     const faviconUrl = basicInfo?.favicon_url || ""; 
     const avatarUrl = basicInfo?.avatar_url || ""; 
-    const { handleSubmit, register, formState: { errors }, reset } = useForm<BasicInfoType>({
+    const { handleSubmit, register, formState: { errors }, reset, control } = useForm<BasicInfoType>({
         defaultValues: {
             name: "",
             email: "",
@@ -20,17 +20,19 @@ const BasicInfoComponent = () => {
             address: "",
             about_me: "",
             bio: "",
+            meta_description: "",
             avatar_url: "",
             favicon_url: "",
             github_url: "",
             linked_in_url: "",
             website_url: ""
         }
-    })
+    });
+    const metaDescription = useWatch({ control, name: "meta_description" }) ?? "";
 
     useEffect(() => {
         if (basicInfo) {
-            reset(basicInfo);
+            reset({ ...basicInfo, meta_description: basicInfo.meta_description ?? "" });
         }
     }, [basicInfo, reset]);
 
@@ -116,6 +118,23 @@ const BasicInfoComponent = () => {
                             })}
                             error={errors.bio?.message}
                         />
+                        <Input
+                            label="SEO Description"
+                            aria-label="SEO Description"
+                            aria-describedby="seo-description-help"
+                            type="text"
+                            {...register("meta_description", {
+                                validate: value => {
+                                    const result = BasicInfoSchema.shape.meta_description.safeParse(value);
+                                    return result.success || result.error.issues[0].message;
+                                }
+                            })}
+                            error={errors.meta_description?.message}
+                        />
+                        <p id="seo-description-help" className="text-sm">
+                            {metaDescription.trim().length}/220 characters. Use 150-220 characters for search and social previews.
+                            Leave blank to use Bio. This does not change your visible introduction.
+                        </p>
                         <div className="grid grid-cols-2 gap-4">
                             <Input type="file"
                                 accept=".svg,.png,.jpg,.jpeg,.webp" 
