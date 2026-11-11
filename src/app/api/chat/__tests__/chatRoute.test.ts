@@ -4,11 +4,13 @@ import { DEFAULT_CHAT_CONFIG } from "@/@types/ChatSettings.types";
 import { ChatConfigurationError } from "@/libs/chat-configuration-error";
 
 const mocks = vi.hoisted(() => ({
-    generate: vi.fn(), getAgentById: vi.fn(), getCurrentBlogSkills: vi.fn(), getPortfolioSkills: vi.fn(), getCertificationIssueDate: vi.fn(), getSkillCapabilities: vi.fn(), getChatSettings: vi.fn(), getPublishedBlogs: vi.fn(),
+    generate: vi.fn(), getAgentById: vi.fn(), getCurrentBlogSkills: vi.fn(), getPortfolioSkills: vi.fn(), getCertificationIssueDate: vi.fn(), getSkillCapabilities: vi.fn(), getChatSettings: vi.fn(), getPublishedBlogs: vi.fn(), getPublishedBlogCount: vi.fn(), retrieve: vi.fn(),
 }));
+vi.mock("@/mastra/tools/portfolio-knowledge", () => ({ retrievePortfolioKnowledge: mocks.retrieve }));
 vi.mock("@/mastra/tools/published-blogs", async importOriginal => ({
     ...await importOriginal<typeof import("@/mastra/tools/published-blogs")>(),
     getPublishedBlogs: mocks.getPublishedBlogs,
+    getPublishedBlogCount: mocks.getPublishedBlogCount,
 }));
 vi.mock("@/libs/chat-settings", () => ({ getChatSettings: mocks.getChatSettings }));
 vi.mock("@/mastra/index", () => ({ mastra: { getAgentById: mocks.getAgentById } }));
@@ -47,11 +49,69 @@ beforeEach(() => {
     mocks.getAgentById.mockReturnValue({ generate: mocks.generate });
     mocks.getCurrentBlogSkills.mockResolvedValue("- React\n- TypeScript");
     mocks.getPortfolioSkills.mockResolvedValue("- JavaScript\n- TypeScript\n- ReactJS\n- NextJS\n- NodeJS\n- Docker");
+    mocks.retrieve.mockResolvedValue({ success: true, matches: ["Saved portfolio evidence"], blogs: [] });
     vi.spyOn(console, "error").mockImplementation(() => {});
 });
 afterEach(() => vi.restoreAllMocks());
 
 describe("Chat blog links and page context API", () => {
+    test("supplies server-retrieved evidence before generation even when the model does not call tools", async () => {
+        mocks.generate.mockResolvedValue({ text: "Saved role at saved company", toolResults: [] });
+        const response = await POST(request({ prompt: "Where does he work?", pathname: "/blogs/react-patterns" }));
+        expect(await response.json()).toEqual({ success: true, text: "Saved role at saved company", blogs: [] });
+        expect(mocks.retrieve).toHaveBeenCalledWith({ question: "Where does he work?", currentBlogSlug: "react-patterns" });
+        const context = mocks.generate.mock.lastCall?.[1].requestContext;
+        expect(context.get("portfolioKnowledge")).toEqual(["Saved portfolio evidence"]);
+        expect(mocks.generate.mock.lastCall?.[1].toolChoice).toBe("none");
+        expect(mocks.retrieve.mock.invocationCallOrder[0]).toBeLessThan(mocks.generate.mock.invocationCallOrder[0]);
+    });
+
+    test("returns an explicit missing-current-page answer without generating another article's summary", async () => {
+        mocks.retrieve.mockResolvedValue({ success: true, matches: ["No current blog page is available."], blogs: [], answer: "No current blog page is available." });
+        expect(await (await POST(request({ prompt: "Summarize this blog", pathname: "/" }))).json())
+            .toEqual({ success: true, text: "No current blog page is available.", blogs: [] });
+        expect(mocks.generate).not.toHaveBeenCalled();
+    });
+
+    test("reports retrieval failures as errors instead of a misleading not-found answer", async () => {
+        mocks.retrieve.mockRejectedValue(new Error("Database unavailable"));
+        const response = await POST(request({ prompt: "List all certifications" }));
+        expect(response.status).toBe(500);
+        expect(await response.json()).toMatchObject({ success: false });
+        expect(mocks.generate).not.toHaveBeenCalled();
+        expect(console.error).toHaveBeenCalledWith("Chat response error:", expect.objectContaining({ phase: "retrieval" }));
+    });
+
+    test("allows partial certification titles to use general collection evidence instead of forcing a false miss", async () => {
+        mocks.getCertificationIssueDate.mockResolvedValue("I could not find that information in the database.");
+        mocks.generate.mockResolvedValue({ text: "Issue date: 2025-03-19.", toolResults: [] });
+        expect(await (await POST(request({ prompt: "When was the Adobe certificate issued?" }))).json())
+            .toMatchObject({ text: "Issue date: 2025-03-19." });
+        expect(mocks.retrieve).toHaveBeenCalledOnce();
+    });
+
+    test.each(["/", "/blogs/how-to-convert-your-mongodb-data-into-an-ai-knowledge-base-with-next-js"])("counts blogs directly regardless of current page: %s", async pathname => {
+        mocks.getPublishedBlogCount.mockResolvedValue("Vijay has written 3 published blogs.");
+        const prompt = "how many total blogs written by vijay";
+        const response = await POST(request({ prompt, pathname }));
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ success: true, text: "Vijay has written 3 published blogs.", blogs: [] });
+        expect(mocks.getPublishedBlogCount).toHaveBeenCalledWith(prompt);
+        expect(mocks.getAgentById).not.toHaveBeenCalled();
+    });
+
+    test("does not count blogs when chat is disabled", async () => {
+        mocks.getChatSettings.mockResolvedValue({ ...DEFAULT_CHAT_CONFIG, chatEnabled: false });
+        expect((await POST(request({ prompt: "how many total blogs written by vijay" }))).status).toBe(403);
+        expect(mocks.getPublishedBlogCount).not.toHaveBeenCalled();
+    });
+
+    test("reports count failures without substituting a model response", async () => {
+        mocks.getPublishedBlogCount.mockRejectedValue(new Error("Database unavailable"));
+        expect((await POST(request({ prompt: "how many total blogs written by vijay" }))).status).toBe(500);
+        expect(mocks.getAgentById).not.toHaveBeenCalled();
+    });
+
     test.each(["/", "/blogs/react-patterns"])("lists every published blog directly without a model or embeddings on %s", async pathname => {
         mocks.generate.mockRejectedValue(new Error("No model or local embeddings are available in this deployment"));
         const response = await POST(request({ prompt: "show me the list of blogs", pathname }));
@@ -363,9 +423,11 @@ describe("Chat blog links and page context API", () => {
         { toolResults: [{ payload: { toolName: "customVectorQueryTool", result: { success: false, matches: ["Not usable"], blogs: [] } } }] },
         { toolResults: [{ payload: { toolName: "customVectorQueryTool", isError: true, result: { success: true, matches: ["Not usable"], blogs: [] } } }] },
     ])("blocks unsupported model answers without successful retrieval: %j", async ({ toolResults }) => {
+        mocks.retrieve.mockResolvedValue({ success: true, matches: [], blogs: [] });
         mocks.generate.mockResolvedValue({ text: "Based on the search results, here are invented facts.", toolResults });
         expect(await (await POST(request({ prompt: "Tell me about an unknown technology" }))).json())
             .toEqual({ success: true, text: "I could not find that information in the database.", blogs: [] });
+        expect(mocks.generate).not.toHaveBeenCalled();
     });
 
     test("reports vector database errors instead of using external knowledge", async () => {

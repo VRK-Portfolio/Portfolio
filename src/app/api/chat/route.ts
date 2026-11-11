@@ -9,7 +9,8 @@ import { getCertificationIssueDate, isCertificationIssueDateQuestion } from '@/m
 import { getCapabilitySkillName, getSkillCapabilities } from '@/mastra/tools/skill-capabilities';
 import { getChatSettings } from '@/libs/chat-settings';
 import { ChatConfigurationError } from '@/libs/chat-configuration-error';
-import { getPublishedBlogs, isPublishedBlogsListQuestion } from '@/mastra/tools/published-blogs';
+import { getPublishedBlogCount, isPublishedBlogCountQuestion, getPublishedBlogs, isPublishedBlogsListQuestion } from '@/mastra/tools/published-blogs';
+import { retrievePortfolioKnowledge } from '@/mastra/tools/portfolio-knowledge';
 
 const PromptSchema = z.object({
   prompt: z.string().trim().min(1),
@@ -57,6 +58,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'The chatbot is disabled.' }, { status: 403 });
     }
     phase = 'database-lookup';
+    if (isPublishedBlogCountQuestion(input.data.prompt)) {
+      return NextResponse.json(ChatResponseSchema.parse({
+        success: true, text: await getPublishedBlogCount(input.data.prompt), blogs: [],
+      }));
+    }
     if (isPublishedBlogsListQuestion(input.data.prompt)) {
       return NextResponse.json(ChatResponseSchema.parse({ success: true, ...await getPublishedBlogs() }));
     }
@@ -73,11 +79,10 @@ export async function POST(req: Request) {
       }));
     }
     if (isCertificationIssueDateQuestion(input.data.prompt)) {
-      return NextResponse.json(ChatResponseSchema.parse({
-        success: true,
-        text: await getCertificationIssueDate(input.data.prompt),
-        blogs: [],
-      }));
+      const answer = await getCertificationIssueDate(input.data.prompt);
+      if (answer !== 'I could not find that information in the database.') {
+        return NextResponse.json(ChatResponseSchema.parse({ success: true, text: answer, blogs: [] }));
+      }
     }
     if (isCurrentBlogSkillsQuestion(input.data.prompt)) {
       return NextResponse.json(ChatResponseSchema.parse({
@@ -94,17 +99,28 @@ export async function POST(req: Request) {
       }));
     }
 
+    phase = 'retrieval';
+    const knowledge = await retrievePortfolioKnowledge({ question: input.data.prompt, currentBlogSlug });
+    if (knowledge.answer || !knowledge.matches.some(match => match.trim())) {
+      return NextResponse.json(ChatResponseSchema.parse({
+        success: true,
+        text: knowledge.answer ?? 'I could not find that information in the database.',
+        blogs: [],
+      }));
+    }
+    requestContext.set('portfolioKnowledge', knowledge.matches);
     phase = 'generation';
     const agent = mastra.getAgentById('rag-agent');
     const response = await agent.generate(input.data.prompt, {
       requestContext,
+      toolChoice: 'none',
       modelSettings: { temperature: settings.temperature, maxOutputTokens: settings.maxOutputTokens },
     });
     phase = 'response';
-    const blogsById = new Map<string, ChatBlog>();
+    const blogsById = new Map<string, ChatBlog>(knowledge.blogs.map(blog => [blog._id, blog]));
     let exactAnswer: string | undefined;
-    let hasRetrievedContext = false;
-    for (const { payload } of response.toolResults) {
+    let hasRetrievedContext = knowledge.matches.some(match => match.trim().length > 0);
+    for (const { payload } of response.toolResults ?? []) {
       if (payload.toolName !== 'customVectorQueryTool' || payload.isError) continue;
       const result = BlogToolResultSchema.parse(payload.result);
       if (result.success) {

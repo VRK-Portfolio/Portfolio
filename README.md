@@ -154,10 +154,11 @@ blogs are excluded.
 
 On `/blogs/[slug]`, the current path is passed through a per-request Mastra
 context. When asked about "this blog" or to summarize the current article, the
-agent requests `currentBlog: true` from the retrieval tool. This fetches the
+server retrieves its full content before calling the model. This fetches the
 published article directly by its URL slug, including full readable content,
 author, category, dates, and skills; it does not depend on vector indexing or
-similarity thresholds. Other questions continue to use normal RAG search.
+similarity thresholds. Other questions use the complete live portfolio facts,
+even when asked on a blog page.
 Missing or unpublished current articles return no blog details, and navigating
 to another page updates the context on the next chat request.
 
@@ -185,13 +186,61 @@ Unfiltered blog-list requests such as "show me the list of blogs" fetch every
 published blog's title and slug directly from MongoDB, newest first. They do
 not require Gemini, credential decryption, local embeddings, or existing
 vector chunks. Drafts are excluded and links remain title-only.
+Blog-count questions such as "how many total blogs written by vijay" use a
+direct MongoDB count of published records, not vector matches or chunks.
+Explicit Vijay questions match his saved author-name variants (Vijay,
+Vijay Rameshkumar, and Vijay Ramesh Kumar), excluding other authors.
+Counts work on any page without an LLM call and return only the count sentence,
+without blog links. Filtered or compound questions retain normal retrieval.
 Named-skill capability questions return only saved capabilities from the MongoDB
 vector collection, without model generation, web search, or added technology
 features. Unknown skills or missing capabilities return an explicit not-found
 message. Legacy skill text remains readable; the next skills ingestion writes
 embeddings and structured skill metadata on every chunk for exact, complete
-capability answers. Other generated answers require successful, nonempty
-retrieval evidence; a model-only response is never returned.
+capability answers.
+
+### General question answering and verification
+
+The API retrieves MongoDB evidence **before** model generation; it no longer
+depends on the model deciding to call a tool or on an Ollama embedding server
+being reachable inside Vercel. All saved Basic Info, skills (including saved
+capabilities/proficiency), certifications, experience positions, and published
+blog metadata are supplied as structured facts. This preserves complete lists,
+counts, comparisons, dates, and compound questions instead of selecting only
+four vector chunks. Collection changes are visible without re-ingestion.
+
+The current article is retrieved in full only for current-page questions.
+For other article-content questions, deterministic lexical matching ranks
+published-blog passages by title/category/body terms and supplies up to eight
+1,600-character passages alongside the complete catalog. This does not require
+embeddings, but unusual synonyms or questions needing passages outside that
+selection may still need a more specific article reference. Drafts and deleted
+articles are excluded. Saved blog skill associations, not mentions in prose,
+remain authoritative for skills.
+
+The model receives the evidence as reference data with tool calling disabled
+for this generation. The shared retrieval tool uses the same pipeline when
+invoked separately. Database failures return errors instead of a misleading
+not-found answer; an empty database or unsupported fact must not authorize
+answers from model knowledge. Questions partly supported by saved data should
+answer the supported parts and identify what is missing. No system can promise
+correct answers to every possible wording or facts that have never been saved.
+
+Run the repeatable end-to-end checks against a running application:
+
+```bash
+node scripts/verify-chat.mjs http://localhost:3000
+# After deployment:
+node scripts/verify-chat.mjs https://www.vijayrameshkumar.dev
+```
+
+This opt-in check uses the configured provider (and consumes its tokens). It
+compares answers with the application's saved records across profile/contact,
+skills, jobs, certificates, blog lists/counts/current-page context, missing or
+unpublished pages, unsupported facts, and prompt-injection controls. It exits
+nonzero on any failure. The local automated retrieval/API regression tests use
+isolated test data and do not call a real model.
+
 ### Chatbot settings
 
 Open **Chatbot Settings** in the admin sidebar (`/admin/chat-settings`) to save
@@ -229,11 +278,9 @@ Without saved settings, chat keeps the Ollama `llama3.2` default. Ollama generat
 uses its OpenAI-compatible `/v1` API at server-only `OLLAMA_BASE_URL` (default
 `http://localhost:11434`). Embeddings/ingestion keep their existing local Ollama
 configuration; changing the chat provider does not change embedding models.
-Semantic queries still require the local Ollama embedding service; selecting
-Gemini alone does not make that service available inside Vercel. Until a
-hosted embedding service using the same model/vectors is configured in the
-retrieval and ingestion code, use direct database lookups for full blog/skill
-lists and the existing exact-fact lookups.
+Public chat retrieval does not call that service: it reads live MongoDB facts
+and published blog passages. Local Ollama is required only when running the
+embedding ingestion scripts, not for general deployed questions.
 Cloud generation sends retrieved portfolio context and the visitor's question
 to the selected provider.
 
@@ -251,8 +298,10 @@ saved-key indicators, or private generation settings are exposed publicly.
 The full ingestion flow in `src/mastra/ingestion/index.ts` also runs
 `seedBlogs`, `seedCertifications`, and `seedExperience`. These functions can
 be called individually from a server-side ingestion script after configuring
-the MongoDB environment. Ingestion uses local Ollama with `nomic-embed-text`,
-the same embedding model used by the chatbot's retrieval tool.
+the MongoDB environment. Ingestion uses local Ollama with `nomic-embed-text`.
+Basic Info uses the same validated, upsert-before-cleanup embedding pipeline
+as the other sources; missing records or embedding failures propagate instead
+of being logged as if ingestion succeeded.
 
 Only published blogs are indexed, including content, category, author, dates,
 related skill names, and a public blog path. Certifications include issuer,

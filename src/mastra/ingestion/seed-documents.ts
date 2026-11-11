@@ -3,7 +3,7 @@ import { embedMany } from "ai";
 import { ollama } from "ollama-ai-provider-v2";
 import { VectorStoreModel } from "@/models/vector-store.model";
 
-type Source = "blogs" | "certifications" | "experience" | "skills";
+type Source = "basic-info" | "blogs" | "certifications" | "experience" | "skills";
 
 interface SourceDocument {
     id: string;
