@@ -29,21 +29,45 @@ theme unchanged (light by default). If browser storage is unavailable, the
 toggle still works for the current page and a console warning reports that
 the preference could not be loaded or saved.
 
+## Crawler rules
+
+[`src/app/robots.ts`](./src/app/robots.ts) serves `/robots.txt` using Next.js
+metadata routing. All crawlers may access public pages, including blogs;
+`/admin`, `/login`, and `/api` paths are disallowed.
+These rules are advisory, not access control or guaranteed removal from search
+results. Existing authentication remains unchanged.
+
+[`src/app/sitemap.ts`](./src/app/sitemap.ts) serves `/sitemap.xml`, containing
+the homepage and all currently published blogs, never drafts, admin, login,
+or API routes. Blog modification dates use saved `updatedAt`, falling back
+to `createdAt`; missing dates are omitted, not replaced with the request time.
+Both routes read the HTTP(S) website origin from Basic Info on each request,
+and robots.txt advertises the absolute sitemap URL. Publishing, unpublishing,
+deleting blogs, or changing the website URL updates the generated files without
+a rebuild. Database failures and invalid saved configuration are surfaced rather
+than producing placeholder URLs or a misleading partial sitemap.
+
 ## Basic info API
 
 The public site layout reads the Basic Info collection server-side to generate
 its default page title/title template, description, author/creator, favicon,
-Open Graph, and Twitter metadata. It uses `name`, `bio`, `website_url`,
+Open Graph, and Twitter metadata. It uses `name`, `bio`, `meta_description`, `website_url`,
 `avatar_url`, and `favicon_url`; private contact fields are not included.
 The website URL supplies the metadata base for relative images/icons. Public
 routes remain dynamic so saved profile changes appear on the next request.
 An unconfigured collection uses a generic "Portfolio" title and logs a warning;
 database failures or invalid saved metadata are surfaced rather than hidden.
 The layout does not assign a homepage canonical URL to every blog.
+The optional **SEO Description** in admin Basic Info supplies the HTML,
+Open Graph, and Twitter description independently of the visible Bio. When
+provided, it must contain 150-220 characters after trimming (spaces included);
+the form displays its character count. An omitted or blank value keeps the
+existing Bio fallback for older records. Save a full SEO description to meet
+the recommended length without changing the visible introduction.
 
 `POST /api/basic-info` accepts a JSON body validated by
-[`BasicInfoSchema`](./src/app/_types/BasicInfo.types.ts).
-The `bio` must contain at least 100 characters and at most 15 words.
+[`BasicInfoSchema`](./src/@types/BasicInfo.types.ts).
+The `bio` remains limited to 1-150 characters.
 The `about_me` must contain 100 to 300 words. Do not send `created_at`
 or `updated_at`; Mongoose generates these timestamps.
 

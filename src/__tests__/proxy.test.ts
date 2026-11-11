@@ -3,6 +3,18 @@ import { NextRequest } from "next/server";
 import { describe, expect, test } from "vitest";
 
 describe("Proxy Tests", () => {
+   test.each(["", "accessToken=mock-valid-token"])("allows robots.txt without an authentication redirect: %j", cookie => {
+       const req = new NextRequest("http://localhost:3000/robots.txt", {
+           headers: { cookie },
+       });
+
+       const response = proxy(req);
+
+       expect(response.status).toBe(200);
+       expect(response.headers.get("location")).toBeNull();
+       expect(response.headers.get("x-middleware-next")).toBe("1");
+   });
+
    test("should test proxy functionality without accesstoken", () => {
        const req = new NextRequest("http://localhost:3000/admin/dashboard");
 

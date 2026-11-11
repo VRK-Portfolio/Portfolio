@@ -53,10 +53,32 @@ describe("Public layout metadata from basic info", () => {
         const query = queryResult({ ...info, email: "private@example.test", phone: "1234567890", address: "Private address" });
         mocks.findOne.mockReturnValue(query);
         const metadata = await generateMetadata();
-        expect(query.select).toHaveBeenCalledWith("name bio website_url avatar_url favicon_url");
+        expect(query.select).toHaveBeenCalledWith("name bio meta_description website_url avatar_url favicon_url");
         expect(JSON.stringify(metadata)).not.toContain("private@example.test");
         expect(JSON.stringify(metadata)).not.toContain("Private address");
         expect(metadata.alternates).toBeUndefined();
+    });
+
+    test("uses a separate 150-220 character SEO description consistently without replacing the visible bio", async () => {
+        const description = "Explore this developer portfolio featuring React, Next.js, TypeScript, and MongoDB projects, enterprise frontend experience, AI-powered applications, technical blogs, and certifications.";
+        expect(description.length).toBeGreaterThanOrEqual(150);
+        expect(description.length).toBeLessThanOrEqual(220);
+        mocks.findOne.mockReturnValue(queryResult({ ...info, meta_description: `  ${description}  ` }));
+        const metadata = await generateMetadata();
+        expect(metadata.description).toBe(description);
+        expect(metadata.openGraph).toMatchObject({ description });
+        expect(metadata.twitter).toMatchObject({ description });
+        expect(info.bio).toBe("Building accessible web applications.");
+    });
+
+    test.each(["", "  "])("falls back to the existing bio when the SEO description is blank: %j", async meta_description => {
+        mocks.findOne.mockReturnValue(queryResult({ ...info, meta_description }));
+        expect((await generateMetadata()).description).toBe(info.bio);
+    });
+
+    test.each([149, 221])("rejects an invalid saved SEO description of length %i", async length => {
+        mocks.findOne.mockReturnValue(queryResult({ ...info, meta_description: "a".repeat(length) }));
+        await expect(generateMetadata()).rejects.toThrow();
     });
 
     test("uses fresh saved values and supports absolute image/icon URLs", async () => {
