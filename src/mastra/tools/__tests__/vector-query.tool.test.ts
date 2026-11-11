@@ -1,267 +1,87 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { customVectorQueryTool } from "../vector-query.tool";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { RequestContext } from "@mastra/core/request-context";
+import { customVectorQueryTool } from "../vector-query.tool";
 
 const mocks = vi.hoisted(() => ({
-    connectDB: vi.fn(), embed: vi.fn(), vectors: vi.fn(), blogs: vi.fn(), currentBlog: vi.fn(), portfolioSkills: vi.fn(), certificationIssueDate: vi.fn(), skillCapabilities: vi.fn(), publishedBlogs: vi.fn(),
+    retrieve: vi.fn(), currentSkills: vi.fn(), portfolioSkills: vi.fn(), certificate: vi.fn(),
+    capabilities: vi.fn(), blogs: vi.fn(), count: vi.fn(),
 }));
-vi.mock("../published-blogs", async importOriginal => ({
-    ...await importOriginal<typeof import("../published-blogs")>(),
-    getPublishedBlogs: mocks.publishedBlogs,
+vi.mock("../portfolio-knowledge", () => ({ retrievePortfolioKnowledge: mocks.retrieve }));
+vi.mock("../current-blog-skills", async original => ({
+    ...await original<typeof import("../current-blog-skills")>(), getCurrentBlogSkills: mocks.currentSkills,
 }));
-vi.mock("@/libs/db", () => ({ connectDB: mocks.connectDB }));
-vi.mock("@/models/vector-store.model", () => ({ VectorStoreModel: { find: mocks.vectors } }));
-vi.mock("@/models/blogs.model", () => ({ BlogModel: { find: mocks.blogs, findOne: mocks.currentBlog } }));
-vi.mock("ai", () => ({ embed: mocks.embed }));
-vi.mock("ollama-ai-provider-v2", () => ({ ollama: { embedding: () => "nomic-embed-text" } }));
-vi.mock("../portfolio-skills", async importOriginal => ({
-    ...await importOriginal<typeof import("../portfolio-skills")>(),
-    getPortfolioSkills: mocks.portfolioSkills,
+vi.mock("../portfolio-skills", async original => ({
+    ...await original<typeof import("../portfolio-skills")>(), getPortfolioSkills: mocks.portfolioSkills,
 }));
-vi.mock("../certification-issue-date", async importOriginal => ({
-    ...await importOriginal<typeof import("../certification-issue-date")>(),
-    getCertificationIssueDate: mocks.certificationIssueDate,
+vi.mock("../certification-issue-date", async original => ({
+    ...await original<typeof import("../certification-issue-date")>(), getCertificationIssueDate: mocks.certificate,
 }));
-vi.mock("../skill-capabilities", async importOriginal => ({
-    ...await importOriginal<typeof import("../skill-capabilities")>(),
-    getSkillCapabilities: mocks.skillCapabilities,
+vi.mock("../skill-capabilities", async original => ({
+    ...await original<typeof import("../skill-capabilities")>(), getSkillCapabilities: mocks.capabilities,
+}));
+vi.mock("../published-blogs", async original => ({
+    ...await original<typeof import("../published-blogs")>(), getPublishedBlogs: mocks.blogs, getPublishedBlogCount: mocks.count,
 }));
 
-const firstId = "507f1f77bcf86cd799439011";
-const secondId = "507f1f77bcf86cd799439012";
-const blog = {
-    _id: firstId, title: "React patterns", slug: "react-patterns",
-    content: "<p>Components &amp; hooks.</p>", coverImage: "/images/react.png", skills: [{ name: "React" }],
-};
-const vector = (id: string, chunk = 0, embedding = [1, 0]) => ({
-    docId: `blogs:${id}:${chunk}`, source: "blogs", text: `Blog ${id} chunk ${chunk}`, vector: embedding,
-});
-function queryResult(records: unknown) {
-    const query = { select: vi.fn(), populate: vi.fn(), lean: vi.fn(), exec: vi.fn().mockResolvedValue(records) };
-    query.select.mockReturnValue(query);
-    query.populate.mockReturnValue(query);
-    query.lean.mockReturnValue(query);
-    return query;
-}
-const runQuery = (options: {
-    currentBlog?: boolean; slug?: string; detail?: "all" | "skills"; includeBlogLinks?: boolean; query?: string; userPrompt?: string;
-} = {}) => {
+function run(question: string, slug?: string) {
     const requestContext = new RequestContext();
-    if (options.slug) requestContext.set("currentBlogSlug", options.slug);
-    if (options.userPrompt) requestContext.set("userPrompt", options.userPrompt);
+    requestContext.set("userPrompt", question);
+    if (slug) requestContext.set("currentBlogSlug", slug);
     return customVectorQueryTool.execute?.({
-        query: options.query ?? "React blogs", currentBlog: options.currentBlog,
-        detail: options.detail, includeBlogLinks: options.includeBlogLinks,
+        query: "A model rewrite that must not override the question",
+        currentBlog: true, detail: "skills", includeBlogLinks: true,
     }, { requestContext });
-};
+}
 
 beforeEach(() => {
     vi.resetAllMocks();
-    mocks.connectDB.mockResolvedValue(undefined);
-    mocks.embed.mockResolvedValue({ embedding: [1, 0] });
-    mocks.portfolioSkills.mockResolvedValue("- JavaScript\n- TypeScript\n- ReactJS\n- NextJS\n- NodeJS\n- Docker");
-    vi.spyOn(console, "error").mockImplementation(() => {});
+    mocks.retrieve.mockResolvedValue({ success: true, matches: ["Saved facts"], blogs: [] });
 });
-afterEach(() => vi.restoreAllMocks());
 
-describe("Blog retrieval links and current article details", () => {
-    test("lists published blogs from the original question without local embeddings or mistaken model flags", async () => {
-        const blogs = [{ _id: firstId, title: blog.title, slug: blog.slug }];
-        mocks.publishedBlogs.mockResolvedValue({ text: "Published blogs:", blogs });
-        expect(await runQuery({
-            userPrompt: "show me the list of blogs", query: "Skills in this blog", currentBlog: true,
-        })).toEqual({ success: true, matches: ["Published blogs:", blog.title], blogs });
-        expect(mocks.embed).not.toHaveBeenCalled();
-        expect(mocks.vectors).not.toHaveBeenCalled();
-        expect(mocks.currentBlog).not.toHaveBeenCalled();
-    });
-
-    test("returns only one published blog title link for multiple matching chunks", async () => {
-        mocks.vectors.mockReturnValue(queryResult([vector(firstId), vector(firstId, 1)]));
-        const query = queryResult([blog]);
-        mocks.blogs.mockReturnValue(query);
-        expect(await runQuery({ includeBlogLinks: true })).toEqual({
-            success: true,
-            matches: [`Blog ${firstId} chunk 0`, `Blog ${firstId} chunk 1`],
-            blogs: [{
-                _id: firstId, title: blog.title, slug: blog.slug,
-            }],
-        });
-        expect(mocks.blogs).toHaveBeenCalledWith({ _id: { $in: [firstId] }, status: "published" });
-        expect(query.populate).toHaveBeenCalledWith({ path: "skills", select: "name" });
-    });
-
-    test("preserves similarity order rather than database result order", async () => {
-        mocks.vectors.mockReturnValue(queryResult([vector(firstId), vector(secondId, 0, [0.8, 0.6])]));
-        mocks.blogs.mockReturnValue(queryResult([{ ...blog, _id: secondId, slug: "second" }, blog]));
-        expect(await runQuery({ includeBlogLinks: true })).toMatchObject({ blogs: [{ _id: firstId }, { _id: secondId }] });
-    });
-
-    test("removes deleted or unpublished blog chunks but preserves other context", async () => {
-        mocks.vectors.mockReturnValue(queryResult([
-            vector(firstId), { docId: "experience:1:0", source: "experience", text: "Developer", vector: [1, 0] },
-        ]));
-        mocks.blogs.mockReturnValue(queryResult([]));
-        expect(await runQuery()).toEqual({ success: true, matches: ["Developer"], blogs: [] });
-    });
-
-    test("omits links and stale blog context with malformed document IDs", async () => {
-        mocks.vectors.mockReturnValue(queryResult([vector("not-an-id")]));
-        expect(await runQuery()).toEqual({ success: true, matches: [], blogs: [] });
-        expect(mocks.blogs).not.toHaveBeenCalled();
-    });
-
-    test("does not include content, images, or skills in blog link metadata", async () => {
-        mocks.vectors.mockReturnValue(queryResult([vector(firstId)]));
-        mocks.blogs.mockReturnValue(queryResult([{ ...blog, content: "<p>" + "Long content ".repeat(50) + "</p>", coverImage: undefined, skills: undefined }]));
-        expect(await runQuery({ includeBlogLinks: true })).toEqual({
-            success: true,
-            matches: [`Blog ${firstId} chunk 0`],
-            blogs: [{ _id: firstId, title: blog.title, slug: blog.slug }],
-        });
-    });
-
-    test.each([{ vectors: [] }, { vectors: [vector(firstId, 0, [0, 1])] }])("does not load blogs without matching vectors", async ({ vectors }) => {
-        mocks.vectors.mockReturnValue(queryResult(vectors));
-        expect(await runQuery()).toMatchObject({ matches: [], blogs: [] });
-        expect(mocks.blogs).not.toHaveBeenCalled();
-    });
-
-    test("surfaces database errors without inventing links", async () => {
-        mocks.vectors.mockReturnValue(queryResult([vector(firstId)]));
-        mocks.blogs.mockImplementation(() => { throw new Error("Database unavailable"); });
-        expect(await runQuery()).toEqual({ success: false, matches: [], blogs: [], error: "Database unavailable" });
-        expect(console.error).toHaveBeenCalled();
-    });
-
-    test("loads full current article details by URL slug without relying on vectors or embeddings", async () => {
-        const content = "Detailed article content. ".repeat(80) + "Unique ending.";
-        const query = queryResult({
-            ...blog, content: `<p>${content}</p>`, category: "Frontend", author: "Author",
-            createdAt: new Date("2026-01-02"), updatedAt: new Date("2026-02-03"),
-        });
-        mocks.currentBlog.mockReturnValue(query);
-        const result = await runQuery({ currentBlog: true, slug: "react-patterns" });
-        expect(mocks.currentBlog).toHaveBeenCalledWith({ slug: "react-patterns", status: "published" });
-        expect(query.populate).toHaveBeenCalledWith({ path: "skills", select: "name" });
-        expect(result).toEqual({
-            success: true,
-            matches: [[
-                "Current blog: React patterns", "URL: /blogs/react-patterns", "Category: Frontend",
-                "Author: Author", "Published: 2026-01-02", "Updated: 2026-02-03",
-                "Skills: React", `Content: ${content}`,
-            ].join("\n")],
-            blogs: [],
-        });
-        expect(mocks.embed).not.toHaveBeenCalled();
-        expect(mocks.vectors).not.toHaveBeenCalled();
-        expect(mocks.blogs).not.toHaveBeenCalled();
-    });
-
-    test("does not guess a current blog when the request has no blog page context", async () => {
-        expect(await runQuery({ currentBlog: true })).toEqual({
-            success: true, matches: [], blogs: [], message: "No current blog page is available.",
-        });
-        expect(mocks.currentBlog).not.toHaveBeenCalled();
-        expect(mocks.embed).not.toHaveBeenCalled();
-    });
-
-    test("does not expose deleted or unpublished current blog details", async () => {
-        mocks.currentBlog.mockReturnValue(queryResult(null));
-        expect(await runQuery({ currentBlog: true, slug: "removed-post" })).toEqual({
-            success: true, matches: [], blogs: [], message: "The current blog was not found or is not published.",
-        });
-        expect(mocks.currentBlog).toHaveBeenCalledWith({ slug: "removed-post", status: "published" });
-        expect(mocks.vectors).not.toHaveBeenCalled();
-    });
-
-    test("keeps normal portfolio search for unrelated questions on a blog page", async () => {
-        mocks.vectors.mockReturnValue(queryResult([
-            { docId: "experience:1:0", source: "experience", text: "Developer", vector: [1, 0] },
-        ]));
-        expect(await runQuery({ currentBlog: false, slug: "react-patterns" }))
-            .toEqual({ success: true, matches: ["Developer"], blogs: [] });
-        expect(mocks.currentBlog).not.toHaveBeenCalled();
-    });
-
-    test("does not append blog links to factual search results by default", async () => {
-        mocks.vectors.mockReturnValue(queryResult([vector(firstId)]));
-        mocks.blogs.mockReturnValue(queryResult([blog]));
-        expect(await runQuery()).toMatchObject({ success: true, blogs: [], matches: [`Blog ${firstId} chunk 0`] });
+describe("Shared MongoDB retrieval tool", () => {
+    test.each([
+        "Where does Vijay work?", "List certifications and their issuers",
+        "What is his GitHub URL?", "Summarize the current blog",
+        "Compare React and NextJS capabilities", "What is the certificate expiration date?",
+    ])("uses the general retrieval pipeline for %s", async question => {
+        expect(await run(question, "react-patterns")).toEqual({ success: true, matches: ["Saved facts"], blogs: [] });
+        expect(mocks.retrieve).toHaveBeenCalledWith({ question, currentBlogSlug: "react-patterns" });
+        expect(mocks.portfolioSkills).not.toHaveBeenCalled();
     });
 
     test.each([
-        { currentBlog: true, detail: "skills" as const, query: "Skills used in the current blog" },
-        { currentBlog: false, query: "Skills used in the current blog" },
-    ])("returns verbatim skill-only answers even when the model chooses a broader search: %j", async options => {
-        const query = queryResult({ ...blog, skills: [{ name: "React" }, { name: "TypeScript" }] });
-        mocks.currentBlog.mockReturnValue(query);
-        expect(await runQuery({ ...options, slug: "react-patterns", includeBlogLinks: true })).toEqual({
-            success: true, matches: ["- React\n- TypeScript"], blogs: [], answer: "- React\n- TypeScript",
+        ["how many total blogs written by vijay", "count", "Vijay has written 7 published blogs."],
+        ["Skills used in the current blog", "currentSkills", "- React"],
+        ["List all skills", "portfolioSkills", "- React\n- TypeScript"],
+        ["what is the core capabilities of Mongodb", "capabilities", "- Saved capability"],
+        ["what is the issue date of the Adobe certificate", "certificate", "Issue date: 2025-03-19."],
+    ] as const)("preserves exact deterministic answers for %s", async (question, key, answer) => {
+        mocks[key].mockResolvedValue(answer);
+        expect(await run(question, "react-patterns")).toEqual({ success: true, matches: [answer], blogs: [], answer });
+        expect(mocks.retrieve).not.toHaveBeenCalled();
+    });
+
+    test("lists all published titles without a model-selected page filter", async () => {
+        const blogs = [{ _id: "507f1f77bcf86cd799439011", title: "React patterns", slug: "react-patterns" }];
+        mocks.blogs.mockResolvedValue({ text: "Published blogs:", blogs });
+        expect(await run("show me the list of blogs")).toEqual({
+            success: true, matches: ["Published blogs:", "React patterns"], blogs,
         });
-        expect(query.select).toHaveBeenCalledWith("skills");
-        expect(mocks.embed).not.toHaveBeenCalled();
-        expect(mocks.vectors).not.toHaveBeenCalled();
     });
 
-    test.each([
-        { query: "show me the list of skills of vijay rameshkumar" },
-        { query: "What are your skills?", currentBlog: false, detail: "skills" as const },
-    ])("lists every owner skill without similarity search or a four-match limit: %j", async options => {
-        const answer = "- JavaScript\n- TypeScript\n- ReactJS\n- NextJS\n- NodeJS\n- Docker";
-        expect(await runQuery({ ...options, slug: "react-patterns" })).toEqual({
-            success: true, matches: [answer], blogs: [], answer,
-        });
-        expect(mocks.portfolioSkills).toHaveBeenCalledOnce();
-        expect(mocks.embed).not.toHaveBeenCalled();
-        expect(mocks.vectors).not.toHaveBeenCalled();
-        expect(mocks.currentBlog).not.toHaveBeenCalled();
+    test("uses the full live certification collection when an exact title is not in the question", async () => {
+        mocks.certificate.mockResolvedValue("I could not find that information in the database.");
+        await run("When was the Adobe certificate issued?");
+        expect(mocks.retrieve).toHaveBeenCalledOnce();
     });
 
-    test.each([false, true])("ignores erroneous skill selection for certificate dates, currentBlog=%s", async currentBlog => {
-        const userPrompt = "what is the issue date of Adobe Experience Manager Edge Delivery Services - Developer Professional certficate";
-        const answer = "Issue date: 2025-03-19.";
-        mocks.certificationIssueDate.mockResolvedValue(answer);
-        expect(await runQuery({
-            query: "List all skills", userPrompt, detail: "skills", currentBlog,
-            slug: "react-patterns", includeBlogLinks: true,
-        })).toEqual({ success: true, matches: [answer], blogs: [], answer });
-        expect(mocks.certificationIssueDate).toHaveBeenCalledWith(userPrompt);
-        expect(mocks.portfolioSkills).not.toHaveBeenCalled();
-        expect(mocks.currentBlog).not.toHaveBeenCalled();
-        expect(mocks.embed).not.toHaveBeenCalled();
+    test("propagates retrieval failure instead of disguising it as missing knowledge", async () => {
+        mocks.retrieve.mockRejectedValue(new Error("Database unavailable"));
+        await expect(run("Where does he work?")).rejects.toThrow("Database unavailable");
     });
 
-    test("does not let a skill detail flag turn a non-skill question into a skills list", async () => {
-        const userPrompt = "What is the expiration date of my certificate?";
-        mocks.vectors.mockReturnValue(queryResult([
-            { docId: "certifications:1:0", source: "certifications", text: "Expires: 2027-01-01", vector: [1, 0] },
-        ]));
-        expect(await runQuery({ query: "List all skills", userPrompt, detail: "skills" })).toEqual({
-            success: true, matches: ["Expires: 2027-01-01"], blogs: [],
-        });
-        expect(mocks.embed).toHaveBeenCalledWith(expect.objectContaining({ value: userPrompt }));
-        expect(mocks.portfolioSkills).not.toHaveBeenCalled();
-    });
-
-    test("ignores a skill detail flag even without an API request context", async () => {
-        mocks.vectors.mockReturnValue(queryResult([]));
-        await runQuery({ query: "What is my experience?", detail: "skills" });
-        expect(mocks.portfolioSkills).not.toHaveBeenCalled();
-        expect(mocks.embed).toHaveBeenCalled();
-    });
-
-    test("returns only indexed capabilities despite a rewritten query and incorrect model flags", async () => {
-        mocks.skillCapabilities.mockResolvedValue("- Saved capability");
-        expect(await runQuery({
-            query: "List all skills", userPrompt: "what is the core capabilities of Mongodb",
-            detail: "skills", currentBlog: true, includeBlogLinks: true,
-        })).toEqual({
-            success: true, matches: ["- Saved capability"], blogs: [], answer: "- Saved capability",
-        });
-        expect(mocks.skillCapabilities).toHaveBeenCalledWith("Mongodb");
-        expect(mocks.portfolioSkills).not.toHaveBeenCalled();
-        expect(mocks.currentBlog).not.toHaveBeenCalled();
-        expect(mocks.embed).not.toHaveBeenCalled();
+    test("works without an API context, using the supplied original query", async () => {
+        await customVectorQueryTool.execute?.({ query: "His experience?" }, { requestContext: new RequestContext() });
+        expect(mocks.retrieve).toHaveBeenCalledWith({ question: "His experience?", currentBlogSlug: undefined });
     });
 });

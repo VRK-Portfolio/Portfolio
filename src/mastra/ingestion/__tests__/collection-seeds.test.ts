@@ -3,6 +3,7 @@ import { seedBlogs } from "../blogs.seed";
 import { seedCertifications } from "../certifications.seed";
 import { seedExperience } from "../experience.seed";
 import { seedSkills } from "../skills.seed";
+import { seedBasicInfo } from "../basic-info.seed";
 
 const mocks = vi.hoisted(() => ({
     connectDB: vi.fn(),
@@ -11,7 +12,9 @@ const mocks = vi.hoisted(() => ({
     experience: vi.fn(),
     skills: vi.fn(),
     seedDocuments: vi.fn(),
+    basicInfo: vi.fn(),
 }));
+vi.mock("@/models/basic-info.model", () => ({ BasicInfoModel: { findOne: mocks.basicInfo } }));
 vi.mock("@/libs/db", () => ({ connectDB: mocks.connectDB }));
 vi.mock("@/models/blogs.model", () => ({ BlogModel: { find: mocks.blogs } }));
 vi.mock("@/models/certifications.model", () => ({ CertificationModel: { find: mocks.certifications } }));
@@ -22,13 +25,15 @@ vi.mock("../seed-documents", async importOriginal => ({
     seedDocuments: mocks.seedDocuments,
 }));
 
-function queryResult(records: unknown[]) {
+function queryResult(records: unknown) {
     const query = {
         populate: vi.fn(),
+        select: vi.fn(),
         lean: vi.fn(),
         exec: vi.fn().mockResolvedValue(records),
     };
     query.populate.mockReturnValue(query);
+    query.select.mockReturnValue(query);
     query.lean.mockReturnValue(query);
     return query;
 }
@@ -40,6 +45,31 @@ beforeEach(() => {
 });
 
 describe("Portfolio collection conversions", () => {
+    test("indexes all basic info with the same validated embedding pipeline as other sources", async () => {
+        mocks.basicInfo.mockReturnValue(queryResult({
+            _id: "profile-id", name: "Saved Developer", email: "saved@example.com", phone: "1234567890",
+            address: "Saved City", bio: "Saved bio", about_me: "<p>Saved about</p>",
+            linked_in_url: "https://linkedin.com/in/saved", github_url: "https://github.com/saved", website_url: "https://example.com",
+        }));
+        expect(await seedBasicInfo()).toBe(1);
+        expect(mocks.seedDocuments).toHaveBeenCalledWith("basic-info", [{
+            id: "profile-id", context: "Portfolio owner: Saved Developer",
+            text: [
+                "Name: Saved Developer", "Email: saved@example.com", "Bio: Saved bio", "About: Saved about",
+                "Phone: 1234567890", "Address: Saved City", "LinkedIn URL: https://linkedin.com/in/saved",
+                "GitHub URL: https://github.com/saved", "Website URL: https://example.com",
+            ].join("\n"),
+        }]);
+    });
+
+    test("propagates missing profiles and failed embedding runs instead of reporting successful ingestion", async () => {
+        mocks.basicInfo.mockReturnValue(queryResult(null));
+        await expect(seedBasicInfo()).rejects.toThrow("No basic info");
+        mocks.basicInfo.mockReturnValue(queryResult({ _id: "profile-id", name: "Saved", about_me: "Saved about" }));
+        mocks.seedDocuments.mockRejectedValueOnce(new Error("Embedding unavailable"));
+        await expect(seedBasicInfo()).rejects.toThrow("Embedding unavailable");
+    });
+
     test("indexes skill capabilities using embeddings and lossless structured metadata", async () => {
         mocks.skills.mockReturnValue(queryResult([{
             _id: "skill-id", name: "MongoDB", capabilities: ["One, with commas", "Two"],

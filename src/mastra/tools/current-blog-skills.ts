@@ -1,11 +1,14 @@
 import { connectDB } from "@/libs/db";
 import { BlogModel } from "@/models/blogs.model";
 
+export function isCurrentBlogQuestion(prompt: string): boolean {
+    return /\b(?:current|this)\s+(?:blog(?:\s+post)?|article|post|page)\b|\b(?:blog|article|post|page)\s+(?:i(?:'m| am)\s+(?:reading|viewing))\b/i.test(prompt);
+}
+
 export function isCurrentBlogSkillsQuestion(prompt: string): boolean {
     const asksSkills = /\b(?:skills?|technolog(?:y|ies)|tech\s+stack|libraries|frameworks?|tools?)\b/i.test(prompt);
-    const refersToCurrentBlog = /\b(?:current|this)\s+(?:blog(?:\s+post)?|article|post|page)\b|\b(?:blog|article|post|page)\s+(?:i(?:'m| am)\s+(?:reading|viewing))\b/i.test(prompt);
     const asksOtherDetails = /\b(?:author|summary|summari[sz]e|explain|content|dates?|published|updated|links?|urls?|related|other|recommend|compare)\b/i.test(prompt);
-    return asksSkills && refersToCurrentBlog && !asksOtherDetails;
+    return asksSkills && isCurrentBlogQuestion(prompt) && !asksOtherDetails;
 }
 
 export async function getCurrentBlogSkills(slug?: string): Promise<string> {
