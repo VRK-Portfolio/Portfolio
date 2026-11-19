@@ -49,7 +49,7 @@ const HeaderComponent = ({ className }: { className?: string }) => {
             <header className={`cmp-header ${className ? className : ''}`}>
                 <div className="container flex justify-between items-center">
                     <div className="cmp-header__logo">
-                        <Link href="#">
+                        <Link href="/">
                             <p>Vijay Rameshkumar</p>
                         </Link>
                     </div>
