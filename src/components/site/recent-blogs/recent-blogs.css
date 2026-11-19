@@ -4,11 +4,19 @@
 @layer components {
     .cmp-recent-blogs{
         /* Add your styles for the project listing component here */
-
+        .cmp-card {
+            @apply inline-flex flex-col w-full;
+            .cmp-card-heading {
+                @apply h-[91px];
+            }
+            .cmp-card-body {
+                @apply flex-1;
+            }
+        }
         .cmp-recent-blogs__technologies {
             @apply flex items-center gap-2 justify-between mb-2;
             .cmp-recent-blogs__technologies-list {
-                @apply flex gap-2 flex-wrap;
+                @apply flex gap-2 flex-wrap mt-2;
             }
 
             .cmp-recent-blogs__publish-date {

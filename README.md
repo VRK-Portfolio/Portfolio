@@ -29,6 +29,16 @@ theme unchanged (light by default). If browser storage is unavailable, the
 toggle still works for the current page and a console warning reports that
 the preference could not be loaded or saved.
 
+## Public loading states
+
+Experience, Projects, Recent Blogs, the `/blogs` listing, and blog detail
+(including Similar Blogs) use shimmer placeholders while their data loads,
+matching the existing Basic Info, Skills, and Certifications pattern.
+New skeletons preserve section styling, expose labelled loading statuses,
+hide decorative placeholders from assistive technology, and disable pulsing
+when reduced motion is requested. They are replaced by content or an error
+when loading finishes. Admin loading screens are unchanged.
+
 ## Crawler rules
 
 [`src/app/robots.ts`](./src/app/robots.ts) serves `/robots.txt` using Next.js
@@ -107,9 +117,13 @@ and timestamps. The API serializes timestamps as ISO strings; the listing schema
 parses them into `Date` values while preserving omitted timestamps.
 The listing API populates skills as `{ _id, name }`
 objects, validated by `BlogListingSchema`.
+The public `/blogs` page lists all published posts using the recent blog cards,
+with no display limit. Drafts and posts without an explicit published status are
+hidden publicly but remain available in admin. The page shows an empty state
+when no published posts exist and reports loading failures.
 Recent blog cards use the slug for their links and display content previews,
-cover images, skill names, and creation dates when available. `maxCount` limits
-the displayed cards; View More appears only when additional records exist.
+cover images, and skill names. `maxCount` limits the displayed published cards;
+View More links to `/blogs` only when additional published posts exist.
 
 The admin blog form supports creating and editing title, URL slug, category,
 author, cover image upload, draft/published status, skill references, and rich-text

@@ -1,7 +1,10 @@
+'use client';
+
 import SectionHeading from "@/block/site/section-heading/section-heading";
 import Badge from "@/block/ui/badge/Badge";
 import Button from "@/block/ui/button/Button";
 import Card from "@/block/ui/card/Card";
+import CardLoading from "@/block/ui/card/CardLoading";
 import { formatDate, truncateText } from "@/libs/utils";
 import Link from "next/link";
 import './recent-blogs.css';
@@ -9,6 +12,8 @@ import { MoveUpRight } from "lucide-react";
 import { useBlogListing } from "@/hooks/useBlogListing";
 
 interface RecentBlogsProps {
+    title?: string;
+    headingTag?: 'h1' | 'h2';
     maxCount?: number;
     className?: string;
     type?: 'site' | 'admin';
@@ -19,10 +24,23 @@ interface RecentBlogsProps {
     deleteError?: string;
 }
 
-const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, onDelete, isDeleting = false, deletingId, deleteError }: RecentBlogsProps) => {
+const RecentBlogsComponent = ({ title = 'Recent Blogs', headingTag = 'h2', maxCount, className, type = 'site', modalOpen, onDelete, isDeleting = false, deletingId, deleteError }: RecentBlogsProps) => {
     const { blogs, isLoading, isError, error } = useBlogListing();
-    const visibleBlogs = maxCount === undefined ? blogs : blogs && blogs.slice(0, maxCount);
+    const filteredBlogs = type === 'admin' ? blogs : blogs?.filter(blog => blog.status === 'published');
+    const visibleBlogs = maxCount === undefined ? filteredBlogs : filteredBlogs?.slice(0, maxCount);
     if (isLoading) {
+        if (type === 'site') {
+            return (
+                <section id="Blogs" role="status" aria-label="Loading blogs" aria-busy="true" className={`cmp-recent-blogs ${className ?? ''}`}>
+                    <div className="container">
+                        <SectionHeading Tag={headingTag} title={title} subtitle="Check out my latest blog posts" />
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {Array.from({ length: maxCount ?? 6 }, (_, index) => <CardLoading key={index} />)}
+                        </div>
+                    </div>
+                </section>
+            );
+        }
         return (
             <section className="cmp-recent-blogs">
                 <p>Loading...</p>
@@ -45,19 +63,20 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
                     type === 'admin' ? (
                         <>
                             <div className="cmp-admin__heading-actions">
-                                <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
+                                <SectionHeading Tag={headingTag} title={title} subtitle="Check out my latest blog posts" />
                                 <Button variant="primary" className='cmp-my-skills__add-skill w-40' onClick={() => modalOpen?.()}>New Blog</Button>
                             </div>
                         </>
                     ) : (
                         <>
-                            <SectionHeading title="Recent Blogs" subtitle="Check out my latest blog posts" />
+                            <SectionHeading Tag={headingTag} title={title} subtitle="Check out my latest blog posts" />
                         </>
                     )
                 }
 
 
                 {type === 'admin' && deleteError && <p role="alert" className="mb-4 text-red-500">{deleteError}</p>}
+                {type === 'site' && filteredBlogs?.length === 0 && <p>No published blogs yet.</p>}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {visibleBlogs && visibleBlogs.map(blog => (
                         <Card Tag="article" key={blog._id ?? blog.slug}>
@@ -108,10 +127,10 @@ const RecentBlogsComponent = ({ maxCount, className, type = 'site', modalOpen, o
                 <div className="cmp-recent-blogs__view-more">
                     {
                         maxCount !== undefined &&
-                        blogs && blogs.length > maxCount && (
-                            <Button >
+                        filteredBlogs && filteredBlogs.length > maxCount && (
+                            <Link href="/blogs" className="cmp-button cmp-button__primary cmp-button__medium inline-block">
                                 View More
-                            </Button>
+                            </Link>
                         )
                     }
                 </div>
