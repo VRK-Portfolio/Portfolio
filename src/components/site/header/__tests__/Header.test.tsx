@@ -44,6 +44,7 @@ describe("Header component", () => {
        const { container } = renderHeader();
        const logo = container.querySelector(".cmp-header__logo");
        expect(logo).toBeInTheDocument();
+       expect(screen.getByRole("link", { name: "Vijay Rameshkumar" })).toHaveAttribute("href", "/");
    });
 
    test("should have a nav", () => {
