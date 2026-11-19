@@ -24,6 +24,18 @@ describe("Recent Blogs Component", () => {
         expect(screen.getByRole("heading", { name: "Recent Blogs", level: 2 })).toBeInTheDocument();
     });
 
+    test("shows blog card shimmers until the listing loads", async () => {
+        const { container } = render(<RecentBlogsComponent maxCount={1} className="section" />);
+        const loading = screen.getByRole("status", { name: "Loading blogs" });
+        expect(loading).toHaveClass("section");
+        expect(loading).toHaveAttribute("aria-busy", "true");
+        expect(loading.querySelector(".shimmer")).toBeInTheDocument();
+        expect(screen.queryByRole("link")).not.toBeInTheDocument();
+        await screen.findByRole("heading", { name: "Blog 1" });
+        expect(screen.queryByRole("status")).not.toBeInTheDocument();
+        expect(container.querySelector(".shimmer")).not.toBeInTheDocument();
+    });
+
     test("renders updated content, images, populated skill names, dates and slug links", async () => {
         render(<RecentBlogsComponent />);
         await screen.findByRole("heading", { name: "Blog 1" });
@@ -43,13 +55,13 @@ describe("Recent Blogs Component", () => {
             expect(link).toHaveAttribute("rel", "noopener noreferrer");
         }
         expect(within(cards[0]).getByText("1 June 2024")).toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "View More" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: "View More" })).not.toBeInTheDocument();
     });
 
     test("handles optional cover images, skills, timestamps and document IDs", async () => {
         server.use(http.get("*/api/blogs", () => HttpResponse.json({
             success: true,
-            data: [{ title: "Minimal Blog", slug: "minimal-blog", category: "Frontend", content: "A simple blog." }],
+            data: [{ title: "Minimal Blog", slug: "minimal-blog", category: "Frontend", content: "A simple blog.", status: "published" }],
         })));
         render(<RecentBlogsComponent />);
         expect(await screen.findByRole("heading", { name: "Minimal Blog" })).toBeInTheDocument();
@@ -76,7 +88,11 @@ describe("Recent Blogs Component", () => {
         render(<RecentBlogsComponent maxCount={maxCount} />);
         await screen.findByRole("heading", { name: "Blog 1" });
         expect(screen.getAllByRole("article")).toHaveLength(visible);
-        expect(!!screen.queryByRole("button", { name: "View More" })).toBe(viewMore);
+        const viewMoreLink = screen.queryByRole("link", { name: "View More" });
+        expect(!!viewMoreLink).toBe(viewMore);
+        if (viewMore) {
+            expect(viewMoreLink).toHaveAttribute("href", "/blogs");
+        }
     });
 
     test("updates the display limit when maxCount changes", async () => {
@@ -86,6 +102,57 @@ describe("Recent Blogs Component", () => {
         rerender(<RecentBlogsComponent maxCount={3} />);
         expect(screen.getByRole("heading", { name: "Blog 3" })).toBeInTheDocument();
         expect(screen.getAllByRole("article")).toHaveLength(3);
+    });
+
+    test.each([
+        { maxCount: 1, visible: 1, viewMore: true },
+        { maxCount: 2, visible: 2, viewMore: false },
+        { maxCount: undefined, visible: 2, viewMore: false },
+    ])("filters unpublished blogs before applying maxCount=$maxCount", async ({ maxCount, visible, viewMore }) => {
+        server.use(http.get("*/api/blogs", () => HttpResponse.json({
+            success: true,
+            data: [
+                { ...mockBlogListingData[0], status: "draft" },
+                mockBlogListingData[1],
+                { ...mockBlogListingData[2], status: undefined },
+                mockBlogListingData[3],
+            ],
+        })));
+        render(<RecentBlogsComponent maxCount={maxCount} />);
+        await screen.findByRole("heading", { name: "Blog 2" });
+        expect(screen.getAllByRole("article")).toHaveLength(visible);
+        expect(screen.queryByRole("heading", { name: "Blog 1" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: "Blog 3" })).not.toBeInTheDocument();
+        expect(!!screen.queryByRole("link", { name: "View More" })).toBe(viewMore);
+    });
+
+    test("shows no public cards or View More when all blogs are drafts", async () => {
+        server.use(http.get("*/api/blogs", () => HttpResponse.json({
+            success: true,
+            data: mockBlogListingData.map(blog => ({ ...blog, status: "draft" })),
+        })));
+        render(<RecentBlogsComponent maxCount={1} />);
+        await screen.findByRole("heading", { name: "Recent Blogs" });
+        await waitFor(() => expect(screen.queryByRole("status", { name: "Loading blogs" })).not.toBeInTheDocument());
+        expect(screen.queryByRole("article")).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: "View More" })).not.toBeInTheDocument();
+    });
+
+    test("keeps drafts visible and editable in admin", async () => {
+        const modalOpen = vi.fn();
+        server.use(http.get("*/api/blogs", () => HttpResponse.json({
+            success: true,
+            data: [
+                { ...mockBlogListingData[0], status: "draft" },
+                mockBlogListingData[1],
+            ],
+        })));
+        render(<RecentBlogsComponent type="admin" modalOpen={modalOpen} />);
+        const draftHeading = await screen.findByRole("heading", { name: "Blog 1" });
+        expect(screen.getAllByRole("article")).toHaveLength(2);
+        const draftCard = within(draftHeading.closest("article")!);
+        fireEvent.click(draftCard.getByRole("button", { name: "Edit Blog" }));
+        expect(modalOpen).toHaveBeenCalledExactlyOnceWith(mockBlogListingData[0]._id);
     });
 
     test("accepts an empty successful listing without reporting an error", async () => {
@@ -98,7 +165,7 @@ describe("Recent Blogs Component", () => {
         await waitFor(() => expect(fetched).toHaveBeenCalled());
         expect(screen.queryByRole("article")).not.toBeInTheDocument();
         expect(screen.queryByText("Failed to fetch blogs")).not.toBeInTheDocument();
-        expect(screen.queryByRole("button", { name: "View More" })).not.toBeInTheDocument();
+        expect(screen.queryByRole("link", { name: "View More" })).not.toBeInTheDocument();
     });
 
     test.each([
@@ -110,6 +177,7 @@ describe("Recent Blogs Component", () => {
         server.use(http.get("*/api/blogs", response));
         render(<RecentBlogsComponent />);
         expect(await screen.findByRole("alert")).not.toBeEmptyDOMElement();
+        expect(screen.queryByRole("status", { name: "Loading blogs" })).not.toBeInTheDocument();
         expect(screen.queryByRole("article")).not.toBeInTheDocument();
     });
 

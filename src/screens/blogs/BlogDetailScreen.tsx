@@ -8,19 +8,34 @@ import './blog-screen.css'
 import { MoveUpRight } from "lucide-react";
 import Link from "next/link";
 import Card from "@/block/ui/card/Card";
+import CardLoading from "@/block/ui/card/CardLoading";
+import BlogDetailLoading from "./BlogDetailLoading";
 
 const BlogDetailScreen = () => {
     const { id } = useParams();
     const { blogDetail, isLoading, isError, error } = useBlogById(id);
-    const { blogs } = useBlogListing(id);
+    const { blogs, isLoading: isBlogsLoading, isError: isBlogsError, error: blogsError } = useBlogListing(id);
+
+    if (isLoading) {
+        return <BlogDetailLoading />;
+    }
+
+    if (isError) {
+        return (
+            <div className="cmp-blog-detail">
+                <div className="container">
+                    <p role="alert" className="col-span-12">{error?.message}</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <div className="cmp-blog-detail">
                 {blogDetail && (
                     <div className="container">
                         <div className="col-span-12 lg:col-span-8">
-                            {isLoading && <p>Loading...</p>}
-                            {isError && <p>Error: {error?.message}</p>}
                             {
                                 blogDetail.coverImage && (
                                     <Image className="cmp-blog-detail__cover-image" src={blogDetail.coverImage} alt={blogDetail.title} width={800} height={100} />
@@ -40,6 +55,12 @@ const BlogDetailScreen = () => {
                         </div>
                         <div className="col-span-12 lg:col-span-4">
                             <h4 className="mb-3">Similar Blogs</h4>
+                            {isBlogsLoading && (
+                                <div role="status" aria-label="Loading similar blogs" aria-busy="true" className="flex flex-col gap-3">
+                                    {Array.from({ length: 3 }, (_, index) => <CardLoading key={index} />)}
+                                </div>
+                            )}
+                            {isBlogsError && <p role="alert">{blogsError?.message}</p>}
                             <div className="cmp-recent-blogs inline-flex w-full flex-col gap-3">
                             {blogs?.map((blog) => (
                                 <Card Tag="article" key={blog._id ?? blog.slug}>
