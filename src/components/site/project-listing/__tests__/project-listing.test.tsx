@@ -40,6 +40,25 @@ describe('Project Listing Component', () => {
         expect(productListing).toBeInTheDocument();
     });
 
+    test("shows card shimmers while fetching and removes them when projects arrive", async () => {
+        const { container } = render(<ProjectListingComponent maxCount={1} className="section" />);
+        const loading = screen.getByRole("status", { name: "Loading projects" });
+        expect(loading).toHaveClass("section");
+        expect(loading.querySelector(".shimmer")).toBeInTheDocument();
+        expect(screen.queryByRole("link")).not.toBeInTheDocument();
+        await screen.findByText("Project 1");
+        expect(screen.queryByRole("status")).not.toBeInTheDocument();
+        expect(container.querySelector(".shimmer")).not.toBeInTheDocument();
+    });
+
+    test("stops shimmering and reports network failures", async () => {
+        server.use(http.get("*/api/projects", () => HttpResponse.error()));
+        render(<ProjectListingComponent />);
+        expect(screen.getByRole("status", { name: "Loading projects" })).toBeInTheDocument();
+        expect(await screen.findByRole("alert")).toHaveTextContent("Failed to fetch projects");
+        expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
     test("fetch and display all projects with correct heading", async () => {
         renderProductListing();
 

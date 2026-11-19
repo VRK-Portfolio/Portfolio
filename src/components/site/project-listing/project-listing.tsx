@@ -1,5 +1,6 @@
 import Badge from "@/block/ui/badge/Badge";
 import Card from "@/block/ui/card/Card"
+import CardLoading from "@/block/ui/card/CardLoading";
 import Link from "next/link";
 import './project-listing.css'
 import { truncateText } from "@/libs/utils";
@@ -15,10 +16,11 @@ const ProjectListingComponent = ({ maxCount, className }: { maxCount?: number, c
 
     const [projects, setProjects] = useState<ProjectType[]>([]);
     const [error, setError] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     const fetchProject = async () => {
-        const response = await fetch('/api/projects')
         try {
+            const response = await fetch('/api/projects');
             const data = await response.json();
             if (!response.ok) {
                 throw new Error('Failed to fetch projects');
@@ -32,8 +34,10 @@ const ProjectListingComponent = ({ maxCount, className }: { maxCount?: number, c
             } else {
                 setProjects(data.data);
             }
-        } catch (error) {
+        } catch {
             setError('Failed to fetch projects');
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -47,7 +51,19 @@ const ProjectListingComponent = ({ maxCount, className }: { maxCount?: number, c
     if (error) {
         return (
             <section className="cmp-project-listing">
-                <p className="cmp-project-listing__error">{error}</p>
+                <p role="alert" className="cmp-project-listing__error">{error}</p>
+            </section>
+        );
+    }
+    if (isLoading) {
+        return (
+            <section role="status" aria-label="Loading projects" aria-busy="true" className={`cmp-project-listing ${className ?? ''}`}>
+                <div className="container">
+                    <SectionHeading title="Projects" subtitle="Check out some of my recent work" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {Array.from({ length: maxCount ?? 6 }, (_, index) => <CardLoading key={index} />)}
+                    </div>
+                </div>
             </section>
         );
     }

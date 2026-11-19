@@ -7,6 +7,9 @@ import { MyExperienceComponent } from "../MyExperience";
 const hooks = vi.hoisted(() => ({
     experienceList: [] as ExperienceType[],
     totalExperience: 9,
+    isLoading: false,
+    isError: false,
+    error: null as Error | null,
     deleteExperience: vi.fn(),
 }));
 vi.mock("@/hooks/useExperience", () => ({
@@ -29,7 +32,45 @@ describe("MyExperienceComponent", () => {
     beforeEach(() => {
         hooks.experienceList = [experience];
         hooks.totalExperience = 9;
+        hooks.isLoading = false;
+        hooks.isError = false;
+        hooks.error = null;
         hooks.deleteExperience.mockReset();
+    });
+
+    test("shows a timeline shimmer until experience loads while preserving section styling", () => {
+        hooks.isLoading = true;
+        hooks.experienceList = [];
+        const { rerender } = render(<MyExperienceComponent className="section" />);
+        const loading = screen.getByRole("status", { name: "Loading experience" });
+        expect(loading).toHaveClass("cmp-my-experience", "section");
+        expect(loading).toHaveAttribute("aria-busy", "true");
+        expect(loading.querySelector(".shimmer")).toBeInTheDocument();
+        expect(screen.queryByText(/0\+ years/)).not.toBeInTheDocument();
+
+        hooks.isLoading = false;
+        hooks.experienceList = [experience];
+        rerender(<MyExperienceComponent className="section" />);
+        expect(screen.getByRole("heading", { name: "Example Company" })).toBeInTheDocument();
+        expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
+    test("replaces the experience shimmer with an error when loading fails", () => {
+        hooks.isLoading = true;
+        const { rerender } = render(<MyExperienceComponent />);
+        hooks.isLoading = false;
+        hooks.isError = true;
+        hooks.error = new Error("Experience unavailable");
+        rerender(<MyExperienceComponent />);
+        expect(screen.getByRole("alert")).toHaveTextContent("Experience unavailable");
+        expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
+    test("leaves the admin loading view unchanged", () => {
+        hooks.isLoading = true;
+        render(<MyExperienceComponent type="admin" />);
+        expect(screen.getByRole("button", { name: "Add Experience" })).toBeInTheDocument();
+        expect(screen.queryByRole("status")).not.toBeInTheDocument();
     });
 
     test("renders the default site heading with formatted subtitle markup", () => {

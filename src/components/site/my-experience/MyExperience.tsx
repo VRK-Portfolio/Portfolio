@@ -6,6 +6,7 @@ import { formatDate } from "@/libs/utils";
 import Button from "@/block/ui/button/Button";
 import Card from "@/block/ui/card/Card";
 import { ExperienceType } from "@/@types/Experience.types";
+import ExperienceLoading from "./ExperienceLoading";
 
 
 const ExperienceDetails = ({ experience }: { experience: ExperienceType}) => {
@@ -33,8 +34,22 @@ const ExperienceDetails = ({ experience }: { experience: ExperienceType}) => {
     )
 }
 export const MyExperienceComponent = ({ className = '', type = 'site', modalOpen }: { className?: string, type?: 'admin' | 'site', modalOpen?: (id?: string) => void }) => {
-    const { experienceList, totalExperience } = useGetExpericence();
+    const { experienceList, totalExperience, isLoading, isError, error } = useGetExpericence();
     const {deleteExperience} = useDeleteExperience();
+
+    if (type === 'site' && isLoading) {
+        return <ExperienceLoading className={className} />;
+    }
+
+    if (type === 'site' && isError) {
+        return (
+            <section id="Experience" className={`cmp-my-experience ${className}`}>
+                <div className="container">
+                    <p role="alert">{error?.message}</p>
+                </div>
+            </section>
+        );
+    }
 
     return (
         <>
