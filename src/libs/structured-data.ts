@@ -3,8 +3,9 @@ import type { BlogType } from "@/@types/Blogs.types";
 import type { CertificationType } from "@/@types/Certification.types";
 import type { ExperienceType } from "@/@types/Experience.types";
 import type { MySkillsType } from "@/@types/MySkills.types";
+import { SITE_ORIGIN } from "./site-url";
 
-export const STRUCTURED_DATA_ORIGIN = "https://vijayrameshkumar.dev";
+export const STRUCTURED_DATA_ORIGIN = SITE_ORIGIN;
 
 type Profile = Pick<BasicInfoType, "name" | "bio" | "avatar_url" | "github_url" | "linked_in_url">;
 type StructuredBlog = Pick<BlogType, "title" | "slug" | "category" | "status" | "author" | "coverImage"> & {

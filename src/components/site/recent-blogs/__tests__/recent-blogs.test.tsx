@@ -73,10 +73,10 @@ describe("Recent Blogs Component", () => {
             }
             const link = card.getByRole("link");
             expect(link).toHaveAttribute("href", `/blogs/${blog.slug}`);
-            expect(link).toHaveAttribute("target", "_blank");
-            expect(link).toHaveAttribute("rel", "noopener noreferrer");
+            expect(link).toHaveTextContent(/^Click Here$/);
+            expect(link).toHaveAccessibleName(`Click Here: ${blog.title}`);
+            expect(card.getByRole("img", { name: blog.title })).toHaveAttribute("sizes", "(min-width: 1024px) 26vw, (min-width: 768px) 48vw, 100vw");
         }
-        expect(within(cards[0]).getByText("1 June 2024")).toBeInTheDocument();
         expect(screen.queryByRole("link", { name: "View More" })).not.toBeInTheDocument();
     });
 
@@ -97,7 +97,7 @@ describe("Recent Blogs Component", () => {
             success: true, data: [{ ...mockBlogListingData[0], content }],
         })));
         render(<RecentBlogsComponent />);
-        expect(await screen.findByText(`${content.slice(0, 300)}...`)).toBeInTheDocument();
+        expect(await screen.findByText(`${content.slice(0, 150)}...`)).toBeInTheDocument();
     });
 
     test.each([

@@ -29,7 +29,7 @@ describe("MySkillsComponent", () => {
         expect(container.querySelector(".animate-pulse")).not.toBeInTheDocument();
         const script = container.querySelector('#Skills script[type="application/ld+json"]')!;
         const person = JSON.parse(script.textContent!)["@graph"][0];
-        expect(person["@id"]).toBe("https://vijayrameshkumar.dev/#person");
+        expect(person["@id"]).toBe("https://www.vijayrameshkumar.dev/#person");
         expect(person.knowsAbout).toEqual([...new Set(mockMySkills.flatMap(skill => [skill.name, ...skill.capabilities]))]);
     });
 

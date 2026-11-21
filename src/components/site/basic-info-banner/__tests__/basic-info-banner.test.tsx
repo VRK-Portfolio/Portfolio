@@ -29,7 +29,7 @@ describe("BasicInfoBanner", () => {
         const data = JSON.parse(script.textContent!);
         expect(data["@graph"]).toContainEqual(expect.objectContaining({
             "@type": "Person", name: basicInfoMock[0].name,
-            "@id": "https://vijayrameshkumar.dev/#person",
+            "@id": "https://www.vijayrameshkumar.dev/#person",
         }));
         expect(script.textContent).not.toContain(basicInfoMock[0].email);
         expect(script.textContent).not.toContain(basicInfoMock[0].address);
@@ -44,7 +44,9 @@ describe("BasicInfoBanner", () => {
 
     test("should display the avatar image", async () => {
         renderBasicInfoBanner();
-        expect(await screen.findByRole("img", { name: /Basic Info Banner/i })).toBeInTheDocument();
+        const image = await screen.findByRole("img", { name: `${basicInfoMock[0].name}, frontend engineer` });
+        expect(image).toHaveAttribute("loading", "eager");
+        expect(image).toHaveAttribute("fetchpriority", "high");
     });
 
 
@@ -62,6 +64,6 @@ describe("BasicInfoBanner", () => {
             expect(container.querySelector(".animate-pulse")).not.toBeInTheDocument();
         });
         expect(screen.queryByText(basicInfoMock[0].name)).not.toBeInTheDocument();
-        expect(screen.getByRole("img", { name: /Basic Info Banner/i })).toBeInTheDocument();
+        expect(screen.getByRole("img", { name: "Portfolio portrait" })).toBeInTheDocument();
     });
 });

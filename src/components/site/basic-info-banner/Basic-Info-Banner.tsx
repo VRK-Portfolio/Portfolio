@@ -20,9 +20,11 @@ const BasicInfoBanner = ({className}: {className?: string}) => {
                 <Image
                     className="cmp-basic-info-banner__image"
                     src={basicInfo?.avatar_url || '/images/basic-info/photo.png'}
-                    alt="Basic Info Banner"
+                    alt={basicInfo ? `${basicInfo.name}, frontend engineer` : "Portfolio portrait"}
                     width={200}
                     height={200}
+                    loading="eager"
+                    fetchPriority="high"
                 />
                 <h1 className='cmp-basic-info-banner__title'>{basicInfo?.name}</h1>
                 <h2 className='cmp-basic-info-banner__bio'>{basicInfo?.bio}</h2>

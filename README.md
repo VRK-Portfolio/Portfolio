@@ -38,6 +38,12 @@ New skeletons preserve section styling, expose labelled loading statuses,
 hide decorative placeholders from assistive technology, and disable pulsing
 when reduced motion is requested. They are replaced by content or an error
 when loading finishes. Admin loading screens are unchanged.
+Public routes now seed these queries on the server: the homepage, listing, and
+published blog articles render their content without waiting for JavaScript.
+The existing shimmers remain available when components are used without preload
+data. The five-minute React Query freshness window avoids immediately fetching
+the same content again after hydration; ordinary client refreshes still work.
+Server database/validation failures propagate rather than becoming empty content.
 
 ## Crawler rules
 
@@ -48,14 +54,15 @@ These rules are advisory, not access control or guaranteed removal from search
 results. Existing authentication remains unchanged.
 
 [`src/app/sitemap.ts`](./src/app/sitemap.ts) serves `/sitemap.xml`, containing
-the homepage and all currently published blogs, never drafts, admin, login,
+the homepage, blog listing, and all currently published blogs, never drafts, admin, login,
 or API routes. Blog modification dates use saved `updatedAt`, falling back
 to `createdAt`; missing dates are omitted, not replaced with the request time.
-Both routes read the HTTP(S) website origin from Basic Info on each request,
-and robots.txt advertises the absolute sitemap URL. Publishing, unpublishing,
-deleting blogs, or changing the website URL updates the generated files without
-a rebuild. Database failures and invalid saved configuration are surfaced rather
-than producing placeholder URLs or a misleading partial sitemap.
+Canonical, schema, social-sharing, and crawler URLs share the deployment origin
+`https://www.vijayrameshkumar.dev` from [`site-url.ts`](./src/libs/site-url.ts),
+not an older website URL saved in Basic Info. Robots advertises that sitemap
+without needing the database. Publishing, unpublishing, and deleting blogs update
+the sitemap on the next request without a rebuild; blog database/validation failures
+are surfaced rather than producing a misleading partial sitemap.
 
 ## Schema.org structured data
 
@@ -71,16 +78,16 @@ Admin components, drafts, and missing posts do not receive article schema.
 Saved authors, cover images, and available creation/modification dates are used
 without inventing dates or assigning another author's post to the portfolio owner.
 
-Schema URLs use `https://vijayrameshkumar.dev/`, the public portfolio reference,
+Schema URLs use `https://www.vijayrameshkumar.dev/`, the canonical portfolio domain,
 rather than the older website URL that may still be saved in Basic Info.
 Relative images resolve against that domain. Profile schema includes only the
 name, bio, avatar, GitHub, and LinkedIn links, not private contact details.
 Scripts reuse each component's existing loaded data, update alongside that
 content, and are omitted during initial loading or when no content is available.
-Because these components fetch their data on the client, their schema appears
-after hydration and data loading, not in the initial server HTML. Existing data
-loading errors remain unchanged. JSON-LD escapes `<` to prevent saved text from
-closing its script tag.
+Public routes seed the existing component queries through React Query hydration,
+so the component-level scripts, headings, and content are also present in server
+HTML. Standalone components without seeded data still load on the client.
+JSON-LD escapes `<` to prevent saved text from closing its script tag.
 Validate deployed pages with the [Schema Markup Validator](https://validator.schema.org/)
 or Google's [Rich Results Test](https://search.google.com/test/rich-results).
 Schema markup does not guarantee a search rich result.
@@ -91,11 +98,26 @@ The public site layout reads the Basic Info collection server-side to generate
 its default page title/title template, description, author/creator, favicon,
 Open Graph, and Twitter metadata. It uses `name`, `bio`, `meta_description`, `website_url`,
 `avatar_url`, and `favicon_url`; private contact fields are not included.
-The website URL supplies the metadata base for relative images/icons. Public
+The canonical deployment origin supplies the metadata base for relative images/icons. Public
 routes remain dynamic so saved profile changes appear on the next request.
 An unconfigured collection uses a generic "Portfolio" title and logs a warning;
 database failures or invalid saved metadata are surfaced rather than hidden.
 The layout does not assign a homepage canonical URL to every blog.
+The default title is `<name> | Mastra AI & EDS Frontend Engineer` (53 characters
+for Vijay Rameshkumar), shared by Open Graph and Twitter. Child pages retain the
+`%s | <name>` title template.
+The blog listing has its own title, canonical, and description derived from the
+published count and categories. Each published blog has metadata generated from
+its saved title, plain-text content preview (up to 160 characters), author,
+cover image, skills/category, and real dates. Article titles use an absolute title
+to avoid appending branding to an already long saved headline. Titles longer than
+60 characters are shortened at a word boundary for SEO/social metadata; the full
+saved headline remains unchanged in the article H1 and schema. Open Graph uses
+the article type and Twitter uses a large-image card when a cover exists.
+Missing/unpublished article routes return 404, not indexable placeholder pages.
+Server blog reads are memoized per render so metadata and page content reuse data.
+Portraits and article hero images load eagerly at high priority; blog-card images
+use responsive sizes and descriptive alt text, and links identify their article.
 The optional **SEO Description** in admin Basic Info supplies the HTML,
 Open Graph, and Twitter description independently of the visible Bio. When
 provided, it must contain 150-220 characters after trimming (spaces included);

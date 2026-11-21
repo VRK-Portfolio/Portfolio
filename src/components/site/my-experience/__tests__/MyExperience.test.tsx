@@ -42,7 +42,7 @@ describe("MyExperienceComponent", () => {
         const { container, rerender } = render(<MyExperienceComponent />);
         const script = container.querySelector('#Experience script[type="application/ld+json"]')!;
         const person = JSON.parse(script.textContent!)["@graph"][0];
-        expect(person["@id"]).toBe("https://vijayrameshkumar.dev/#person");
+        expect(person["@id"]).toBe("https://www.vijayrameshkumar.dev/#person");
         expect(person.memberOf).toEqual([
             expect.objectContaining({ roleName: "Engineer", startDate: "2020-01-01", endDate: "2022-12-31", memberOf: { "@type": "Organization", name: experience.company } }),
             expect.objectContaining({ roleName: "Lead Engineer", startDate: "2023-01-01" }),

@@ -3,7 +3,7 @@ import { useParams } from "next/navigation";
 import { useBlogById, useBlogListing } from "@/hooks/useBlogListing";
 import Image from "next/image";
 import Badge from "@/block/ui/badge/Badge";
-import { formatDate, truncateText } from "@/libs/utils";
+import { formatDate, htmlToPlainText, truncateText } from "@/libs/utils";
 import './blog-screen.css'
 import { MoveUpRight } from "lucide-react";
 import Link from "next/link";
@@ -41,7 +41,7 @@ const BlogDetailScreen = () => {
                         <div className="col-span-12 lg:col-span-8">
                             {
                                 blogDetail.coverImage && (
-                                    <Image className="cmp-blog-detail__cover-image" src={blogDetail.coverImage} alt={blogDetail.title} width={800} height={100} />
+                                    <Image className="cmp-blog-detail__cover-image" src={blogDetail.coverImage} alt={blogDetail.title} width={800} height={400} sizes="(min-width: 1024px) 53vw, 100vw" loading="eager" fetchPriority="high" />
                                 )
                             }
                             <h1>{blogDetail.title}</h1>
@@ -65,9 +65,9 @@ const BlogDetailScreen = () => {
                             )}
                             {isBlogsError && <p role="alert">{blogsError?.message}</p>}
                             <div className="cmp-recent-blogs inline-flex w-full flex-col gap-3">
-                            {blogs?.map((blog) => (
+                            {blogs?.filter(blog => blog.status === 'published').map((blog) => (
                                 <Card Tag="article" key={blog._id ?? blog.slug}>
-                                    {blog.coverImage && <Card.Image imageUrl={blog.coverImage} />}
+                                    {blog.coverImage && <Card.Image imageUrl={blog.coverImage} alt={blog.title} sizes="(min-width: 1024px) 26vw, 100vw" />}
                                     <Card.Heading Tag="h3">{blog.title}</Card.Heading>
                                     <Card.Body>
                                         <div className="cmp-recent-blogs__technologies">
@@ -78,15 +78,14 @@ const BlogDetailScreen = () => {
                                             </div>
                                         </div>
                                         <p>
-                                            {truncateText(blog.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(), 100)}
+                                            {truncateText(htmlToPlainText(blog.content), 100)}
                                         </p>
                                     </Card.Body>
                                     <Card.Footer>
                                         <Link className="cmp-recent-blogs__link-detail inline-flex gap-2 items-center" href={`/blogs/${blog.slug}`}>
-                                            Click Here
+                                            Read {blog.title}
                                             <span>
                                                 <MoveUpRight className="size-4" />
-                                                <span className="sr-only">View Blog in new tab</span>
                                             </span>
                                         </Link>
                                     </Card.Footer>
