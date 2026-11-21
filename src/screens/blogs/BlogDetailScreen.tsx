@@ -10,6 +10,8 @@ import Link from "next/link";
 import Card from "@/block/ui/card/Card";
 import CardLoading from "@/block/ui/card/CardLoading";
 import BlogDetailLoading from "./BlogDetailLoading";
+import StructuredData from "@/components/site/structured-data/StructuredData";
+import { blogDetailStructuredData } from "@/libs/structured-data";
 
 const BlogDetailScreen = () => {
     const { id } = useParams();
@@ -35,6 +37,7 @@ const BlogDetailScreen = () => {
             <div className="cmp-blog-detail">
                 {blogDetail && (
                     <div className="container">
+                        {blogDetail.status === 'published' && <StructuredData data={blogDetailStructuredData(blogDetail)} />}
                         <div className="col-span-12 lg:col-span-8">
                             {
                                 blogDetail.coverImage && (

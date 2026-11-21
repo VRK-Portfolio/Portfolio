@@ -2,6 +2,8 @@ import Image from 'next/image';
 import './basic-info-banner.css';
 import { useBasicInfo } from '@/hooks/useBasicInfo';
 import BasicInfoLoading from './BasicInfoLoading';
+import StructuredData from '@/components/site/structured-data/StructuredData';
+import { profileStructuredData } from '@/libs/structured-data';
 
 const BasicInfoBanner = ({className}: {className?: string}) => {
 
@@ -13,6 +15,7 @@ const BasicInfoBanner = ({className}: {className?: string}) => {
 
     return (
         <div className={` cmp-basic-info-banner ${className ? className : ''}`}>
+            {basicInfo && <StructuredData data={profileStructuredData(basicInfo)} />}
             <div className='container'>
                 <Image
                     className="cmp-basic-info-banner__image"

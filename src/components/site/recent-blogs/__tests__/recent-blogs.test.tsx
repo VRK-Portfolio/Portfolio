@@ -17,6 +17,28 @@ describe("Recent Blogs Component", () => {
     });
     afterAll(() => server.close());
 
+    test("keeps separate schema in the section, matching the current visible published cards", async () => {
+        server.use(http.get("*/api/blogs", () => HttpResponse.json({
+            success: true, data: [
+                { ...mockBlogListingData[0], status: "draft" },
+                ...mockBlogListingData.slice(1),
+            ],
+        })));
+        const { container, rerender } = render(<RecentBlogsComponent maxCount={1} />);
+        expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
+        await screen.findByRole("heading", { name: "Blog 2" });
+        const readSchema = () => JSON.parse(container.querySelector('#Blogs script[type="application/ld+json"]')!.textContent!);
+        const first = readSchema();
+        const list = first["@graph"].find((node: { "@type": string }) => node["@type"] === "ItemList");
+        expect(list.numberOfItems).toBe(1);
+        expect(first["@graph"].filter((node: { "@type": string }) => node["@type"] === "BlogPosting").map((node: { headline: string }) => node.headline)).toEqual(["Blog 2"]);
+        rerender(<RecentBlogsComponent maxCount={2} />);
+        expect(readSchema()["@graph"].filter((node: { "@type": string }) => node["@type"] === "BlogPosting")).toHaveLength(2);
+        expect(container.querySelectorAll('script[type="application/ld+json"]')).toHaveLength(1);
+        rerender(<RecentBlogsComponent type="admin" />);
+        expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
+    });
+
     test("renders its section heading and custom styling", async () => {
         const { container } = render(<RecentBlogsComponent className="custom-blogs" />);
         await screen.findByRole("heading", { name: "Recent Blogs", level: 2 });

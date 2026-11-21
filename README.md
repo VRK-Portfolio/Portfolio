@@ -57,6 +57,34 @@ deleting blogs, or changing the website URL updates the generated files without
 a rebuild. Database failures and invalid saved configuration are surfaced rather
 than producing placeholder URLs or a misleading partial sitemap.
 
+## Schema.org structured data
+
+Each public content component renders its own JSON-LD script through
+[`StructuredData`](./src/components/site/structured-data/StructuredData.tsx);
+there is no page-level schema aggregator or separate database query for schema.
+Basic Info describes the person, website, and profile page. Skills, Experience,
+and Certifications emit separate scripts linked to the same person ID.
+Recent Blogs describes exactly the visible published cards with a Blog and
+ordered ItemList; the full listing also includes CollectionPage and breadcrumbs.
+Blog Detail emits BlogPosting and breadcrumbs inside the loaded article.
+Admin components, drafts, and missing posts do not receive article schema.
+Saved authors, cover images, and available creation/modification dates are used
+without inventing dates or assigning another author's post to the portfolio owner.
+
+Schema URLs use `https://vijayrameshkumar.dev/`, the public portfolio reference,
+rather than the older website URL that may still be saved in Basic Info.
+Relative images resolve against that domain. Profile schema includes only the
+name, bio, avatar, GitHub, and LinkedIn links, not private contact details.
+Scripts reuse each component's existing loaded data, update alongside that
+content, and are omitted during initial loading or when no content is available.
+Because these components fetch their data on the client, their schema appears
+after hydration and data loading, not in the initial server HTML. Existing data
+loading errors remain unchanged. JSON-LD escapes `<` to prevent saved text from
+closing its script tag.
+Validate deployed pages with the [Schema Markup Validator](https://validator.schema.org/)
+or Google's [Rich Results Test](https://search.google.com/test/rich-results).
+Schema markup does not guarantee a search rich result.
+
 ## Basic info API
 
 The public site layout reads the Basic Info collection server-side to generate

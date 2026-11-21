@@ -7,6 +7,8 @@ import Button from "@/block/ui/button/Button";
 import Card from "@/block/ui/card/Card";
 import { ExperienceType } from "@/@types/Experience.types";
 import ExperienceLoading from "./ExperienceLoading";
+import StructuredData from "@/components/site/structured-data/StructuredData";
+import { experienceStructuredData } from "@/libs/structured-data";
 
 
 const ExperienceDetails = ({ experience }: { experience: ExperienceType}) => {
@@ -54,6 +56,7 @@ export const MyExperienceComponent = ({ className = '', type = 'site', modalOpen
     return (
         <>
             <section id="Experience" className={`cmp-my-experience ${className} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
+                {type === 'site' && experienceList.length > 0 && <StructuredData data={experienceStructuredData(experienceList)} />}
                 {
                     type === 'admin' ? (
                         <>
