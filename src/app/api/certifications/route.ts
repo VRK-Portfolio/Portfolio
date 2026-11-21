@@ -4,6 +4,7 @@ import { withAuth } from "@/libs/auth-wrapper";
 import { CertificationModel } from "@/models/certifications.model";
 import { NextResponse } from "next/server";
 import { connectDB } from "@/libs/db";
+import { invalidatePublicData } from "@/libs/public-cache";
 
 const GET = async (): Promise<NextResponse<ApiGetResponse<CertificationType[]>>> => {
     try {
@@ -41,6 +42,7 @@ const POST = withAuth(async (req: Request): Promise<NextResponse<ApiPostResponse
         const { data: validatedData } = validation;
         await connectDB();
         await CertificationModel.create(validatedData);
+        invalidatePublicData("certifications");
         return NextResponse.json({
             success: true,
             message: "Certification created successfully"

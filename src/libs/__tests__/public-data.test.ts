@@ -1,7 +1,12 @@
 import { describe, expect, test, vi } from "vitest";
 import { BlogModel } from "@/models/blogs.model";
 import { MySkillsModel } from "@/models/my-skills.model";
-import { getPublishedBlog, getPublishedBlogs } from "../public-data";
+import { getHomepageData, getPublicProfile, getPublishedBlog, getPublishedBlogs } from "../public-data";
+import { BasicInfoModel } from "@/models/basic-info.model";
+import { Experience } from "@/models/experience.model";
+import { CertificationModel } from "@/models/certifications.model";
+import { basicInfoMock } from "@/mocks/basic-info";
+import { mockCertifications } from "@/mocks/certifications";
 
 const post = {
     title: "Mastra AI guide", slug: "mastra-ai-guide", category: "AI",
@@ -10,6 +15,21 @@ const post = {
 } as const;
 
 describe("Server public blog reads", () => {
+    test("restores typed dates in profile and homepage data after cache JSON serialization", async () => {
+        await Promise.all([
+            BasicInfoModel.create({ ...basicInfoMock[0], created_at: new Date("2020-01-01") }),
+            CertificationModel.create(mockCertifications[0]),
+            Experience.create({
+                company: "Example", location: "Remote", responsibilites: [],
+                positions: [{ role: "Engineer", description: "Built applications.", startDate: new Date("2020-01-01"), isCurrentPosition: true }],
+            }),
+        ]);
+        const [profile, homepage] = await Promise.all([getPublicProfile(), getHomepageData()]);
+        expect(profile?.created_at).toEqual(new Date("2020-01-01"));
+        expect(homepage.experiences[0].positions[0].startDate).toEqual(new Date("2020-01-01"));
+        expect(homepage.certifications[0].issueDate).toEqual(mockCertifications[0].issueDate);
+    });
+
     test("returns only published articles with populated skill names, serializable IDs, and parsed dates", async () => {
         const skill = await MySkillsModel.create({ name: "TypeScript", icon: "/icon.svg", category: "Frontend", capabilities: ["Types"], proficiency: "Expert" });
         await BlogModel.create([

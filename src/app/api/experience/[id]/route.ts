@@ -3,6 +3,7 @@ import { ExperiencePropsSchema, ExperienceType } from "@/@types/Experience.types
 import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
 import { Experience } from "@/models/experience.model";
+import { invalidatePublicData } from "@/libs/public-cache";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
@@ -31,6 +32,7 @@ export const PUT = withAuth(async (request: Request, { params }: { params: Promi
         if (!experience) {
             return NextResponse.json({ error: "Experience not found", success: false }, { status: 404 });
         }
+        invalidatePublicData("experience");
         return NextResponse.json({ success: true, message: 'Experience updated successfully' }, { status: 200 });
 
 
@@ -56,6 +58,7 @@ export const DELETE = withAuth(async (request: Request, { params }: { params: Pr
         if (!experience) {
             return NextResponse.json({ error: "Experience not found", success: false }, { status: 404 });
         }
+        invalidatePublicData("experience");
         return NextResponse.json({ success: true, message: 'Experience deleted successfully' }, { status: 200 });
 
     } catch (error) {

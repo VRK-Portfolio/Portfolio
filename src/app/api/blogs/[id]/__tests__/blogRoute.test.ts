@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { BlogModel } from "@/models/blogs.model";
 import { GET, PUT, DELETE } from "../route";
+import { revalidateTag } from "next/cache";
+import { getPublishedBlog } from "@/libs/public-data";
 
 const { connectDB } = vi.hoisted(() => ({ connectDB: vi.fn() }));
 vi.mock("@/libs/db", () => ({ connectDB }));
@@ -51,6 +53,7 @@ describe("Blog update and delete API", () => {
         const response = await PUT(request("PUT", updated), context(String(saved._id)));
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ success: true, message: "Blog updated successfully" });
+        expect(revalidateTag).toHaveBeenCalledExactlyOnceWith("public-blogs", { expire: 0 });
         const result = await BlogModel.findById(saved._id).orFail();
         expect(result).toMatchObject({
             title: "Updated blog", slug: "updated-blog", content: updated.content,
@@ -80,6 +83,7 @@ describe("Blog update and delete API", () => {
         const response = await DELETE(request("DELETE"), context(String(first._id)));
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ success: true, message: "Blog deleted successfully" });
+        expect(revalidateTag).toHaveBeenCalledExactlyOnceWith("public-blogs", { expire: 0 });
         expect(await BlogModel.findById(first._id)).toBeNull();
         expect(await BlogModel.findById(second._id)).not.toBeNull();
     });
@@ -92,6 +96,15 @@ describe("Blog update and delete API", () => {
         const missing = await handler(request(method, method === "PUT" ? blog : undefined), context(String(new mongoose.Types.ObjectId())));
         expect(missing.status).toBe(404);
         expect(await missing.json()).toEqual({ success: false, error: "Blog not found" });
+        expect(revalidateTag).not.toHaveBeenCalled();
+    });
+
+    test("unpublishing immediately expires article caches instead of serving stale published content", async () => {
+        const saved = await BlogModel.create({ ...blog, status: "published" });
+        expect(await getPublishedBlog(blog.slug)).not.toBeNull();
+        expect((await PUT(request("PUT", { ...blog, status: "draft" }), context(String(saved._id)))).status).toBe(200);
+        expect(revalidateTag).toHaveBeenCalledExactlyOnceWith("public-blogs", { expire: 0 });
+        expect(await getPublishedBlog(blog.slug)).toBeNull();
     });
 
     test.each(["PUT", "DELETE"] as const)("%s requires authentication and exposes database errors", async method => {

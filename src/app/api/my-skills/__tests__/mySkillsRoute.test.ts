@@ -5,6 +5,7 @@ import { GET, POST } from "../route";
 import { ApiGetResponse, ApiPostResponse } from "@/@types/ApiResponse.types";
 import { NextRequest } from "next/server";
 import { DELETE, PUT, GET as GETById } from "../[id]/route";
+import { revalidateTag } from "next/cache";
 
 vi.mock("@/libs/db", () => ({
     connectDB: vi.fn().mockResolvedValue(true)
@@ -20,6 +21,20 @@ describe('My Skills API Routes', () => {
         { _id: '2', name: 'TypeScript', icon: '/images/skills/typescript.png', category: 'Language', capabilities: ['Type safety'], proficiency: 'Advanced' },
         { _id: '3', name: 'React', icon: '/images/skills/react.png', category: 'Frontend', capabilities: ['Components'], proficiency: 'Advanced' }
     ];
+
+    test.each(["POST", "PUT", "DELETE"] as const)("%s invalidates skills and blog caches containing populated skill names", async method => {
+        const data = { ...mockSkills[0], _id: undefined };
+        const saved = method === "POST" ? null : await MySkillsModel.create(data);
+        const request = new NextRequest("http://localhost:3000/api/my-skills", {
+            method, ...(method === "DELETE" ? {} : { body: JSON.stringify(data) }),
+        });
+        const handler = method === "POST" ? POST : method === "PUT" ? PUT : DELETE;
+        const response = await handler(request, { params: Promise.resolve({ id: saved ? String(saved._id) : "unused" }) });
+        expect(response.status).toBe(method === "POST" ? 201 : 200);
+        expect(revalidateTag).toHaveBeenCalledTimes(2);
+        expect(revalidateTag).toHaveBeenCalledWith("public-skills", { expire: 0 });
+        expect(revalidateTag).toHaveBeenCalledWith("public-blogs", { expire: 0 });
+    });
 
 
     test("POST should persist valid skill data and return an unconditional success response", async () => {

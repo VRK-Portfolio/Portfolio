@@ -5,6 +5,7 @@ import { BlogModel } from "@/models/blogs.model";
 import { MySkillsModel } from "@/models/my-skills.model";
 import { mockMySkills } from "@/mocks/my-skills";
 import { GET, POST } from "../route";
+import { revalidateTag } from "next/cache";
 
 const { connectDB } = vi.hoisted(() => ({ connectDB: vi.fn() }));
 vi.mock("@/libs/db", () => ({ connectDB }));
@@ -36,6 +37,7 @@ describe("Blog API routes", () => {
         const response = await POST(createRequest(blog), context);
         expect(response.status).toBe(200);
         expect(await response.json()).toEqual({ success: true, message: "Blog created successfully" });
+        expect(revalidateTag).toHaveBeenCalledExactlyOnceWith("public-blogs", { expire: 0 });
         const saved = await BlogModel.findOne({ slug: blog.slug }).orFail();
         expect(saved.title).toBe(blog.title);
         expect(saved.content).toBe(blog.content);
@@ -89,6 +91,7 @@ describe("Blog API routes", () => {
             success: false, error: "Invalid request body", errors: expect.any(Array),
         });
         expect(connectDB).not.toHaveBeenCalled();
+        expect(revalidateTag).not.toHaveBeenCalled();
         expect(await BlogModel.countDocuments()).toBe(0);
     });
 

@@ -12,6 +12,8 @@ import CardLoading from "@/block/ui/card/CardLoading";
 import BlogDetailLoading from "./BlogDetailLoading";
 import StructuredData from "@/components/site/structured-data/StructuredData";
 import { blogDetailStructuredData } from "@/libs/structured-data";
+import ShareLinks from "@/components/site/share-links/ShareLinks";
+import { SITE_ORIGIN } from "@/libs/site-url";
 
 const BlogDetailScreen = () => {
     const { id } = useParams();
@@ -54,6 +56,7 @@ const BlogDetailScreen = () => {
                                 }
                             </div>
                             <div className="rich-text" dangerouslySetInnerHTML={{ __html: blogDetail.content }}></div>
+                            {blogDetail.status === 'published' && <ShareLinks title={blogDetail.title} url={`${SITE_ORIGIN}/blogs/${blogDetail.slug}`} />}
                         <hr/>
                         </div>
                         <div className="col-span-12 lg:col-span-4">

@@ -11,7 +11,10 @@ import StructuredData from "@/components/site/structured-data/StructuredData";
 import { experienceStructuredData } from "@/libs/structured-data";
 
 
-const ExperienceDetails = ({ experience }: { experience: ExperienceType}) => {
+const normalizeDescription = (description: string) => description.replace(/\s+/g, " ").trim();
+
+const ExperienceDetails = ({ experience, sharedDescriptions }: { experience: ExperienceType; sharedDescriptions?: ReadonlySet<string> }) => {
+    const RoleTitle = sharedDescriptions ? 'p' : 'h4';
     return (
         <li key={experience._id} className="cmp-my-experience__item">
             <h3 className="cmp-my-experience__company">{experience.company}</h3>
@@ -25,9 +28,11 @@ const ExperienceDetails = ({ experience }: { experience: ExperienceType}) => {
             {
                 experience.positions.map((position, index) => (
                     <div key={index} className="cmp-my-experience__role-container mb-3">
-                        <h4 className="cmp-my-experience__role text-lg">{position.role}</h4>
+                        <RoleTitle className="cmp-my-experience__role text-lg font-bold">{position.role}</RoleTitle>
                         <p className="cmp-my-experience__duration">{formatDate(position.startDate)} - {position.endDate ? formatDate(position.endDate) : 'Present'}</p>
-                        <p className="cmp-my-experience__description">{position.description}</p>
+                        {!sharedDescriptions?.has(normalizeDescription(position.description)) && (
+                            <p className="cmp-my-experience__description">{position.description}</p>
+                        )}
                     </div>
                 ))
             }
@@ -52,6 +57,21 @@ export const MyExperienceComponent = ({ className = '', type = 'site', modalOpen
             </section>
         );
     }
+
+    const descriptionGroups = new Map<string, { description: string; roles: string[] }>();
+    if (type === 'site') {
+        for (const experience of experienceList) {
+            for (const position of experience.positions) {
+                const description = normalizeDescription(position.description);
+                if (!description) continue;
+                const group = descriptionGroups.get(description) ?? { description: position.description, roles: [] };
+                group.roles.push(`${experience.company}: ${position.role}`);
+                descriptionGroups.set(description, group);
+            }
+        }
+    }
+    const sharedGroups = [...descriptionGroups.entries()].filter(([, group]) => group.roles.length > 1);
+    const sharedDescriptions = new Set(sharedGroups.map(([description]) => description));
 
     return (
         <>
@@ -82,6 +102,19 @@ export const MyExperienceComponent = ({ className = '', type = 'site', modalOpen
                     )
                 }
                 <div className={`container ${type !== 'admin' ? 'pl-20!' : ''}`}>
+                    {sharedGroups.length > 0 && (
+                        <div className="mb-6">
+                            <p className="font-bold mb-3">Shared responsibilities across roles</p>
+                            {sharedGroups.map(([description, group]) => (
+                                <div key={description} className="mb-4">
+                                    <p className="cmp-my-experience__description">{group.description}</p>
+                                    <ul className="mt-2 list-disc pl-5 text-sm">
+                                        {group.roles.map((role, index) => <li key={`${role}-${index}`}>{role}</li>)}
+                                    </ul>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                     <ul className="cmp-my-experience__list">
                         {
                             experienceList.map((experience) => {
@@ -98,7 +131,7 @@ export const MyExperienceComponent = ({ className = '', type = 'site', modalOpen
                                             </Card.Footer>
                                         </Card>
                                     ) : (
-                                        <ExperienceDetails key={experience._id} experience={experience} />
+                                        <ExperienceDetails key={experience._id} experience={experience} sharedDescriptions={sharedDescriptions} />
                                     )
                             })
                         }

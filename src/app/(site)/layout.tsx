@@ -5,10 +5,8 @@ import PublicFooter from "@/components/site/footer/PublicFooter";
 import { QueryProvider } from "@/providers/QueryProvider";
 import type { Metadata } from "next";
 import { BasicInfoSchema } from "@/@types/BasicInfo.types";
-import { BasicInfoModel } from "@/models/basic-info.model";
-import { connectDB } from "@/libs/db";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
-import { getPublicProfile } from "@/libs/public-data";
+import { getPublicProfile, getPublicProfileRecord } from "@/libs/public-data";
 import { SITE_ORIGIN } from "@/libs/site-url";
 export const dynamic = 'force-dynamic';
 
@@ -22,12 +20,10 @@ const siteMetadataSchema = BasicInfoSchema.pick({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  await connectDB();
-  const record = await BasicInfoModel.findOne()
-    .select("name bio meta_description website_url avatar_url favicon_url").lean().exec();
+  const record = await getPublicProfileRecord();
   if (!record) {
     console.warn("Basic info is not configured; using the default portfolio metadata.");
-    return { title: "Portfolio" };
+    return { title: "Portfolio", icons: { apple: "/apple-touch-icon.png" } };
   }
   const info = siteMetadataSchema.parse(record);
   const metadataBase = new URL(SITE_ORIGIN);
@@ -40,7 +36,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description,
     authors: [{ name: info.name, url: SITE_ORIGIN }],
     creator: info.name,
-    icons: { icon: info.favicon_url, shortcut: info.favicon_url },
+    icons: { icon: info.favicon_url, shortcut: info.favicon_url, apple: "/apple-touch-icon.png" },
     openGraph: {
       type: "website",
       title,

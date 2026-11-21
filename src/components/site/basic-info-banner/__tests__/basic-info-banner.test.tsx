@@ -23,7 +23,7 @@ describe("BasicInfoBanner", () => {
         expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
         expect(screen.queryByRole("img")).not.toBeInTheDocument();
 
-        await screen.findByRole("heading", { name: basicInfoMock[0].name });
+        await screen.findByRole("heading", { name: `${basicInfoMock[0].name} - Mastra AI & EDS Frontend Engineer` });
         expect(container.querySelector(".animate-pulse")).not.toBeInTheDocument();
         const script = container.querySelector('.cmp-basic-info-banner script[type="application/ld+json"]')!;
         const data = JSON.parse(script.textContent!);
@@ -37,7 +37,9 @@ describe("BasicInfoBanner", () => {
 
     test("should display the basic info banner content", async () => {
         renderBasicInfoBanner();
-        expect(await screen.findByRole("heading", { name: basicInfoMock[0].name })).toBeInTheDocument();
+        expect(await screen.findByRole("heading", { name: `${basicInfoMock[0].name} - Mastra AI & EDS Frontend Engineer` })).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: basicInfoMock[0].bio })).not.toBeInTheDocument();
+        expect(screen.getByRole("navigation", { name: "Share this page" })).toBeInTheDocument();
         expect(screen.getByText(basicInfoMock[0].about_me)).toBeInTheDocument();
         expect(screen.getByText(basicInfoMock[0].bio)).toBeInTheDocument();
     });

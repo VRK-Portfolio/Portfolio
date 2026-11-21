@@ -68,6 +68,7 @@ const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { 
                                         <>
                                             <Link href={certification.credentialURL} className="inline-flex gap-3 items-center" target="_blank" rel="noopener noreferrer">
                                                 <span>View Credential</span>
+                                                <span className="sr-only">: {certification.title}</span>
                                                 <MoveUpRight size={16} />
                                             </Link>
                                             {type === 'admin' && (

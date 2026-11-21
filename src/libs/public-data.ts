@@ -1,5 +1,6 @@
 import "server-only";
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import type { Types } from "mongoose";
 import { BasicInfoSchema } from "@/@types/BasicInfo.types";
 import { BlogListingSchema } from "@/@types/Blogs.types";
@@ -13,10 +14,15 @@ import { Experience } from "@/models/experience.model";
 import { MySkillsModel } from "@/models/my-skills.model";
 import { connectDB } from "./db";
 import { sortExperiences } from "./utils";
+import { PUBLIC_DATA_TAGS } from "./public-cache";
+
+export const getPublicProfileRecord = cache(unstable_cache(async () => {
+    await connectDB();
+    return BasicInfoModel.findOne().lean().exec();
+}, ["public-profile"], { revalidate: 60, tags: [PUBLIC_DATA_TAGS.profile] }));
 
 export const getPublicProfile = cache(async () => {
-    await connectDB();
-    const record = await BasicInfoModel.findOne().lean().exec();
+    const record = await getPublicProfileRecord();
     return record ? BasicInfoSchema.parse(record) : null;
 });
 
@@ -30,27 +36,45 @@ function parseBlog(record: PopulatedSkills & { _id: Types.ObjectId | string }) {
     });
 }
 
-export const getPublishedBlogs = cache(async () => {
+const readPublishedBlogs = unstable_cache(async () => {
     await connectDB();
     const records = await BlogModel.find({ status: "published" }).sort({ createdAt: -1 })
         .populate<PopulatedSkills>({ path: "skills", select: "name" }).lean().exec();
     return records.map(parseBlog);
+}, ["public-published-blogs"], { revalidate: 60, tags: [PUBLIC_DATA_TAGS.blogs] });
+
+export const getPublishedBlogs = cache(async () => {
+    return BlogListingSchema.array().parse(await readPublishedBlogs());
 });
 
-export const getPublishedBlog = cache(async (slug: string) => {
+const readPublishedBlog = unstable_cache(async (slug: string) => {
     await connectDB();
     const record = await BlogModel.findOne({ slug, status: "published" })
         .populate<PopulatedSkills>({ path: "skills", select: "name" }).lean().exec();
     return record ? parseBlog(record) : null;
+}, ["public-published-blog"], { revalidate: 60, tags: [PUBLIC_DATA_TAGS.blogs] });
+
+export const getPublishedBlog = cache(async (slug: string) => {
+    const record = await readPublishedBlog(slug);
+    return record ? BlogListingSchema.parse(record) : null;
 });
 
-export async function getHomepageData() {
+const readHomepageRecords = unstable_cache(async () => {
     await connectDB();
-    const [skills, experiences, certifications, blogs] = await Promise.all([
+    const [skills, experiences, certifications] = await Promise.all([
         MySkillsModel.find().lean().exec(),
         Experience.find().lean().exec(),
         CertificationModel.find().lean().exec(),
-        getPublishedBlogs(),
+    ]);
+    return { skills, experiences, certifications };
+}, ["public-homepage-sections"], {
+    revalidate: 60,
+    tags: [PUBLIC_DATA_TAGS.skills, PUBLIC_DATA_TAGS.experience, PUBLIC_DATA_TAGS.certifications],
+});
+
+export async function getHomepageData() {
+    const [{ skills, experiences, certifications }, blogs] = await Promise.all([
+        readHomepageRecords(), getPublishedBlogs(),
     ]);
     return {
         skills: MySkillsSchema.array().parse(skills.map(skill => ({ ...skill, _id: String(skill._id) }))),

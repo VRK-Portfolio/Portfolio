@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { Experience } from "@/models/experience.model";
 import { connectDB } from "@/libs/db";
 import { withAuth } from "@/libs/auth-wrapper";
+import { invalidatePublicData } from "@/libs/public-cache";
 
 const GET = async (): Promise<NextResponse<ApiGetResponse<ExperienceType[]>>> => {
     try {
@@ -32,6 +33,7 @@ const POST = withAuth(async (req: Request): Promise<NextResponse<ApiPostResponse
         await connectDB();
         const newExperience = new Experience(validation.data);
         await newExperience.save();
+        invalidatePublicData("experience");
         return NextResponse.json({ success: true, message: "Experience created successfully" }, { status: 201 });
     } catch (error: Error | unknown) {
         const err = error instanceof Error ? error : new Error(String("Something went wrong!"));
