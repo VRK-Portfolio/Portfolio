@@ -8,6 +8,8 @@ import {useCertifications, useDeleteCertifications} from "@/hooks/useCertificati
 import Button from "@/block/ui/button/Button";
 import { formatDate } from "@/libs/utils";
 import CertificationLoading from "./loading";
+import StructuredData from "@/components/site/structured-data/StructuredData";
+import { certificationsStructuredData } from "@/libs/structured-data";
 
 const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { className?: string, modalOpen?: (id?: string) => void, type?: 'admin' | 'site' }) => {
     const { certifications, isLoading, isError, isFetching, refetch } = useCertifications();
@@ -17,6 +19,7 @@ const CertificationComponent = ({ className = '', modalOpen, type = 'site' }: { 
     }
     return (
         <section id="Certifications" className={`cmp-certification ${className} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
+            {type === 'site' && certifications.length > 0 && <StructuredData data={certificationsStructuredData(certifications)} />}
             <div className="container">
                 {
                     type === 'site' && (

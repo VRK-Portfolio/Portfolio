@@ -22,7 +22,7 @@ describe("Blogs page", () => {
                 { ...mockBlogListingData[0], _id: "unspecified", title: "Unspecified Blog", slug: "unspecified-blog", status: undefined },
             ],
         })));
-        renderWithQueryClient(<BlogsPage />);
+        const { container } = renderWithQueryClient(<BlogsPage />);
         const loading = screen.getByRole("status", { name: "Loading blogs" });
         expect(loading.querySelector(".shimmer")).toBeInTheDocument();
         await screen.findByRole("heading", { name: "Blog 1" });
@@ -37,6 +37,12 @@ describe("Blogs page", () => {
         expect(screen.queryByRole("heading", { name: "Draft Blog" })).not.toBeInTheDocument();
         expect(screen.queryByRole("heading", { name: "Unspecified Blog" })).not.toBeInTheDocument();
         expect(screen.queryByRole("link", { name: "View More" })).not.toBeInTheDocument();
+        const scripts = container.querySelectorAll('script[type="application/ld+json"]');
+        expect(scripts).toHaveLength(1);
+        expect(scripts[0].parentElement).toHaveAttribute("id", "Blogs");
+        const data = JSON.parse(scripts[0].textContent!);
+        expect(data["@graph"]).toContainEqual(expect.objectContaining({ "@type": "CollectionPage" }));
+        expect(data["@graph"].filter((node: { "@type": string }) => node["@type"] === "BlogPosting")).toHaveLength(mockBlogListingData.length);
     });
 
     test("shows an empty state when no published blogs exist", async () => {

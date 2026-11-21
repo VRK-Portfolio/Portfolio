@@ -31,6 +31,17 @@ describe("Blog detail loading", () => {
         hooks.listing = { blogs: mockBlogListingData.slice(1), isLoading: false, isError: false, error: null };
     });
 
+    test("keeps the article schema inside the detail component and excludes drafts", () => {
+        const { container, rerender } = render(<BlogDetailScreen />);
+        const script = container.querySelector('.cmp-blog-detail .container script[type="application/ld+json"]')!;
+        const data = JSON.parse(script.textContent!);
+        expect(data["@graph"][0]).toMatchObject({ "@type": "BlogPosting", headline: "Blog 1" });
+        hooks.detail.blogDetail = { ...mockBlogListingData[0], status: "draft" };
+        rerender(<BlogDetailScreen />);
+        expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
+        expect(screen.getByRole("heading", { name: "Blog 1", level: 1 })).toBeInTheDocument();
+    });
+
     test("shows the article and sidebar shimmers before the blog detail is available", () => {
         hooks.detail.blogDetail = undefined;
         hooks.detail.isLoading = true;
@@ -39,6 +50,7 @@ describe("Blog detail loading", () => {
         expect(loading.querySelector(".shimmer")).toBeInTheDocument();
         expect(loading).toHaveAttribute("aria-busy", "true");
         expect(screen.queryByRole("link")).not.toBeInTheDocument();
+        expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
 
         hooks.detail.blogDetail = mockBlogListingData[0];
         hooks.detail.isLoading = false;

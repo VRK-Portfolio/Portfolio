@@ -15,7 +15,7 @@ describe("CertificationComponent", () => {
     afterAll(() => server.close());
 
     test("should render site headings, certification details, skills and safe credential links", async () => {
-        renderWithQueryClient(<CertificationComponent />);
+        const { container } = renderWithQueryClient(<CertificationComponent />);
         await screen.findByRole("heading", { name: mockCertifications[0].title });
 
         expect(screen.getByRole("heading", { name: "Certifications", level: 2 })).toBeInTheDocument();
@@ -33,6 +33,13 @@ describe("CertificationComponent", () => {
             expect(link).toHaveAttribute("rel", "noopener noreferrer");
         }
         expect(screen.queryByRole("button")).not.toBeInTheDocument();
+        const script = container.querySelector('#Certifications script[type="application/ld+json"]')!;
+        const person = JSON.parse(script.textContent!)["@graph"][0];
+        expect(person.hasCredential).toHaveLength(mockCertifications.length);
+        expect(person.hasCredential[0]).toMatchObject({
+            name: mockCertifications[0].title, identifier: mockCertifications[0].credentialID,
+            recognizedBy: { name: mockCertifications[0].issuer },
+        });
     });
 
     test("should apply custom and admin classes and invoke Add and Edit callbacks", async () => {
@@ -42,6 +49,7 @@ describe("CertificationComponent", () => {
         await screen.findByRole("heading", { name: mockCertifications[0].title });
 
         expect(container.querySelector(".cmp-certification")).toHaveClass("custom-certifications", "cmp-admin__type");
+        expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Admin View of Certifications", level: 4 })).toBeInTheDocument();
         await user.click(screen.getByRole("button", { name: "Add Certification" }));
         expect(modalOpen).toHaveBeenNthCalledWith(1);

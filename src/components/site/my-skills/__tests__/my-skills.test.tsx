@@ -22,10 +22,15 @@ describe("MySkillsComponent", () => {
     test("should show loading placeholders until skills load", async () => {
         const { container } = renderSkillComponent();
         expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
+        expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
         expect(screen.queryByRole("heading", { name: mockMySkills[0].name })).not.toBeInTheDocument();
 
         await screen.findByRole("heading", { name: mockMySkills[0].name });
         expect(container.querySelector(".animate-pulse")).not.toBeInTheDocument();
+        const script = container.querySelector('#Skills script[type="application/ld+json"]')!;
+        const person = JSON.parse(script.textContent!)["@graph"][0];
+        expect(person["@id"]).toBe("https://vijayrameshkumar.dev/#person");
+        expect(person.knowsAbout).toEqual([...new Set(mockMySkills.flatMap(skill => [skill.name, ...skill.capabilities]))]);
     });
 
     test("should show the site heading without admin controls by default", async () => {
