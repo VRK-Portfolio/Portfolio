@@ -4,8 +4,6 @@ import { useBasicInfo } from '@/hooks/useBasicInfo';
 import BasicInfoLoading from './BasicInfoLoading';
 import StructuredData from '@/components/site/structured-data/StructuredData';
 import { profileStructuredData } from '@/libs/structured-data';
-import ShareLinks from '@/components/site/share-links/ShareLinks';
-import { SITE_ORIGIN } from '@/libs/site-url';
 
 const BasicInfoBanner = ({className}: {className?: string}) => {
 
@@ -31,7 +29,6 @@ const BasicInfoBanner = ({className}: {className?: string}) => {
                 {basicInfo && <h1 className='cmp-basic-info-banner__title'>{basicInfo.name} - Mastra AI &amp; EDS Frontend Engineer</h1>}
                 <p className='cmp-basic-info-banner__bio'>{basicInfo?.bio}</p>
                 <p className='cmp-basic-info-banner__about-me'>{basicInfo?.about_me}</p>
-                {basicInfo && <ShareLinks title={`${basicInfo.name} | Mastra AI & EDS Frontend Engineer`} url={SITE_ORIGIN} />}
             </div>
         </div>
     );
