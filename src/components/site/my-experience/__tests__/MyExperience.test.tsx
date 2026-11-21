@@ -38,6 +38,20 @@ describe("MyExperienceComponent", () => {
         hooks.deleteExperience.mockReset();
     });
 
+    test("keeps experience schema inside the public component and omits it in admin", () => {
+        const { container, rerender } = render(<MyExperienceComponent />);
+        const script = container.querySelector('#Experience script[type="application/ld+json"]')!;
+        const person = JSON.parse(script.textContent!)["@graph"][0];
+        expect(person["@id"]).toBe("https://vijayrameshkumar.dev/#person");
+        expect(person.memberOf).toEqual([
+            expect.objectContaining({ roleName: "Engineer", startDate: "2020-01-01", endDate: "2022-12-31", memberOf: { "@type": "Organization", name: experience.company } }),
+            expect.objectContaining({ roleName: "Lead Engineer", startDate: "2023-01-01" }),
+        ]);
+        expect(person.memberOf[1].endDate).toBeUndefined();
+        rerender(<MyExperienceComponent type="admin" />);
+        expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
+    });
+
     test("shows a timeline shimmer until experience loads while preserving section styling", () => {
         hooks.isLoading = true;
         hooks.experienceList = [];

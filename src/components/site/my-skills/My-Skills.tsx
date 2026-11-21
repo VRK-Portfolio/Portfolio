@@ -6,6 +6,8 @@ import SkillLoading from './SkillLoading';
 import Card from '@/block/ui/card/Card';
 import Badge from '@/block/ui/badge/Badge';
 import Button from '@/block/ui/button/Button';
+import StructuredData from '@/components/site/structured-data/StructuredData';
+import { skillsStructuredData } from '@/libs/structured-data';
 
 
 const MySkillsComponent = ({ className, type = 'site', modalOpen }: { className?: string, type?: 'admin' | 'site', modalOpen?: (id?: string | undefined) => void }) => {
@@ -17,7 +19,7 @@ const MySkillsComponent = ({ className, type = 'site', modalOpen }: { className?
     }
     return (
         <section className={`cmp-my-skills ${className ? className : ''} ${type === 'admin' ? 'cmp-admin__type' : ''}`} id="Skills">
-
+            {type === 'site' && skills.length > 0 && <StructuredData data={skillsStructuredData(skills)} />}
             <div className="container">
                 {
                     type === 'site' && (

@@ -10,6 +10,8 @@ import Link from "next/link";
 import './recent-blogs.css';
 import { MoveUpRight } from "lucide-react";
 import { useBlogListing } from "@/hooks/useBlogListing";
+import StructuredData from "@/components/site/structured-data/StructuredData";
+import { blogsStructuredData } from "@/libs/structured-data";
 
 interface RecentBlogsProps {
     title?: string;
@@ -57,6 +59,9 @@ const RecentBlogsComponent = ({ title = 'Recent Blogs', headingTag = 'h2', maxCo
     }
     return (
         <section id="Blogs" className={`cmp-recent-blogs ${className ?? ''} ${type === 'admin' ? 'cmp-admin__type' : ''}`}>
+            {type === 'site' && visibleBlogs && (
+                <StructuredData data={blogsStructuredData(visibleBlogs, headingTag === 'h1')} />
+            )}
             <div className="container">
 
                 {

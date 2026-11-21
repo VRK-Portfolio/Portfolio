@@ -20,10 +20,19 @@ describe("BasicInfoBanner", () => {
     test("should show a loading placeholder until basic info loads", async () => {
         const { container } = renderBasicInfoBanner();
         expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
+        expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
         expect(screen.queryByRole("img")).not.toBeInTheDocument();
 
         await screen.findByRole("heading", { name: basicInfoMock[0].name });
         expect(container.querySelector(".animate-pulse")).not.toBeInTheDocument();
+        const script = container.querySelector('.cmp-basic-info-banner script[type="application/ld+json"]')!;
+        const data = JSON.parse(script.textContent!);
+        expect(data["@graph"]).toContainEqual(expect.objectContaining({
+            "@type": "Person", name: basicInfoMock[0].name,
+            "@id": "https://vijayrameshkumar.dev/#person",
+        }));
+        expect(script.textContent).not.toContain(basicInfoMock[0].email);
+        expect(script.textContent).not.toContain(basicInfoMock[0].address);
     });
 
     test("should display the basic info banner content", async () => {
