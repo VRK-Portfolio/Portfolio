@@ -25,21 +25,24 @@ describe("sitemap.xml", () => {
             { ...blogData, slug: "unpublished-article", status: "draft" },
         ]);
         expect(await sitemap()).toEqual([
-            { url: "https://portfolio.example/" },
-            { url: "https://portfolio.example/blogs/another-article", lastModified: new Date("2026-01-02T00:00:00.000Z") },
-            { url: "https://portfolio.example/blogs/published-article", lastModified: new Date("2026-02-01T00:00:00.000Z") },
+            { url: "https://www.vijayrameshkumar.dev/" },
+            { url: "https://www.vijayrameshkumar.dev/blogs" },
+            { url: "https://www.vijayrameshkumar.dev/blogs/another-article", lastModified: new Date("2026-01-02T00:00:00.000Z") },
+            { url: "https://www.vijayrameshkumar.dev/blogs/published-article", lastModified: new Date("2026-02-01T00:00:00.000Z") },
         ]);
     });
 
-    test("returns only the homepage when there are no published blogs", async () => {
-        expect(await sitemap()).toEqual([{ url: "https://portfolio.example/" }]);
+    test("includes the homepage and listing when there are no published blogs", async () => {
+        expect(await sitemap()).toEqual([
+            { url: "https://www.vijayrameshkumar.dev/" }, { url: "https://www.vijayrameshkumar.dev/blogs" },
+        ]);
     });
 
     test("does not invent timestamps for blogs without saved dates", async () => {
         await BlogModel.create(blogData);
         const entries = await sitemap();
-        expect(entries[1]).toEqual({
-            url: "https://portfolio.example/blogs/published-article",
+        expect(entries[2]).toEqual({
+            url: "https://www.vijayrameshkumar.dev/blogs/published-article",
             lastModified: undefined,
         });
     });
@@ -47,33 +50,31 @@ describe("sitemap.xml", () => {
     test("reflects publishing, unpublishing, and deletion without rebuilding", async () => {
         expect(dynamic).toBe("force-dynamic");
         const blog = await BlogModel.create({ ...blogData, status: "draft" });
-        expect(await sitemap()).toHaveLength(1);
-        await BlogModel.updateOne({ _id: blog._id }, { status: "published" });
         expect(await sitemap()).toHaveLength(2);
+        await BlogModel.updateOne({ _id: blog._id }, { status: "published" });
+        expect(await sitemap()).toHaveLength(3);
         await BlogModel.updateOne({ _id: blog._id }, { status: "draft" });
-        expect(await sitemap()).toHaveLength(1);
+        expect(await sitemap()).toHaveLength(2);
         await BlogModel.updateOne({ _id: blog._id }, { status: "published" });
         await BlogModel.deleteOne({ _id: blog._id });
-        expect(await sitemap()).toHaveLength(1);
+        expect(await sitemap()).toHaveLength(2);
     });
 
-    test("uses only the configured website origin", async () => {
+    test("uses the deployment origin instead of saved profile URLs", async () => {
         await BasicInfoModel.updateOne({}, { website_url: "https://updated.example/portfolio?preview=1#about" });
         await BlogModel.create(blogData);
         expect((await sitemap()).map(entry => entry.url)).toEqual([
-            "https://updated.example/",
-            "https://updated.example/blogs/published-article",
+            "https://www.vijayrameshkumar.dev/",
+            "https://www.vijayrameshkumar.dev/blogs",
+            "https://www.vijayrameshkumar.dev/blogs/published-article",
         ]);
     });
 
-    test("surfaces missing site configuration rather than generating placeholder URLs", async () => {
+    test("does not depend on profile setup for the known deployment origin", async () => {
         await BasicInfoModel.deleteMany({});
-        await expect(sitemap()).rejects.toThrow("Configure the Basic Info website URL");
-    });
-
-    test.each(["not-a-url", "ftp://portfolio.example"])("rejects an invalid website URL: %s", async website_url => {
-        await BasicInfoModel.updateOne({}, { website_url });
-        await expect(sitemap()).rejects.toThrow();
+        expect((await sitemap()).map(entry => entry.url)).toEqual([
+            "https://www.vijayrameshkumar.dev/", "https://www.vijayrameshkumar.dev/blogs",
+        ]);
     });
 
     test.each([

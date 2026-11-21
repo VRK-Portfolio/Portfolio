@@ -5,7 +5,7 @@ import Badge from "@/block/ui/badge/Badge";
 import Button from "@/block/ui/button/Button";
 import Card from "@/block/ui/card/Card";
 import CardLoading from "@/block/ui/card/CardLoading";
-import { formatDate, truncateText } from "@/libs/utils";
+import { htmlToPlainText, truncateText } from "@/libs/utils";
 import Link from "next/link";
 import './recent-blogs.css';
 import { MoveUpRight } from "lucide-react";
@@ -85,7 +85,7 @@ const RecentBlogsComponent = ({ title = 'Recent Blogs', headingTag = 'h2', maxCo
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {visibleBlogs && visibleBlogs.map(blog => (
                         <Card Tag="article" key={blog._id ?? blog.slug}>
-                            {blog.coverImage && <Card.Image imageUrl={blog.coverImage} />}
+                            {blog.coverImage && <Card.Image imageUrl={blog.coverImage} alt={blog.title} sizes="(min-width: 1024px) 26vw, (min-width: 768px) 48vw, 100vw" />}
                             <Card.Heading Tag="h3">{blog.title}</Card.Heading>
                             <Card.Body>
                                 <div className="cmp-recent-blogs__technologies">
@@ -99,15 +99,14 @@ const RecentBlogsComponent = ({ title = 'Recent Blogs', headingTag = 'h2', maxCo
                                     </div>
                                 </div>
                                 <p>
-                                    {truncateText(blog.content.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/gi, ' ').replace(/\s+/g, ' ').trim(), 150)}
+                                    {truncateText(htmlToPlainText(blog.content), 150)}
                                 </p>
                             </Card.Body>
                             <Card.Footer>
-                                <Link className="cmp-recent-blogs__link-detail" href={`/blogs/${blog.slug}`}>
+                                <Link className="cmp-recent-blogs__link-detail" href={`/blogs/${blog.slug}`} aria-label={`Click Here: ${blog.title}`}>
                                     Click Here
                                     <span>
                                         <MoveUpRight className="size-4" />
-                                        <span className="sr-only">View Blog in new tab</span>
                                     </span>
                                 </Link>
 

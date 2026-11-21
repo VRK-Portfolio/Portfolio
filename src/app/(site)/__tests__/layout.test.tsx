@@ -30,23 +30,41 @@ afterEach(() => vi.restoreAllMocks());
 describe("Public layout metadata from basic info", () => {
     test("uses saved profile fields for SEO, social sharing, and icons", async () => {
         expect(await generateMetadata()).toEqual({
-            metadataBase: new URL(info.website_url),
-            title: { default: "Portfolio Author | Portfolio", template: "%s | Portfolio Author" },
+            metadataBase: new URL("https://www.vijayrameshkumar.dev"),
+            title: { default: "Portfolio Author | Mastra AI & EDS Frontend Engineer", template: "%s | Portfolio Author" },
             description: info.bio,
-            authors: [{ name: info.name, url: info.website_url }],
+            authors: [{ name: info.name, url: "https://www.vijayrameshkumar.dev" }],
             creator: info.name,
             icons: { icon: info.favicon_url, shortcut: info.favicon_url },
             openGraph: {
-                type: "website", title: "Portfolio Author | Portfolio", description: info.bio,
-                siteName: "Portfolio Author | Portfolio", images: [{ url: info.avatar_url, alt: info.name }],
+                type: "website", title: "Portfolio Author | Mastra AI & EDS Frontend Engineer", description: info.bio,
+                siteName: "Portfolio Author | Mastra AI & EDS Frontend Engineer", images: [{ url: info.avatar_url, alt: info.name }],
+                url: "https://www.vijayrameshkumar.dev",
             },
             twitter: {
-                card: "summary", title: "Portfolio Author | Portfolio", description: info.bio,
+                card: "summary", title: "Portfolio Author | Mastra AI & EDS Frontend Engineer", description: info.bio,
                 images: [{ url: info.avatar_url, alt: info.name }],
             },
         });
         expect(mocks.connectDB).toHaveBeenCalledOnce();
         expect(mocks.findOne).toHaveBeenCalledWith();
+    });
+
+    test("highlights Mastra AI and EDS within 50-60 characters and preserves child title templates", async () => {
+        mocks.findOne.mockReturnValue(queryResult({ ...info, name: "Vijay Rameshkumar" }));
+        const metadata = await generateMetadata();
+        expect(metadata.title).toEqual({
+            default: "Vijay Rameshkumar | Mastra AI & EDS Frontend Engineer",
+            template: "%s | Vijay Rameshkumar",
+        });
+        const title = metadata.title;
+        if (!title || typeof title === "string" || !("default" in title) || !title.default) {
+            throw new Error("Expected a default portfolio title.");
+        }
+        expect(title.default.length).toBeGreaterThanOrEqual(50);
+        expect(title.default.length).toBeLessThanOrEqual(60);
+        expect(metadata.openGraph).toMatchObject({ title: title.default });
+        expect(metadata.twitter).toMatchObject({ title: title.default });
     });
 
     test("selects only the public fields required for metadata", async () => {
@@ -88,7 +106,7 @@ describe("Public layout metadata from basic info", () => {
             avatar_url: "https://images.example/avatar.png", favicon_url: "https://images.example/favicon.png",
         }));
         const metadata = await generateMetadata();
-        expect(metadata.title).toEqual({ default: "Updated Author | Portfolio", template: "%s | Updated Author" });
+        expect(metadata.title).toEqual({ default: "Updated Author | Mastra AI & EDS Frontend Engineer", template: "%s | Updated Author" });
         expect(metadata.description).toBe("Updated biography.");
         expect(metadata.icons).toEqual({ icon: "https://images.example/favicon.png", shortcut: "https://images.example/favicon.png" });
         expect(metadata.openGraph).toMatchObject({ images: [{ url: "https://images.example/avatar.png", alt: "Updated Author" }] });
@@ -100,9 +118,11 @@ describe("Public layout metadata from basic info", () => {
         expect(console.warn).toHaveBeenCalledOnce();
     });
 
-    test.each(["invalid-url", "ftp://portfolio.example"])("rejects invalid website metadata bases: %s", async website_url => {
-        mocks.findOne.mockReturnValue(queryResult({ ...info, website_url }));
-        await expect(generateMetadata()).rejects.toThrow();
+    test("uses the canonical deployment origin instead of an outdated saved website URL", async () => {
+        mocks.findOne.mockReturnValue(queryResult({ ...info, website_url: "http://vjyramesh.github.io" }));
+        const metadata = await generateMetadata();
+        expect(metadata.metadataBase).toEqual(new URL("https://www.vijayrameshkumar.dev"));
+        expect(metadata.authors).toEqual([{ name: info.name, url: "https://www.vijayrameshkumar.dev" }]);
     });
 
     test("propagates database failures instead of returning success-shaped metadata", async () => {

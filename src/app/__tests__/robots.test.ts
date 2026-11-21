@@ -15,22 +15,23 @@ describe("robots.txt", () => {
                 allow: "/",
                 disallow: ["/admin", "/login", "/api"],
             },
-            sitemap: "https://portfolio.example/sitemap.xml",
+            sitemap: "https://www.vijayrameshkumar.dev/sitemap.xml",
         });
     });
 
-    test("uses the current configured website origin, without paths or query strings", async () => {
+    test("uses the deployment domain regardless of an outdated saved website", async () => {
         await BasicInfoModel.updateOne({}, { website_url: "https://updated.example/portfolio?preview=1#about" });
-        expect((await robots()).sitemap).toBe("https://updated.example/sitemap.xml");
+        expect((await robots()).sitemap).toBe("https://www.vijayrameshkumar.dev/sitemap.xml");
         expect(dynamic).toBe("force-dynamic");
     });
 
-    test("surfaces database failures instead of advertising an incorrect sitemap", async () => {
+    test("keeps crawler rules available without querying the profile database", async () => {
         const spy = vi.spyOn(BasicInfoModel, "findOne").mockImplementationOnce(() => {
             throw new Error("Database unavailable");
         });
         try {
-            await expect(robots()).rejects.toThrow("Database unavailable");
+            expect((await robots()).sitemap).toBe("https://www.vijayrameshkumar.dev/sitemap.xml");
+            expect(spy).not.toHaveBeenCalled();
         } finally {
             spy.mockRestore();
         }
