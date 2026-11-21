@@ -39,7 +39,7 @@ describe("BasicInfoBanner", () => {
         renderBasicInfoBanner();
         expect(await screen.findByRole("heading", { name: `${basicInfoMock[0].name} - Mastra AI & EDS Frontend Engineer` })).toBeInTheDocument();
         expect(screen.queryByRole("heading", { name: basicInfoMock[0].bio })).not.toBeInTheDocument();
-        expect(screen.getByRole("navigation", { name: "Share this page" })).toBeInTheDocument();
+        expect(screen.queryByRole("navigation", { name: "Share this page" })).not.toBeInTheDocument();
         expect(screen.getByText(basicInfoMock[0].about_me)).toBeInTheDocument();
         expect(screen.getByText(basicInfoMock[0].bio)).toBeInTheDocument();
     });
