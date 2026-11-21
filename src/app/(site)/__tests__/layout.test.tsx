@@ -35,7 +35,7 @@ describe("Public layout metadata from basic info", () => {
             description: info.bio,
             authors: [{ name: info.name, url: "https://www.vijayrameshkumar.dev" }],
             creator: info.name,
-            icons: { icon: info.favicon_url, shortcut: info.favicon_url },
+            icons: { icon: info.favicon_url, shortcut: info.favicon_url, apple: "/apple-touch-icon.png" },
             openGraph: {
                 type: "website", title: "Portfolio Author | Mastra AI & EDS Frontend Engineer", description: info.bio,
                 siteName: "Portfolio Author | Mastra AI & EDS Frontend Engineer", images: [{ url: info.avatar_url, alt: info.name }],
@@ -67,11 +67,11 @@ describe("Public layout metadata from basic info", () => {
         expect(metadata.twitter).toMatchObject({ title: title.default });
     });
 
-    test("selects only the public fields required for metadata", async () => {
+    test("exposes only the public fields required for metadata from the shared profile read", async () => {
         const query = queryResult({ ...info, email: "private@example.test", phone: "1234567890", address: "Private address" });
         mocks.findOne.mockReturnValue(query);
         const metadata = await generateMetadata();
-        expect(query.select).toHaveBeenCalledWith("name bio meta_description website_url avatar_url favicon_url");
+        expect(query.lean).toHaveBeenCalledOnce();
         expect(JSON.stringify(metadata)).not.toContain("private@example.test");
         expect(JSON.stringify(metadata)).not.toContain("Private address");
         expect(metadata.alternates).toBeUndefined();
@@ -108,13 +108,13 @@ describe("Public layout metadata from basic info", () => {
         const metadata = await generateMetadata();
         expect(metadata.title).toEqual({ default: "Updated Author | Mastra AI & EDS Frontend Engineer", template: "%s | Updated Author" });
         expect(metadata.description).toBe("Updated biography.");
-        expect(metadata.icons).toEqual({ icon: "https://images.example/favicon.png", shortcut: "https://images.example/favicon.png" });
+        expect(metadata.icons).toEqual({ icon: "https://images.example/favicon.png", shortcut: "https://images.example/favicon.png", apple: "/apple-touch-icon.png" });
         expect(metadata.openGraph).toMatchObject({ images: [{ url: "https://images.example/avatar.png", alt: "Updated Author" }] });
     });
 
     test("explicitly reports missing setup without inventing personal information", async () => {
         mocks.findOne.mockReturnValue(queryResult(null));
-        expect(await generateMetadata()).toEqual({ title: "Portfolio" });
+        expect(await generateMetadata()).toEqual({ title: "Portfolio", icons: { apple: "/apple-touch-icon.png" } });
         expect(console.warn).toHaveBeenCalledOnce();
     });
 

@@ -14,6 +14,7 @@ const MySkillsComponent = ({ className, type = 'site', modalOpen }: { className?
 
     const { skills, isSkillsLoading } = useSkills();
     const { deleteSkill, isDeleting } = useDeleteSkills();
+    const SkillTitle = type === 'site' ? 'p' : 'h3';
     if (isSkillsLoading) {
         return <SkillLoading type={type} />;
     }
@@ -51,7 +52,7 @@ const MySkillsComponent = ({ className, type = 'site', modalOpen }: { className?
                                             height={50}
                                         />
                                         <div className='cmp-my-skills__content-heading'>
-                                            <h3 className='cmp-my-skills__list-item-title'>{skill.name}</h3>
+                                            <SkillTitle className='cmp-my-skills__list-item-title'>{skill.name}</SkillTitle>
                                             <p className='cmp-my-skills__list-item-category'>{skill.category}</p>
                                         </div>
                                     </div>

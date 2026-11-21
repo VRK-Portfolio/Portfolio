@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { Experience } from "@/models/experience.model";
 import { GET, POST } from "../route";
 import { DELETE, PUT } from "../[id]/route";
+import { revalidateTag } from "next/cache";
 
 const { connectDB } = vi.hoisted(() => ({ connectDB: vi.fn() }));
 vi.mock("@/libs/db", () => ({ connectDB }));
@@ -29,6 +30,14 @@ const request = (method: string, body?: unknown) => new Request("http://localhos
 });
 
 describe("Experience API routes", () => {
+    test.each(["POST", "PUT", "DELETE"] as const)("%s immediately invalidates cached public experience after a write", async method => {
+        const saved = method === "POST" ? null : await Experience.create(experience);
+        const handler = method === "POST" ? POST : method === "PUT" ? PUT : DELETE;
+        const response = await handler(request(method, method === "DELETE" ? undefined : experience), context(saved ? String(saved._id) : validId));
+        expect(response.status).toBe(method === "POST" ? 201 : 200);
+        expect(revalidateTag).toHaveBeenCalledExactlyOnceWith("public-experience", { expire: 0 });
+    });
+
     beforeEach(() => {
         connectDB.mockReset();
         connectDB.mockResolvedValue(undefined);
@@ -73,6 +82,7 @@ describe("Experience API routes", () => {
             errors: [{ field: "positions.0.startDate" }],
         });
         expect(connectDB).not.toHaveBeenCalled();
+        expect(revalidateTag).not.toHaveBeenCalled();
         expect(await Experience.countDocuments()).toBe(0);
     });
 

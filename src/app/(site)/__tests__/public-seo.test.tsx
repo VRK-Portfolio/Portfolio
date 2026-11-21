@@ -40,7 +40,11 @@ describe("Public SEO rendering and page metadata", () => {
         const element = await RootLayout({ children: await Home(), params: Promise.resolve({}) });
         const document = new DOMParser().parseFromString(renderToStaticMarkup(element), "text/html");
         expect(document.querySelectorAll("h1")).toHaveLength(1);
-        expect(document.querySelector("h1")?.textContent).toBe(basicInfoMock[0].name);
+        expect(document.querySelector("h1")?.textContent).toBe(`${basicInfoMock[0].name} - Mastra AI & EDS Frontend Engineer`);
+        expect(document.querySelector("h1")?.textContent?.length).toBeGreaterThanOrEqual(20);
+        expect(document.querySelector("#Skills h3")).toBeNull();
+        expect(document.querySelector("#Experience h4")).toBeNull();
+        expect(document.querySelector('a[href^="https://www.linkedin.com/sharing/"]')).not.toBeNull();
         expect(document.body.textContent).toContain("Example Company");
         expect(document.querySelectorAll('script[type="application/ld+json"]')).toHaveLength(5);
         for (const selector of [".cmp-basic-info-banner", "#Skills", "#Experience", "#Certifications", "#Blogs"]) {

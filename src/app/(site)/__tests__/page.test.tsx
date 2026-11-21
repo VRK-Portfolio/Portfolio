@@ -32,8 +32,8 @@ describe("Site Page", () => {
         expect(container.querySelector(".home-page")).toBeInTheDocument();
 
         const content = await Promise.all([
-            screen.findByRole("heading", { name: basicInfoMock[0].name }),
-            screen.findByRole("heading", { name: mockMySkills[0].name }),
+            screen.findByRole("heading", { name: `${basicInfoMock[0].name} - Mastra AI & EDS Frontend Engineer` }),
+            screen.findByText(mockMySkills[0].name, { selector: ".cmp-my-skills__list-item-title" }),
             screen.findByText("Example Company"),
             screen.findByText("Blog 1"),
             screen.findByRole("heading", { name: mockCertifications[0].title }),

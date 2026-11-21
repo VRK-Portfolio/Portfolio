@@ -115,7 +115,7 @@ describe("MyExperienceComponent", () => {
         expect(entry.getByText("1 January 2020 - 31 December 2022")).toBeInTheDocument();
         expect(entry.getByText("1 January 2023 - Present")).toBeInTheDocument();
         for (const position of experience.positions) {
-            expect(entry.getByRole("heading", { name: position.role })).toBeInTheDocument();
+            expect(entry.getByText(position.role)).toBeInTheDocument();
             expect(entry.getByText(position.description)).toBeInTheDocument();
         }
     });
@@ -124,6 +124,25 @@ describe("MyExperienceComponent", () => {
         hooks.experienceList = [{ ...experience, positions: [experience.positions[0]] }];
         render(<MyExperienceComponent />);
         expect(screen.getAllByText("1 January 2020 - 31 December 2022")).toHaveLength(2);
+    });
+
+    test("shows shared responsibilities once across companies, retains unique copy and preserves admin descriptions", () => {
+        hooks.experienceList = [
+            experience,
+            { ...experience, _id: "507f1f77bcf86cd799439012", company: "Second Company", positions: [
+                { ...experience.positions[0], description: "  Built   applications. " },
+            ] },
+        ];
+        const { container, rerender } = render(<MyExperienceComponent />);
+        expect(container.querySelectorAll(".cmp-my-experience__description")).toHaveLength(2);
+        expect(screen.getByText("Example Company: Engineer")).toBeInTheDocument();
+        expect(screen.getByText("Second Company: Engineer")).toBeInTheDocument();
+        expect(screen.getByText("Led development.")).toBeInTheDocument();
+        expect(screen.queryByRole("heading", { name: "Engineer" })).not.toBeInTheDocument();
+        rerender(<MyExperienceComponent type="admin" />);
+        expect(container.querySelectorAll(".cmp-my-experience__description")).toHaveLength(3);
+        expect(screen.queryByText("Shared responsibilities across roles")).not.toBeInTheDocument();
+        expect(screen.getAllByRole("heading", { name: "Engineer" })).toHaveLength(2);
     });
 
     test("supports custom classes for explicit site and admin views", () => {

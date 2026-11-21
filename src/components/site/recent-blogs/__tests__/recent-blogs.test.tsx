@@ -73,7 +73,8 @@ describe("Recent Blogs Component", () => {
             }
             const link = card.getByRole("link");
             expect(link).toHaveAttribute("href", `/blogs/${blog.slug}`);
-            expect(link).toHaveTextContent(/^Click Here$/);
+            expect(card.getByText("Click Here", { exact: true })).toBe(link);
+            expect(link).toHaveTextContent(`Click Here: ${blog.title}`);
             expect(link).toHaveAccessibleName(`Click Here: ${blog.title}`);
             expect(card.getByRole("img", { name: blog.title })).toHaveAttribute("sizes", "(min-width: 1024px) 26vw, (min-width: 768px) 48vw, 100vw");
         }

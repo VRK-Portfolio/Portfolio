@@ -3,6 +3,7 @@ import { CertificationType } from "@/@types/Certification.types";
 import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
 import { CertificationModel } from "@/models/certifications.model";
+import { invalidatePublicData } from "@/libs/public-cache";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
@@ -31,6 +32,7 @@ export const PUT = withAuth(async (request: Request, context: RouteContext): Pro
                 error: 'Certification not found'
             }, { status: 404 });
         }
+        invalidatePublicData("certifications");
         return NextResponse.json({ success: true, message: "Certification updated successfully" });
 
     } catch (error: Error | unknown) {
@@ -59,6 +61,7 @@ export const DELETE = withAuth(async (request: Request, context: RouteContext): 
                 error: 'Certification not found'
             }, { status: 404 });
         }
+        invalidatePublicData("certifications");
         return NextResponse.json({ success: true, message: "Certification deleted successfully" });
 
     } catch (error: Error | unknown) {

@@ -3,6 +3,7 @@ import { BlogWriteSchema } from "@/@types/Blogs.types";
 import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
 import { BlogModel } from "@/models/blogs.model";
+import { invalidatePublicData } from "@/libs/public-cache";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
@@ -30,6 +31,7 @@ export const PUT = withAuth(async (request: Request, { params }: BlogContext): P
         if (!blog) {
             return NextResponse.json({ success: false, error: "Blog not found" }, { status: 404 });
         }
+        invalidatePublicData("blogs");
         return NextResponse.json({ success: true, message: "Blog updated successfully" });
     } catch (error) {
         return NextResponse.json({
@@ -50,6 +52,7 @@ export const DELETE = withAuth(async (_request: Request, { params }: BlogContext
         if (!blog) {
             return NextResponse.json({ success: false, error: "Blog not found" }, { status: 404 });
         }
+        invalidatePublicData("blogs");
         return NextResponse.json({ success: true, message: "Blog deleted successfully" });
     } catch (error) {
         return NextResponse.json({
