@@ -62,7 +62,7 @@ Repeated experience descriptions appear once with their associated companies and
 roles; admin views retain each saved description for editing.
 Recent Blogs still visibly says "Click Here"; screen-reader text identifies the
 linked article. Credential links similarly identify their certification.
-The homepage and published articles offer lightweight LinkedIn, X, and WhatsApp
+Published articles offer lightweight LinkedIn, X, and WhatsApp
 sharing links without third-party plugins. Metadata declares the existing
 180px Apple touch icon, and Next.js disables the `X-Powered-By` response header.
 Hosting/network response time and genuine external backlinks require measurement
