@@ -57,10 +57,12 @@ const CardFooter = ({className = '', children}: CardFooterProps) => {
     )
 }
 
-const CardImage = ({className = '', imageUrl=''}: {className?: string; imageUrl: string; children?: React.ReactNode}) => {
+const CardImage = ({className = '', imageUrl='', alt = 'Card Image', sizes = '100vw'}: {
+    className?: string; imageUrl: string; alt?: string; sizes?: string; children?: React.ReactNode;
+}) => {
     return (
         <div className={`cmp-card-with-image ${className}`}>
-            <Image src={imageUrl} alt="Card Image" sizes="100%" fill />
+            <Image src={imageUrl} alt={alt} sizes={sizes} fill />
         </div>
     )
 }

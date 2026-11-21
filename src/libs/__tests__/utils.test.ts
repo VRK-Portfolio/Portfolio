@@ -1,5 +1,15 @@
 import { describe, test, expect } from "vitest";
-import { truncateText, countWords, formatDate } from "../utils"; // Adjust the import path as needed
+import { truncateText, countWords, formatDate, htmlToPlainText } from "../utils"; // Adjust the import path as needed
+
+describe("Plain text for blog metadata and previews", () => {
+    test("removes markup and non-content scripts while decoding common and numeric entities", () => {
+        expect(htmlToPlainText('<style>hidden</style><script>hidden()</script><h2>Mastra &amp; EDS</h2><p>It&#39;s&nbsp;ready &#x1F680; &quot;now&quot;.</p>'))
+            .toBe('Mastra & EDS It\'s ready \u{1F680} "now".');
+    });
+    test("preserves unknown entities and invalid Unicode entities without throwing", () => {
+        expect(htmlToPlainText("<p>&unknown; &#99999999; &#xD800;</p>")).toBe("&unknown; &#99999999; &#xD800;");
+    });
+});
 
 describe("Utils Truncate Text Tests", () => {
    test("check the truncateText function", () => {

@@ -7,6 +7,9 @@ import type { Metadata } from "next";
 import { BasicInfoSchema } from "@/@types/BasicInfo.types";
 import { BasicInfoModel } from "@/models/basic-info.model";
 import { connectDB } from "@/libs/db";
+import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import { getPublicProfile } from "@/libs/public-data";
+import { SITE_ORIGIN } from "@/libs/site-url";
 export const dynamic = 'force-dynamic';
 
 const siteMetadataSchema = BasicInfoSchema.pick({
@@ -27,18 +30,15 @@ export async function generateMetadata(): Promise<Metadata> {
     return { title: "Portfolio" };
   }
   const info = siteMetadataSchema.parse(record);
-  const metadataBase = new URL(info.website_url);
-  if (metadataBase.protocol !== "http:" && metadataBase.protocol !== "https:") {
-    throw new Error("The basic info website URL must use HTTP or HTTPS.");
-  }
-  const title = `${info.name} | Portfolio`;
+  const metadataBase = new URL(SITE_ORIGIN);
+  const title = `${info.name} | Mastra AI & EDS Frontend Engineer`;
   const description = info.meta_description || info.bio.trim();
 
   return {
     metadataBase,
     title: { default: title, template: `%s | ${info.name}` },
     description,
-    authors: [{ name: info.name, url: info.website_url }],
+    authors: [{ name: info.name, url: SITE_ORIGIN }],
     creator: info.name,
     icons: { icon: info.favicon_url, shortcut: info.favicon_url },
     openGraph: {
@@ -46,6 +46,7 @@ export async function generateMetadata(): Promise<Metadata> {
       title,
       description,
       siteName: title,
+      url: SITE_ORIGIN,
       images: [{ url: info.avatar_url, alt: info.name }],
     },
     twitter: {
@@ -58,7 +59,10 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const profile = await getPublicProfile();
+  const queryClient = new QueryClient();
+  if (profile) queryClient.setQueryData(["basicInfo"], profile);
   return (
     <html
       lang="en"
@@ -66,11 +70,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <QueryProvider>
+          <HydrationBoundary state={dehydrate(queryClient)}>
           <HeaderComponent />
           <main className="flex-1">
             {children}
           </main>
           <PublicFooter year={new Date().getFullYear()} />
+          </HydrationBoundary>
         </QueryProvider>
       </body>
     </html>

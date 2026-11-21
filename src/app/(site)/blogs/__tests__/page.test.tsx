@@ -1,15 +1,19 @@
 import { screen } from "@testing-library/react";
-import { afterAll, afterEach, beforeAll, describe, expect, test } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 import { http, HttpResponse } from "msw";
 import { setupServer } from "msw/node";
 import { handlers, mockBlogListingData } from "@/mocks/recent-blogs";
 import { renderWithQueryClient } from "@/tests/tan-query";
 import BlogsPage from "../page";
+import { getPublishedBlogs } from "@/libs/public-data";
+
+vi.mock("@/libs/public-data", () => ({ getPublishedBlogs: vi.fn(), getPublicProfile: vi.fn() }));
 
 const server = setupServer(...handlers);
 
 describe("Blogs page", () => {
     beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+    beforeEach(() => vi.mocked(getPublishedBlogs).mockResolvedValue(mockBlogListingData));
     afterEach(() => server.resetHandlers());
     afterAll(() => server.close());
 
@@ -22,9 +26,8 @@ describe("Blogs page", () => {
                 { ...mockBlogListingData[0], _id: "unspecified", title: "Unspecified Blog", slug: "unspecified-blog", status: undefined },
             ],
         })));
-        const { container } = renderWithQueryClient(<BlogsPage />);
-        const loading = screen.getByRole("status", { name: "Loading blogs" });
-        expect(loading.querySelector(".shimmer")).toBeInTheDocument();
+        const { container } = renderWithQueryClient(await BlogsPage());
+        expect(screen.queryByRole("status", { name: "Loading blogs" })).not.toBeInTheDocument();
         await screen.findByRole("heading", { name: "Blog 1" });
         expect(await screen.findByRole("heading", { name: "Blogs", level: 1 })).toBeInTheDocument();
         expect(screen.queryByRole("status", { name: "Loading blogs" })).not.toBeInTheDocument();
@@ -50,15 +53,14 @@ describe("Blogs page", () => {
             success: true,
             data: mockBlogListingData.map(blog => ({ ...blog, status: "draft" })),
         })));
-        renderWithQueryClient(<BlogsPage />);
+        vi.mocked(getPublishedBlogs).mockResolvedValue([]);
+        renderWithQueryClient(await BlogsPage());
         expect(await screen.findByText("No published blogs yet.")).toBeInTheDocument();
         expect(screen.queryByRole("article")).not.toBeInTheDocument();
     });
 
     test("reports listing failures instead of showing an empty state", async () => {
-        server.use(http.get("*/api/blogs", () => HttpResponse.json({ success: false }, { status: 500 })));
-        renderWithQueryClient(<BlogsPage />);
-        expect(await screen.findByRole("alert")).toHaveTextContent("Failed to fetch blogs");
-        expect(screen.queryByText("No published blogs yet.")).not.toBeInTheDocument();
+        vi.mocked(getPublishedBlogs).mockRejectedValueOnce(new Error("Failed to fetch blogs"));
+        await expect(BlogsPage()).rejects.toThrow("Failed to fetch blogs");
     });
 });

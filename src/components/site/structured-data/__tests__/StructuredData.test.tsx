@@ -26,8 +26,8 @@ describe("Component JSON-LD scripts", () => {
         const article = data["@graph"][0];
         expect(article).toMatchObject({
             "@type": "BlogPosting", headline: post.title,
-            url: "https://vijayrameshkumar.dev/blogs/published-post",
-            image: "https://vijayrameshkumar.dev/cover.png",
+            url: "https://www.vijayrameshkumar.dev/blogs/published-post",
+            image: "https://www.vijayrameshkumar.dev/cover.png",
             author: { "@type": "Person", name: "Guest Author" },
             datePublished: post.createdAt, dateModified: post.updatedAt,
         });

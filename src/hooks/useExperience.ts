@@ -1,6 +1,7 @@
 import { ApiGetResponse, ApiPostResponse } from "@/@types/ApiResponse.types";
 import { ExperiencePropsSchema, ExperienceType } from "@/@types/Experience.types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import { sortExperiences } from "@/libs/utils";
 
 export const useGetExpericence = () => {
     const query = useQuery({
@@ -14,13 +15,7 @@ export const useGetExpericence = () => {
             if (!data.success) {
                 throw new Error('Failed to fetch experience');
             }
-            return ExperiencePropsSchema.array().parse(data.data.sort((a, b) => {
-                const aStart = new Date(a.positions[0]?.startDate || 0);
-                const bStart = new Date(b.positions[0]?.startDate || 0);
-                a.positions.sort((x, y) => new Date(y.startDate).getTime() - new Date(x.startDate).getTime());
-                b.positions.sort((x, y) => new Date(y.startDate).getTime() - new Date(x.startDate).getTime());
-                return bStart.getTime() - aStart.getTime();
-            }));
+            return sortExperiences(ExperiencePropsSchema.array().parse(data.data));
         }
     })
 
