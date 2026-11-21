@@ -44,6 +44,29 @@ The existing shimmers remain available when components are used without preload
 data. The five-minute React Query freshness window avoids immediately fetching
 the same content again after hydration; ordinary client refreshes still work.
 Server database/validation failures propagate rather than becoming empty content.
+Metadata and layout share a request-memoized profile database read. Public profile,
+homepage sections, and published blog reads also use a 60-second tagged data cache.
+Admin saves/deletes invalidate the affected tags immediately, including blog
+unpublishing and skill names populated into articles. The next request blocks for
+fresh data rather than returning stale content after an admin change.
+Direct MongoDB changes rely on time-based revalidation and may briefly serve
+previous data while refreshing. Dates are validated again after cache deserialization.
+The supported `unstable_cache` API keeps the current dynamic-route configuration;
+migrating to `use cache` would require enabling Cache Components across the app.
+
+## SEO audit improvements
+
+The homepage H1 identifies Mastra AI, EDS, and frontend engineering expertise.
+Skill names and role labels are styled text rather than unnecessary public headings.
+Repeated experience descriptions appear once with their associated companies and
+roles; admin views retain each saved description for editing.
+Recent Blogs still visibly says "Click Here"; screen-reader text identifies the
+linked article. Credential links similarly identify their certification.
+The homepage and published articles offer lightweight LinkedIn, X, and WhatsApp
+sharing links without third-party plugins. Metadata declares the existing
+180px Apple touch icon, and Next.js disables the `X-Powered-By` response header.
+Hosting/network response time and genuine external backlinks require measurement
+and work outside the application; code changes cannot guarantee audit scores.
 
 ## Crawler rules
 

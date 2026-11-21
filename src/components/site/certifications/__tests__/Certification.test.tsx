@@ -27,7 +27,7 @@ describe("CertificationComponent", () => {
             for (const skill of certification.skillsCoverd) {
                 expect(screen.getByText(skill)).toBeInTheDocument();
             }
-            const link = screen.getAllByRole("link", { name: "View Credential" })[index];
+            const link = screen.getByRole("link", { name: `View Credential: ${certification.title}` });
             expect(link).toHaveAttribute("href", certification.credentialURL);
             expect(link).toHaveAttribute("target", "_blank");
             expect(link).toHaveAttribute("rel", "noopener noreferrer");
@@ -65,7 +65,7 @@ describe("CertificationComponent", () => {
         await user.click(screen.getByRole("button", { name: "Add Certification" }));
         await user.click(screen.getAllByRole("button", { name: "Edit" })[0]);
 
-        expect(screen.getAllByRole("link", { name: "View Credential" })).toHaveLength(mockCertifications.length);
+        expect(screen.getAllByRole("link", { name: /^View Credential/ })).toHaveLength(mockCertifications.length);
     });
 
     test("should delete the selected certification and refetch the remaining cards", async () => {
@@ -90,7 +90,7 @@ describe("CertificationComponent", () => {
         });
         expect(deleteRequest).toHaveBeenCalledExactlyOnceWith(mockCertifications[1]._id);
         expect(screen.getByRole("heading", { name: mockCertifications[0].title })).toBeInTheDocument();
-        expect(screen.getAllByRole("link", { name: "View Credential" })).toHaveLength(1);
+        expect(screen.getAllByRole("link", { name: /^View Credential/ })).toHaveLength(1);
     });
 
     test.each([200, 500])("should leave the list empty after an unsuccessful response with status %i", async (status) => {

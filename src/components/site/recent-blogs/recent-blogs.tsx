@@ -105,6 +105,7 @@ const RecentBlogsComponent = ({ title = 'Recent Blogs', headingTag = 'h2', maxCo
                             <Card.Footer>
                                 <Link className="cmp-recent-blogs__link-detail" href={`/blogs/${blog.slug}`} aria-label={`Click Here: ${blog.title}`}>
                                     Click Here
+                                    <span className="sr-only">: {blog.title}</span>
                                     <span>
                                         <MoveUpRight className="size-4" />
                                     </span>

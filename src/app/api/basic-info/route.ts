@@ -4,6 +4,7 @@ import { BasicInfoSchema, BasicInfoType } from '@/@types/BasicInfo.types'
 import { ApiGetResponse, ApiPostResponse } from '@/@types/ApiResponse.types'
 import { connectDB } from '@/libs/db'
 import { withAuth } from '@/libs/auth-wrapper'
+import { invalidatePublicData } from '@/libs/public-cache'
 
 /**
  * GET /api/basic-info
@@ -68,6 +69,7 @@ export const POST = withAuth(async (request: Request): Promise<NextResponse<ApiP
         setDefaultsOnInsert: true,
       }
     );
+    invalidatePublicData("profile");
     return NextResponse.json({
       message: 'Basic info created successfully',
       success: true,

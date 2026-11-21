@@ -3,6 +3,7 @@ import { MySkillsSchema, MySkillsType } from "@/@types/MySkills.types";
 import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
 import { MySkillsModel } from "@/models/my-skills.model";
+import { invalidatePublicData } from "@/libs/public-cache";
 import { NextResponse } from "next/server";
 
 export const GET = async (): Promise<NextResponse<ApiGetResponse<MySkillsType[] | null>>> => {
@@ -46,6 +47,7 @@ export const POST = withAuth( async (request: Request): Promise<NextResponse<Api
         await saveSkills.save({
             validateBeforeSave: true
         });
+        invalidatePublicData("skills");
         return NextResponse.json({
             success: true,
             message: 'Skill created successfully'

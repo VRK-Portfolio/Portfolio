@@ -7,6 +7,7 @@ import { NextRequest } from "next/server";
 import { DELETE, PUT } from "../[id]/route";
 import { connectDB } from "@/libs/db";
 import mongoose from "mongoose";
+import { revalidateTag } from "next/cache";
 
 vi.mock("@/libs/db", () => ({
     connectDB: vi.fn().mockResolvedValue(true)
@@ -22,6 +23,17 @@ describe("Certification API Routes", () => {
         { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 1", issuer: "Issuer 1", issueDate: new Date("2023-01-01"), expirationDate: new Date("2024-01-01"), credentialID: "123", credentialURL: "http://example.com", skillsCoverd: ["Skill 1"] },
         { _id: '6ad60785c4daf1c34ef66c38', title: "Certification 2", issuer: "Issuer 2", issueDate: new Date("2023-02-01"), expirationDate: new Date("2024-02-01"), credentialID: "456", credentialURL: "http://example.com", skillsCoverd: ["Skill 2"] }
     ];
+    test.each(["POST", "PUT", "DELETE"] as const)("%s invalidates public certifications only after a successful write", async method => {
+        const saved = method === "POST" ? null : await CertificationModel.create(mockCertifications[0]);
+        const request = new NextRequest("http://localhost:3000/api/certifications", {
+            method, ...(method === "DELETE" ? {} : { body: JSON.stringify(mockCertifications[0]) }),
+        });
+        const handler = method === "POST" ? POST : method === "PUT" ? PUT : DELETE;
+        const response = await handler(request, { params: Promise.resolve({ id: saved ? String(saved._id) : mockCertifications[0]._id! }) });
+        expect((await response.json()).success).toBe(true);
+        expect(revalidateTag).toHaveBeenCalledExactlyOnceWith("public-certifications", { expire: 0 });
+    });
+
     test("GET waits for the connection before querying on a cold start", async () => {
         const connection = Promise.withResolvers<typeof mongoose>();
         vi.mocked(connectDB).mockReturnValueOnce(connection.promise);

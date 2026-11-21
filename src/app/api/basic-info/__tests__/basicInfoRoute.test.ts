@@ -5,6 +5,7 @@ import { connectDB } from "@/libs/db";
 import { GET, POST } from "../route";
 import { ApiGetResponse, ApiPostResponse } from "@/@types/ApiResponse.types";
 import { NextRequest } from "next/server";
+import { revalidateTag } from "next/cache";
 
 describe("BasicInfo API Route", () => {
     beforeEach(async () => {
@@ -104,6 +105,15 @@ describe("BasicInfo API Route", () => {
     });
 
     describe("POST /api/basic-info", () => {
+        test("immediately invalidates cached profile metadata and content after a save", async () => {
+            const request = new Request("http://localhost:3000/api/basic-info", {
+                method: "POST", headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(validData),
+            });
+            expect((await POST(request, { params: Promise.resolve({}) })).status).toBe(201);
+            expect(revalidateTag).toHaveBeenCalledExactlyOnceWith("public-profile", { expire: 0 });
+        });
+
         test("persists a separate SEO description while leaving the bio unchanged", async () => {
             const description = "a".repeat(191);
             const request = new Request("http://localhost:3000/api/basic-info", {

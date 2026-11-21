@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
 import { BlogModel } from "@/models/blogs.model";
+import { invalidatePublicData } from "@/libs/public-cache";
 import { NextResponse } from "next/server";
 
 export const POST = withAuth(async (req: Request):Promise<NextResponse<ApiPostResponse>> => {
@@ -15,6 +16,7 @@ export const POST = withAuth(async (req: Request):Promise<NextResponse<ApiPostRe
         await connectDB();
         const now = new Date().toISOString();
         await BlogModel.create({ ...isValid.data, createdAt: now, updatedAt: now });
+        invalidatePublicData("blogs");
         return NextResponse.json({ success: true, message: 'Blog created successfully' }, { status: 200 });
     } catch (error) {
         return NextResponse.json({

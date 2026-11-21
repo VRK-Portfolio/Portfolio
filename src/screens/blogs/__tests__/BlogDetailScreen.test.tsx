@@ -36,9 +36,12 @@ describe("Blog detail loading", () => {
         const script = container.querySelector('.cmp-blog-detail .container script[type="application/ld+json"]')!;
         const data = JSON.parse(script.textContent!);
         expect(data["@graph"][0]).toMatchObject({ "@type": "BlogPosting", headline: "Blog 1" });
+        const share = screen.getByRole("link", { name: /^Share on LinkedIn/ });
+        expect(new URL(share.getAttribute("href")!).searchParams.get("url")).toBe(`https://www.vijayrameshkumar.dev/blogs/${mockBlogListingData[0].slug}`);
         hooks.detail.blogDetail = { ...mockBlogListingData[0], status: "draft" };
         rerender(<BlogDetailScreen />);
         expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
+        expect(screen.queryByRole("navigation", { name: "Share this page" })).not.toBeInTheDocument();
         expect(screen.getByRole("heading", { name: "Blog 1", level: 1 })).toBeInTheDocument();
     });
 

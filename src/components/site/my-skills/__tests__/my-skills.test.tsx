@@ -23,9 +23,9 @@ describe("MySkillsComponent", () => {
         const { container } = renderSkillComponent();
         expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
         expect(container.querySelector('script[type="application/ld+json"]')).not.toBeInTheDocument();
-        expect(screen.queryByRole("heading", { name: mockMySkills[0].name })).not.toBeInTheDocument();
+        expect(screen.queryByText(mockMySkills[0].name)).not.toBeInTheDocument();
 
-        await screen.findByRole("heading", { name: mockMySkills[0].name });
+        await screen.findByText(mockMySkills[0].name);
         expect(container.querySelector(".animate-pulse")).not.toBeInTheDocument();
         const script = container.querySelector('#Skills script[type="application/ld+json"]')!;
         const person = JSON.parse(script.textContent!)["@graph"][0];
@@ -35,7 +35,7 @@ describe("MySkillsComponent", () => {
 
     test("should show the site heading without admin controls by default", async () => {
         renderSkillComponent();
-        await screen.findByRole("heading", { name: mockMySkills[0].name });
+        await screen.findByText(mockMySkills[0].name);
         expect(screen.getByRole("heading", { name: "My Skills", level: 2 })).toBeInTheDocument();
         expect(screen.getByText("Skilled full-stack engineer developing efficient frontend, backend, and database solutions.")).toBeInTheDocument();
         expect(screen.queryByRole("button", { name: "Add Skill" })).not.toBeInTheDocument();
@@ -46,7 +46,7 @@ describe("MySkillsComponent", () => {
     test("should hide admin controls when the site type is explicitly provided", async () => {
         const modalOpen = vi.fn();
         const { container } = renderSkillComponent({ type: "site", modalOpen });
-        await screen.findByRole("heading", { name: mockMySkills[0].name });
+        await screen.findByText(mockMySkills[0].name);
 
         expect(screen.getByRole("heading", { name: "My Skills", level: 2 })).toBeInTheDocument();
         expect(screen.queryByRole("button")).not.toBeInTheDocument();
@@ -57,11 +57,12 @@ describe("MySkillsComponent", () => {
 
     test("should display all fetched skills and their capabilities", async () => {
         renderSkillComponent();
-        await screen.findByRole("heading", { name: mockMySkills[0].name });
+        await screen.findByText(mockMySkills[0].name);
         expect(screen.getAllByRole("listitem")).toHaveLength(mockMySkills.length);
         for (const [index, skill] of mockMySkills.entries()) {
             const item = within(screen.getAllByRole("listitem")[index]);
-            expect(item.getByRole("heading", { name: skill.name })).toBeInTheDocument();
+            expect(item.getByText(skill.name)).toBeInTheDocument();
+            expect(item.queryByRole("heading")).not.toBeInTheDocument();
             expect(item.getByRole("img", { name: `${skill.name} Skill Icon` })).toBeInTheDocument();
             expect(item.getByText(skill.category)).toBeInTheDocument();
             for (const capability of skill.capabilities) {
@@ -128,7 +129,7 @@ describe("MySkillsComponent", () => {
             }))
         );
         const { container } = renderSkillComponent();
-        await screen.findByRole("heading", { name: skill.name });
+        await screen.findByText(skill.name);
 
         expect(screen.getAllByRole("listitem")).toHaveLength(1);
         expect(screen.getByRole("img", { name: `${skill.name} Skill Icon` })).toBeInTheDocument();
@@ -138,7 +139,7 @@ describe("MySkillsComponent", () => {
 
     test("should retain existing skills during a background refetch and then render updated data", async () => {
         const { container, queryClient } = renderSkillComponent();
-        await screen.findByRole("heading", { name: mockMySkills[0].name });
+        await screen.findByText(mockMySkills[0].name);
         const updatedSkill = { ...mockMySkills[0], name: "Updated HTML", capabilities: ["Updated capability"] };
         const { promise: responseReady, resolve: completeRefetch } = Promise.withResolvers<void>();
         server.use(
@@ -159,21 +160,21 @@ describe("MySkillsComponent", () => {
                 expect(queryClient.getQueryState(["skills"])?.fetchStatus).toBe("fetching");
             });
             expect(screen.getAllByRole("listitem")).toHaveLength(mockMySkills.length);
-            expect(screen.getByRole("heading", { name: mockMySkills[0].name })).toBeInTheDocument();
+            expect(screen.getByText(mockMySkills[0].name)).toBeInTheDocument();
             expect(container.querySelector(".animate-pulse")).not.toBeInTheDocument();
         } finally {
             completeRefetch();
         }
 
-        expect(await screen.findByRole("heading", { name: updatedSkill.name })).toBeInTheDocument();
+        expect(await screen.findByText(updatedSkill.name)).toBeInTheDocument();
         expect(screen.getByText(updatedSkill.capabilities[0])).toBeInTheDocument();
-        expect(screen.queryByRole("heading", { name: mockMySkills[0].name })).not.toBeInTheDocument();
+        expect(screen.queryByText(mockMySkills[0].name)).not.toBeInTheDocument();
         expect(screen.getAllByRole("listitem")).toHaveLength(1);
     });
 
     test("should apply a custom class after loading", async () => {
         const { container } = renderSkillComponent({ className: "custom-skills" });
-        await screen.findByRole("heading", { name: mockMySkills[0].name });
+        await screen.findByText(mockMySkills[0].name);
         expect(container.querySelector("section")).toHaveClass("cmp-my-skills", "custom-skills");
         expect(container.querySelector("section")).not.toHaveClass("cmp-my-skills--admin");
     });

@@ -3,6 +3,7 @@ import { MySkillsType } from "@/@types/MySkills.types";
 import { withAuth } from "@/libs/auth-wrapper";
 import { connectDB } from "@/libs/db";
 import { MySkillsModel } from "@/models/my-skills.model";
+import { invalidatePublicData } from "@/libs/public-cache";
 import { NextResponse } from "next/server";
 
 interface RouteContext {
@@ -49,6 +50,7 @@ export const PUT = withAuth(async (request: Request, context: RouteContext): Pro
                 error: 'Skill not found'
             }, { status: 404 });
         }
+        invalidatePublicData("skills");
         return NextResponse.json({
             success: true,
             message: 'Skill updated successfully'
@@ -75,6 +77,7 @@ export const DELETE = withAuth(async (request: Request, context: RouteContext): 
                 error: 'Skill not found'
             }, { status: 404 });
         }
+        invalidatePublicData("skills");
         return NextResponse.json({
             success: true,
             message: 'Skill deleted successfully'
