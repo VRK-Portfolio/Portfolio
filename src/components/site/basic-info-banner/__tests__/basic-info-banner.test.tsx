@@ -51,6 +51,21 @@ describe("BasicInfoBanner", () => {
         expect(image).toHaveAttribute("fetchpriority", "high");
     });
 
+    test("shows saved social profiles as accessible icon-only links in new tabs", async () => {
+        renderBasicInfoBanner();
+        expect(screen.queryByRole("navigation", { name: "Social profiles" })).not.toBeInTheDocument();
+        const github = await screen.findByRole("link", { name: "GitHub profile (opens in a new tab)" });
+        const linkedin = screen.getByRole("link", { name: "LinkedIn profile (opens in a new tab)" });
+        expect(github).toHaveAttribute("href", basicInfoMock[0].github_url);
+        expect(linkedin).toHaveAttribute("href", basicInfoMock[0].linked_in_url);
+        for (const link of [github, linkedin]) {
+            expect(link).toHaveAttribute("target", "_blank");
+            expect(link).toHaveAttribute("rel", "noopener noreferrer");
+            expect(link.textContent).toBe("");
+            expect(link.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+        }
+    });
+
 
     test.each([200, 500])("should finish loading when the API returns an error with status %i", async (status) => {
         server.use(
@@ -67,5 +82,6 @@ describe("BasicInfoBanner", () => {
         });
         expect(screen.queryByText(basicInfoMock[0].name)).not.toBeInTheDocument();
         expect(screen.getByRole("img", { name: "Portfolio portrait" })).toBeInTheDocument();
+        expect(screen.queryByRole("navigation", { name: "Social profiles" })).not.toBeInTheDocument();
     });
 });
