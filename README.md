@@ -48,6 +48,9 @@ It follows the current light/dark theme, announces loading to screen readers,
 and disables animation for reduced motion. Links and browser history retain
 their normal behavior; already-loaded routes and same-page anchor jumps do not
 introduce an artificial loading delay. Admin loading screens are unchanged.
+Same-page section links (including Home) never activate the page loader.
+They scroll smoothly with an offset for the fixed header; reduced motion uses
+instant scrolling. Links to sections on a different page retain the page loader.
 
 Experience, Projects, Recent Blogs, the `/blogs` listing, and blog detail
 (including Similar Blogs) use shimmer placeholders while their data loads,

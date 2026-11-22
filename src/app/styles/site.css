@@ -1,5 +1,18 @@
 @reference './../styles/globals.css';
 
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 4.75rem;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        html {
+            scroll-behavior: auto;
+        }
+    }
+}
+
 @layer components {
     .rich-text {
 
