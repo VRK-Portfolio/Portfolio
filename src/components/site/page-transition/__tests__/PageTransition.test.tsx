@@ -1,4 +1,5 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { ComponentProps } from "react";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import PageTransition, { TransitionLink } from "../PageTransition";
 import Loading from "@/app/(site)/loading";
@@ -6,6 +7,12 @@ import Loading from "@/app/(site)/loading";
 const linkState = vi.hoisted(() => ({ pending: false }));
 vi.mock("next/link", async importOriginal => ({
     ...await importOriginal<typeof import("next/link")>(),
+    default: ({ children, onClick, ...props }: ComponentProps<"a">) => (
+        <a {...props} onClick={event => {
+            onClick?.(event);
+            event.preventDefault();
+        }}>{children}</a>
+    ),
     useLinkStatus: () => linkState,
 }));
 
@@ -13,6 +20,7 @@ describe("Public page transitions", () => {
     beforeEach(() => {
         vi.useFakeTimers();
         linkState.pending = false;
+        window.history.replaceState(null, "", "/");
     });
     afterEach(() => {
         cleanup();
@@ -102,5 +110,27 @@ describe("Public page transitions", () => {
         rerender(<PageTransition><h1>Ready</h1></PageTransition>);
         act(() => vi.advanceTimersByTime(0));
         expect(container.querySelector(".cmp-page-transition")).not.toHaveClass("cmp-page-transition--loading");
+    });
+
+    test.each(["/#Skills", "/#", "#Experience"])("never shows a loader for same-page section link %s", href => {
+        const { container, rerender } = render(
+            <PageTransition><TransitionLink href={href}>Section</TransitionLink></PageTransition>
+        );
+        fireEvent.click(screen.getByRole("link", { name: "Section" }));
+        linkState.pending = true;
+        rerender(<PageTransition><TransitionLink href={href}>Section</TransitionLink></PageTransition>);
+        expect(container.querySelector(".cmp-page-transition")).not.toHaveClass("cmp-page-transition--loading");
+        act(() => vi.advanceTimersByTime(600));
+        expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    });
+
+    test.each(["/blogs#article", "/?filter=new#Skills"])("keeps the loader for a different document %s", href => {
+        const { container, rerender } = render(
+            <PageTransition><TransitionLink href={href}>Destination</TransitionLink></PageTransition>
+        );
+        fireEvent.click(screen.getByRole("link", { name: "Destination" }));
+        linkState.pending = true;
+        rerender(<PageTransition><TransitionLink href={href}>Destination</TransitionLink></PageTransition>);
+        expect(container.querySelector(".cmp-page-transition")).toHaveClass("cmp-page-transition--loading");
     });
 });
