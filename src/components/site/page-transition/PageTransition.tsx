@@ -74,12 +74,29 @@ export function PageLoading() {
     return <p className="text-center py-12">Loading page...</p>;
 }
 
-function PendingLink() {
+function PendingLink({ isSectionNavigation }: { isSectionNavigation: boolean }) {
     const { pending } = useLinkStatus();
-    usePageLoading(pending);
+    usePageLoading(pending && !isSectionNavigation);
     return null;
 }
 
-export function TransitionLink({ children, ...props }: ComponentProps<typeof Link>) {
-    return <Link {...props}>{children}<PendingLink /></Link>;
+export function TransitionLink({ children, onClick, ...props }: ComponentProps<typeof Link>) {
+    const [isSectionNavigation, setIsSectionNavigation] = useState(false);
+
+    return (
+        <Link {...props} onClick={event => {
+            onClick?.(event);
+            if (event.defaultPrevented) return;
+            const destination = new URL(event.currentTarget.href);
+            const current = window.location;
+            setIsSectionNavigation(
+                destination.href.includes("#")
+                && destination.origin === current.origin
+                && destination.pathname === current.pathname
+                && destination.search === current.search
+            );
+        }}>
+            {children}<PendingLink isSectionNavigation={isSectionNavigation} />
+        </Link>
+    );
 }
