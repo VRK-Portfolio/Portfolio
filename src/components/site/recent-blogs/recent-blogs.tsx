@@ -6,7 +6,7 @@ import Button from "@/block/ui/button/Button";
 import Card from "@/block/ui/card/Card";
 import CardLoading from "@/block/ui/card/CardLoading";
 import { htmlToPlainText, truncateText } from "@/libs/utils";
-import Link from "next/link";
+import { TransitionLink as Link } from "@/components/site/page-transition/PageTransition";
 import './recent-blogs.css';
 import { MoveUpRight } from "lucide-react";
 import { useBlogListing } from "@/hooks/useBlogListing";

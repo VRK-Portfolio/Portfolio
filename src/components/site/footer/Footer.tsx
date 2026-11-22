@@ -1,6 +1,6 @@
 'use client';
 
-import Link from "next/link";
+import { TransitionLink as Link } from "@/components/site/page-transition/PageTransition";
 import { usePathname } from "next/navigation";
 import { MessageCircle, Send, X } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";

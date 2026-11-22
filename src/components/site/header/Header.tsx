@@ -1,5 +1,5 @@
 'use client';
-import Link from "next/link"
+import { TransitionLink as Link } from "@/components/site/page-transition/PageTransition";
 import './Header.css';
 import Button from "@/block/ui/button/Button";
 import { useEffect, useState, useSyncExternalStore } from "react";

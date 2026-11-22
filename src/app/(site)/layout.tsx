@@ -2,6 +2,7 @@ import "./../styles/globals.css";
 import './../styles/site.css';
 import HeaderComponent from "@/components/site/header/Header";
 import PublicFooter from "@/components/site/footer/PublicFooter";
+import PageTransition from "@/components/site/page-transition/PageTransition";
 import { QueryProvider } from "@/providers/QueryProvider";
 import type { Metadata } from "next";
 import { BasicInfoSchema } from "@/@types/BasicInfo.types";
@@ -67,11 +68,13 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <QueryProvider>
           <HydrationBoundary state={dehydrate(queryClient)}>
+          <PageTransition>
           <HeaderComponent />
           <main className="flex-1">
             {children}
           </main>
           <PublicFooter year={new Date().getFullYear()} />
+          </PageTransition>
           </HydrationBoundary>
         </QueryProvider>
       </body>
