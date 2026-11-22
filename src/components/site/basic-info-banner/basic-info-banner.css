@@ -28,5 +28,13 @@
         .cmp-basic-info-banner__about-me {
             @apply mt-2 text-gray-700 dark:text-gray-100 text-base;
         }
+
+        .cmp-basic-info-banner__social-links {
+            @apply mt-4 flex justify-center gap-3;
+        }
+
+        .cmp-basic-info-banner__social-link {
+            @apply inline-flex size-[44px] items-center justify-center p-0;
+        }
     }
 }

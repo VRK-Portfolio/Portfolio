@@ -29,7 +29,25 @@ theme unchanged (light by default). If browser storage is unavailable, the
 toggle still works for the current page and a console warning reports that
 the preference could not be loaded or saved.
 
+## Profile links
+
+The basic info banner displays icon-only GitHub and LinkedIn links using the
+saved profile URLs. Both open in a new tab, have accessible names and tooltips,
+and use the existing round-button styling in light and dark themes.
+
 ## Public loading states
+
+Public page navigation uses a full-screen loader that fades in while the
+Next.js link navigation or route-loading boundary is pending and fades out
+when content is ready, including the wait before a server response arrives.
+Each fade takes 500ms with a soft ease-out curve. Once shown, the loader stays
+for at least 600ms so fast responses do not reverse an unfinished entrance;
+longer loads exit as soon as content is ready. This hold does not delay fetching
+or rendering the destination, and is skipped for reduced motion.
+It follows the current light/dark theme, announces loading to screen readers,
+and disables animation for reduced motion. Links and browser history retain
+their normal behavior; already-loaded routes and same-page anchor jumps do not
+introduce an artificial loading delay. Admin loading screens are unchanged.
 
 Experience, Projects, Recent Blogs, the `/blogs` listing, and blog detail
 (including Similar Blogs) use shimmer placeholders while their data loads,

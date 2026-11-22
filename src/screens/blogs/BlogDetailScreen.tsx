@@ -6,7 +6,7 @@ import Badge from "@/block/ui/badge/Badge";
 import { formatDate, htmlToPlainText, truncateText } from "@/libs/utils";
 import './blog-screen.css'
 import { MoveUpRight } from "lucide-react";
-import Link from "next/link";
+import { TransitionLink as Link } from "@/components/site/page-transition/PageTransition";
 import Card from "@/block/ui/card/Card";
 import CardLoading from "@/block/ui/card/CardLoading";
 import BlogDetailLoading from "./BlogDetailLoading";
